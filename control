@@ -1,0 +1,224 @@
+#!/bin/bash
+
+CWD=$(cd $(dirname $0)/; pwd)
+cd $CWD
+
+usage()
+{
+	echo $"Usage: $0 {start|stop|restart|status|build|pack} <module>"
+	exit 0
+}
+
+start_all()
+{
+	# http: 8022
+	test -x n9e-portal && start portal
+	# http: 8030 ; rpc: 8031
+	test -x n9e-index && start index
+	# http: 8036 ; rpc: 8037
+	test -x n9e-tsdb && start tsdb
+	# http: 8040 ; rpc: 8041
+	test -x n9e-transfer && start transfer
+	# http: 8032
+	test -x n9e-judge && start judge
+	# http: 2188
+	test -x n9e-syscollector && start syscollector
+	# http: 2189
+	test -x n9e-logcollector && start logcollector
+	# http: 8028
+	test -x n9e-alarm && start alarm
+	# http: 8026
+	test -x n9e-sender && start sender
+}
+
+start()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		usage
+		return
+	fi
+
+	if [ "x${mod}" = "xall" ]; then
+		start_all
+		return
+	fi
+
+	binfile=n9e-${mod}
+
+	if [ ! -f $binfile ]; then
+		echo "file[$binfile] not found"
+		exit 1
+	fi
+
+
+	if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -gt 0 ]; then
+		echo "${mod} already started"
+		return
+	fi
+
+	mkdir -p logs/$mod
+	nohup $CWD/$binfile &> logs/${mod}/stdout.log &
+
+	for((i=1;i<=15;i++)); do
+		if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -gt 0 ]; then
+			echo "${mod} started"
+			return
+		fi
+		sleep 0.2
+	done
+
+	echo "cannot start ${mod}"
+	exit 1
+}
+
+stop_all()
+{
+	test -x n9e-logcollector && stop logcollector
+	test -x n9e-syscollector && stop syscollector
+	test -x n9e-transfer && stop transfer
+	test -x n9e-tsdb && stop tsdb
+	test -x n9e-judge && stop judge
+	test -x n9e-index && stop index
+	test -x n9e-portal && stop portal
+	test -x n9e-alarm && stop alarm
+	test -x n9e-sender && stop sender
+}
+
+stop()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		usage
+		return
+	fi
+
+	if [ "x${mod}" = "xall" ]; then
+		stop_all
+		return
+	fi
+
+	binfile=n9e-${mod}
+
+	if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -eq 0 ]; then
+		echo "${mod} already stopped"
+		return
+	fi
+
+	ps aux|grep -v grep|grep -v control|grep "$binfile"|awk '{print $2}'|xargs kill
+	for((i=1;i<=15;i++)); do
+		if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -eq 0 ]; then
+			echo "${mod} stopped"
+			return
+		fi
+		sleep 0.2
+	done
+
+	echo "cannot stop $mod"
+	exit 1
+}
+
+restart()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		usage
+		return
+	fi
+
+	if [ "x${mod}" = "xall" ]; then
+		stop_all
+		start_all
+		return
+	fi
+
+	stop $mod
+	start $mod
+
+	status
+}
+
+status()
+{
+	ps aux|grep -v grep|grep "n9e"
+}
+
+build_one()
+{
+	mod=$1
+	go build -o n9e-${mod} src/modules/${mod}/${mod}.go
+}
+
+build()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		build_one logcollector
+		build_one syscollector
+		build_one tsdb
+		build_one index
+		build_one judge
+		build_one transfer
+		build_one portal
+		build_one alarm
+		build_one sender
+		return
+	fi
+
+	build_one $mod
+}
+
+reload()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		echo "arg: <mod> is necessary"
+		return
+	fi
+	
+	build_one $mod
+	restart $mod
+}
+
+pack()
+{
+	v=$(date +%Y-%m-%d-%H-%M-%S)
+	tar zcvf n9e-$v.tar.gz control \
+	plugin \
+	supervisord.d \
+	n9e-logcollector etc/logcollector.yml \
+	n9e-syscollector etc/syscollector.yml \
+	n9e-tsdb etc/tsdb.yml \
+	n9e-index etc/index.yml \
+	n9e-judge etc/judge.yml \
+	n9e-transfer etc/transfer.yml \
+	n9e-portal etc/portal.yml \
+	n9e-alarm etc/alarm.yml \
+	n9e-sender etc/sender.yml
+}
+
+case "$1" in
+	start)
+		start $2
+		;;
+	stop)
+		stop $2
+		;;
+	restart)
+		restart $2
+		;;
+	status)
+		status
+		;;
+	build)
+		build $2
+		;;
+	reload)
+		reload $2
+		;;
+	pack)
+		pack
+		;;
+	*)
+		usage
+esac

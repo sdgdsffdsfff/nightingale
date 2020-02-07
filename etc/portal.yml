@@ -1,0 +1,27 @@
+---
+salt: "PLACE_SALT"
+logger:
+  dir: "logs/portal"
+  level: "INFO"
+  keepHours: 24
+http:
+  listen: "0.0.0.0:8022"
+  secret: "PLACE_SECRET"
+ldap:
+  host: "ldap.example.org"
+  port: 389
+  baseDn: "dc=example,dc=org"
+  bindUser: "cn=manager,dc=example,dc=org"
+  bindPass: "*******"
+  # openldap: (&(uid=%s))
+  # AD: (&(sAMAccountName=%s))
+  authFilter: "(&(uid=%s))"
+  tls: false
+  startTLS: false
+# judge sharding, use judge's identity as cluster list
+judges:
+  judge01: 127.0.0.1
+# just for single host test, use nginx in production
+proxy:
+  transfer: http://127.0.0.1:8040
+  index: http://127.0.0.1:8030
