@@ -3,8 +3,8 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/ports"
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/procs"
+	"github.com/didi/nightingale/src/modules/syscollector/ports"
+	"github.com/didi/nightingale/src/modules/syscollector/procs"
 )
 
 func getStrategy(c *gin.Context) {

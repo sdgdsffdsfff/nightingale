@@ -11,8 +11,8 @@ import (
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/sys"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/funcs"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/syscollector/funcs"
 )
 
 type PluginScheduler struct {

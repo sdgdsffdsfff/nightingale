@@ -3,8 +3,8 @@ package entity
 import (
 	"errors"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/schema"
 )
 
 // AlertPointDriver 点驱动模型, 只记录异常/恢复的时间, 不记录没有点的情况

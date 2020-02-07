@@ -7,9 +7,9 @@ import (
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/backend"
-	. "github.com/open-falcon/falcon-ng/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/transfer/backend"
+	. "github.com/didi/nightingale/src/modules/transfer/config"
 )
 
 func PushData(c *gin.Context) {

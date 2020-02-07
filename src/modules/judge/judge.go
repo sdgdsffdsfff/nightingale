@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/worker"
+	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/worker"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/runner"

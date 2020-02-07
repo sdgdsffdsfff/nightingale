@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/open-falcon/falcon-ng/src/modules/index/cache"
-	"github.com/open-falcon/falcon-ng/src/modules/index/config"
+	"github.com/didi/nightingale/src/modules/index/cache"
+	"github.com/didi/nightingale/src/modules/index/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"

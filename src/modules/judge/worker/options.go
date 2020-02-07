@@ -3,9 +3,9 @@ package worker
 import (
 	"log"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/publish"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/buffer"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/query"
+	"github.com/didi/nightingale/src/modules/judge/schema/publish"
+	"github.com/didi/nightingale/src/modules/judge/storage/buffer"
+	"github.com/didi/nightingale/src/modules/judge/storage/query"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/sys"

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/index/cache"
-	. "github.com/open-falcon/falcon-ng/src/modules/index/config"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/index/cache"
+	. "github.com/didi/nightingale/src/modules/index/config"
 
 	nsq "github.com/bitly/go-nsq"
 	"github.com/toolkits/pkg/concurrent/semaphore"

@@ -9,7 +9,7 @@ import (
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/nux"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 func FsKernelMetrics() (L []*dataobj.MetricValue) {

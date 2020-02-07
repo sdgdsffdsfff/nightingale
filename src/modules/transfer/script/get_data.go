@@ -13,7 +13,7 @@ import (
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 	"github.com/ugorji/go/codec"
 )
 

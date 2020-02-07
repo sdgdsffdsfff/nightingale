@@ -8,9 +8,9 @@ import (
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/model"
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/config"
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/utils"
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/syscollector/config"
+	"github.com/didi/nightingale/src/modules/syscollector/utils"
 )
 
 var (

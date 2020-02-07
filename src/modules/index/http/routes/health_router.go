@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/open-falcon/falcon-ng/src/modules/index/config"
+	"github.com/didi/nightingale/src/modules/index/config"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,7 +1,7 @@
 package buffer
 
 import (
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 // 所有的点 保留一个批次信息, 内部维护一个变量, 每次write的是一个批次

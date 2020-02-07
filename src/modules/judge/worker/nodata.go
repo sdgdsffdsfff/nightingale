@@ -7,14 +7,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/bitmap"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/entity"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/query"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/series"
+	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/schema/bitmap"
+	"github.com/didi/nightingale/src/modules/judge/schema/entity"
+	"github.com/didi/nightingale/src/modules/judge/storage/query"
+	"github.com/didi/nightingale/src/modules/judge/storage/series"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 var (

@@ -1,9 +1,9 @@
 package storage
 
 import (
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/series"
+	"github.com/didi/nightingale/src/modules/judge/storage/series"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 type Storage interface {

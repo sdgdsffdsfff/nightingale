@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-falcon/falcon-ng/src/modules/sender/config"
+	"github.com/didi/nightingale/src/modules/sender/config"
 )
 
 func ping(c *gin.Context) {

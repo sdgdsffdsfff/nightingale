@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/json-iterator/go"
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 	"github.com/spaolacci/murmur3"
 )
 

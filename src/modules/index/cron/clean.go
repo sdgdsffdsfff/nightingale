@@ -3,8 +3,8 @@ package cron
 import (
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/index/cache"
-	. "github.com/open-falcon/falcon-ng/src/modules/index/config"
+	"github.com/didi/nightingale/src/modules/index/cache"
+	. "github.com/didi/nightingale/src/modules/index/config"
 
 	"github.com/toolkits/pkg/logger"
 )

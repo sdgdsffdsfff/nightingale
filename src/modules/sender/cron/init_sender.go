@@ -1,6 +1,6 @@
 package cron
 
-import "github.com/open-falcon/falcon-ng/src/modules/sender/config"
+import "github.com/didi/nightingale/src/modules/sender/config"
 
 var (
 	IMWorkerChan    chan int

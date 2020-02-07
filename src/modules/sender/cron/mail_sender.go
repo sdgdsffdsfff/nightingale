@@ -12,9 +12,9 @@ import (
 	"github.com/toolkits/pkg/net/httplib"
 	"github.com/toolkits/pkg/sys"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/config"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/redi"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/sender/config"
+	"github.com/didi/nightingale/src/modules/sender/redi"
 )
 
 type Mail struct {

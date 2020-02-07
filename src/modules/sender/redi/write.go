@@ -6,7 +6,7 @@ import (
 	"github.com/json-iterator/go"
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 func lpush(queue, message string) {

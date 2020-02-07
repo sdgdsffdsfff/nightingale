@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/config"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/strategy"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/worker"
+	"github.com/didi/nightingale/src/modules/logcollector/config"
+	"github.com/didi/nightingale/src/modules/logcollector/strategy"
+	"github.com/didi/nightingale/src/modules/logcollector/worker"
 )
 
 func ping(c *gin.Context) {

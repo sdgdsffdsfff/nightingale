@@ -10,8 +10,8 @@ import (
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/pool"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	. "github.com/open-falcon/falcon-ng/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/dataobj"
+	. "github.com/didi/nightingale/src/modules/transfer/config"
 )
 
 func FetchData(inputs []dataobj.QueryData) []*dataobj.TsdbQueryResponse {

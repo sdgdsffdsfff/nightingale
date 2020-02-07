@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/config"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/http"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/worker"
+	"github.com/didi/nightingale/src/modules/logcollector/config"
+	"github.com/didi/nightingale/src/modules/logcollector/http"
+	"github.com/didi/nightingale/src/modules/logcollector/worker"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"

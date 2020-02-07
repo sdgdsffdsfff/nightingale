@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/backend"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/config"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/http"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/rpc"
+	"github.com/didi/nightingale/src/modules/transfer/backend"
+	"github.com/didi/nightingale/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/modules/transfer/http"
+	"github.com/didi/nightingale/src/modules/transfer/rpc"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"

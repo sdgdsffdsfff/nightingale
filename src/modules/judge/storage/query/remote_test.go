@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/judge/storage"
 
 	"github.com/stretchr/testify/assert"
 )

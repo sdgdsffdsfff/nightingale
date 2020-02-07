@@ -4,7 +4,7 @@ import (
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/nux"
 
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/config"
+	"github.com/didi/nightingale/src/modules/logcollector/config"
 )
 
 func CalculateMemLimit() int {

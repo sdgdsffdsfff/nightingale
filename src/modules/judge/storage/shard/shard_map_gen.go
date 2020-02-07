@@ -1,7 +1,7 @@
 package shard
 
 import (
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/series"
+	"github.com/didi/nightingale/src/modules/judge/storage/series"
 )
 
 type shardMapElementEqual func(*series.Series, *series.Series) bool

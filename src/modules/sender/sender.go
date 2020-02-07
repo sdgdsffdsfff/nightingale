@@ -12,11 +12,11 @@ import (
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
 
-	"github.com/open-falcon/falcon-ng/src/model"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/config"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/cron"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/http"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/redi"
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/sender/config"
+	"github.com/didi/nightingale/src/modules/sender/cron"
+	"github.com/didi/nightingale/src/modules/sender/http"
+	"github.com/didi/nightingale/src/modules/sender/redi"
 )
 
 var (

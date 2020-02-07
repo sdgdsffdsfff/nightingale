@@ -7,9 +7,9 @@ import (
 
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/model"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/cache"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/config"
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/alarm/cache"
+	"github.com/didi/nightingale/src/modules/alarm/config"
 )
 
 func SyncMaskconfLoop() {

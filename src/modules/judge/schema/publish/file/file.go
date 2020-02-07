@@ -5,8 +5,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/publish"
+	"github.com/didi/nightingale/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/schema/publish"
 )
 
 type FilePublisher struct {

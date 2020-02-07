@@ -5,12 +5,12 @@ import (
 	"sort"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/buffer"
+	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/storage"
+	"github.com/didi/nightingale/src/modules/judge/storage/buffer"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 var (

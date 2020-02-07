@@ -3,7 +3,7 @@ package worker
 import (
 	"log"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/logger"
 )
 
 func InitLog(opts LoggerOption) {

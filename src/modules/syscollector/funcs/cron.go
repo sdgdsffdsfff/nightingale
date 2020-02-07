@@ -5,8 +5,8 @@ import (
 
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/config"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/syscollector/config"
 )
 
 func Collect() {

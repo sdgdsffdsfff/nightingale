@@ -7,11 +7,11 @@ import (
 
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/model"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/cache"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/config"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/notify"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/redi"
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/alarm/cache"
+	"github.com/didi/nightingale/src/modules/alarm/config"
+	"github.com/didi/nightingale/src/modules/alarm/notify"
+	"github.com/didi/nightingale/src/modules/alarm/redi"
 )
 
 const RECOVERY_TIME_PREFIX = "/falcon-ng/recovery/time/"

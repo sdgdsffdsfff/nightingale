@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/model"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/schema"
 
 	"github.com/parnurzeal/gorequest"
 )

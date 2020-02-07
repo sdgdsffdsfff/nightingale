@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	. "github.com/open-falcon/falcon-ng/src/modules/index/config"
+	. "github.com/didi/nightingale/src/modules/index/config"
 
 	"github.com/toolkits/pkg/net/httplib"
 )

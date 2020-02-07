@@ -3,7 +3,7 @@ package plugins
 import (
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/config"
+	"github.com/didi/nightingale/src/modules/syscollector/config"
 )
 
 func Detect() {

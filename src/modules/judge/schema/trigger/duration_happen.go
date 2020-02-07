@@ -4,10 +4,10 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage"
+	"github.com/didi/nightingale/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/storage"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 // TriggerDurationHappen 一段时间内发生

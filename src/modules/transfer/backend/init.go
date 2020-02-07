@@ -11,8 +11,8 @@ import (
 	"github.com/toolkits/pkg/pool"
 	"github.com/toolkits/pkg/str"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	. "github.com/open-falcon/falcon-ng/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/dataobj"
+	. "github.com/didi/nightingale/src/modules/transfer/config"
 )
 
 const (

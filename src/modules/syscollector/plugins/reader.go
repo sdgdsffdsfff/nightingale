@@ -9,7 +9,7 @@ import (
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/config"
+	"github.com/didi/nightingale/src/modules/syscollector/config"
 )
 
 // key: 60_ntp.py

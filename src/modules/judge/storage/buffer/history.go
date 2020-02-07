@@ -1,7 +1,7 @@
 package buffer
 
 import (
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 // 支持插入的数据, 历史数据允许更新

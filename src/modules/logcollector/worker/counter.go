@@ -10,9 +10,9 @@ import (
 
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/strategy"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/logcollector/schema"
+	"github.com/didi/nightingale/src/modules/logcollector/strategy"
 )
 
 //从worker往计算部分推的Point

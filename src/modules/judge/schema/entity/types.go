@@ -3,12 +3,12 @@ package entity
 import (
 	"sync"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/bitmap"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/publish"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/trigger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/buffer"
+	"github.com/didi/nightingale/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/schema/bitmap"
+	"github.com/didi/nightingale/src/modules/judge/schema/publish"
+	"github.com/didi/nightingale/src/modules/judge/schema/trigger"
+	"github.com/didi/nightingale/src/modules/judge/storage"
+	"github.com/didi/nightingale/src/modules/judge/storage/buffer"
 
 	nsema "github.com/toolkits/concurrent/semaphore"
 )

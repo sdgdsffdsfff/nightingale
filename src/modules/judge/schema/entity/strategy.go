@@ -8,12 +8,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/publish"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/query"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/series"
+	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/schema/publish"
+	"github.com/didi/nightingale/src/modules/judge/storage"
+	"github.com/didi/nightingale/src/modules/judge/storage/query"
+	"github.com/didi/nightingale/src/modules/judge/storage/series"
 
 	nsema "github.com/toolkits/concurrent/semaphore"
 )

@@ -7,11 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/open-falcon/falcon-ng/src/modules/index/backend/nsq"
-	"github.com/open-falcon/falcon-ng/src/modules/index/cache"
-	"github.com/open-falcon/falcon-ng/src/modules/index/config"
-	"github.com/open-falcon/falcon-ng/src/modules/index/cron"
-	"github.com/open-falcon/falcon-ng/src/modules/index/http"
+	"github.com/didi/nightingale/src/modules/index/backend/nsq"
+	"github.com/didi/nightingale/src/modules/index/cache"
+	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/modules/index/cron"
+	"github.com/didi/nightingale/src/modules/index/http"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"

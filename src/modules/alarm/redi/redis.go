@@ -6,7 +6,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/config"
+	"github.com/didi/nightingale/src/modules/alarm/config"
 )
 
 var RedisConnPool *redis.Pool

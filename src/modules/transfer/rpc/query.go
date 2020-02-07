@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/backend"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/transfer/backend"
 )
 
 func (this *Transfer) Query(args []dataobj.QueryData, reply *dataobj.QueryDataResp) error {

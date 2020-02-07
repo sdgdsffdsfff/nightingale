@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 func Test_RingHistory(t *testing.T) {

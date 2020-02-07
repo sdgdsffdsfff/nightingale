@@ -6,14 +6,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/logger"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/entity"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/publish"
-	filep "github.com/open-falcon/falcon-ng/src/modules/judge/schema/publish/file"
-	redisp "github.com/open-falcon/falcon-ng/src/modules/judge/schema/publish/redis"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/buffer"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/query"
+	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/didi/nightingale/src/modules/judge/schema/entity"
+	"github.com/didi/nightingale/src/modules/judge/schema/publish"
+	filep "github.com/didi/nightingale/src/modules/judge/schema/publish/file"
+	redisp "github.com/didi/nightingale/src/modules/judge/schema/publish/redis"
+	"github.com/didi/nightingale/src/modules/judge/storage"
+	"github.com/didi/nightingale/src/modules/judge/storage/buffer"
+	"github.com/didi/nightingale/src/modules/judge/storage/query"
 )
 
 var (

@@ -11,9 +11,9 @@ import (
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/nux"
 
-	"github.com/open-falcon/falcon-ng/src/modules/syscollector/config"
+	"github.com/didi/nightingale/src/modules/syscollector/config"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 func FsRWMetrics() (L []*dataobj.MetricValue) {

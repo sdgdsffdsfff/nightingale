@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/open-falcon/falcon-ng/src/modules/sender/config"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/http/middleware"
-	"github.com/open-falcon/falcon-ng/src/modules/sender/http/routes"
+	"github.com/didi/nightingale/src/modules/sender/config"
+	"github.com/didi/nightingale/src/modules/sender/http/middleware"
+	"github.com/didi/nightingale/src/modules/sender/http/routes"
 )
 
 var srv = &http.Server{

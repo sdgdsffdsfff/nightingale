@@ -11,7 +11,7 @@ import (
 
 	"github.com/toolkits/pkg/logger"
 
-	. "github.com/open-falcon/falcon-ng/src/modules/transfer/config"
+	. "github.com/didi/nightingale/src/modules/transfer/config"
 
 	"github.com/ugorji/go/codec"
 )

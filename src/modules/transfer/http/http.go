@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/config"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/http/middleware"
-	"github.com/open-falcon/falcon-ng/src/modules/transfer/http/routes"
+	"github.com/didi/nightingale/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/modules/transfer/http/middleware"
+	"github.com/didi/nightingale/src/modules/transfer/http/routes"
 )
 
 var srv = &http.Server{

@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
 
-	"github.com/open-falcon/falcon-ng/src/modules/sender/config"
+	"github.com/didi/nightingale/src/modules/sender/config"
 )
 
 func renderMessage(c *gin.Context, v interface{}) {

@@ -1,5 +1,5 @@
 package config
 
-import "github.com/open-falcon/falcon-ng/src/model"
+import "github.com/didi/nightingale/src/model"
 
 var Collect model.Collect

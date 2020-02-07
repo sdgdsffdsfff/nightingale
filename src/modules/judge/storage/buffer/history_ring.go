@@ -5,7 +5,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 // RingHistory做了很多复杂的事情, ChainHistory相对简单, 性能更好一些

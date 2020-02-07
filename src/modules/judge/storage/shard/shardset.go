@@ -3,7 +3,7 @@ package shard
 import (
 	"sync/atomic"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/series"
+	"github.com/didi/nightingale/src/modules/judge/storage/series"
 
 	"github.com/spaolacci/murmur3"
 )

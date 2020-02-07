@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/config"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/http/middleware"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/http/routes"
+	"github.com/didi/nightingale/src/modules/logcollector/config"
+	"github.com/didi/nightingale/src/modules/logcollector/http/middleware"
+	"github.com/didi/nightingale/src/modules/logcollector/http/routes"
 )
 
 var srv = &http.Server{

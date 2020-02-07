@@ -3,12 +3,12 @@ package buffer
 import (
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/query"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/series"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/shard"
+	"github.com/didi/nightingale/src/modules/judge/storage"
+	"github.com/didi/nightingale/src/modules/judge/storage/query"
+	"github.com/didi/nightingale/src/modules/judge/storage/series"
+	"github.com/didi/nightingale/src/modules/judge/storage/shard"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 	nsema "github.com/toolkits/concurrent/semaphore"
 )
 

@@ -12,9 +12,9 @@ import (
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/model"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/config"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/alarm/config"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary

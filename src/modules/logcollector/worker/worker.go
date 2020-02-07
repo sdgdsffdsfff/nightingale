@@ -11,10 +11,10 @@ import (
 
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/config"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/strategy"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/utils"
+	"github.com/didi/nightingale/src/modules/logcollector/config"
+	"github.com/didi/nightingale/src/modules/logcollector/schema"
+	"github.com/didi/nightingale/src/modules/logcollector/strategy"
+	"github.com/didi/nightingale/src/modules/logcollector/utils"
 )
 
 type callbackHandler func(int64, int64)

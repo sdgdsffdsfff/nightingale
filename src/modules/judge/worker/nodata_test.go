@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema/entity"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/buffer"
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/query"
+	"github.com/didi/nightingale/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/schema/entity"
+	"github.com/didi/nightingale/src/modules/judge/storage/buffer"
+	"github.com/didi/nightingale/src/modules/judge/storage/query"
 )
 
 func Test_Nodata(t *testing.T) {

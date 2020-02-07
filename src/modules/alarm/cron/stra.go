@@ -10,9 +10,9 @@ import (
 	"github.com/json-iterator/go"
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/cache"
-	"github.com/open-falcon/falcon-ng/src/modules/alarm/config"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/alarm/cache"
+	"github.com/didi/nightingale/src/modules/alarm/config"
 )
 
 func SyncStraLoop() {

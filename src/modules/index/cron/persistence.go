@@ -5,8 +5,8 @@ import (
 
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/open-falcon/falcon-ng/src/modules/index/cache"
-	. "github.com/open-falcon/falcon-ng/src/modules/index/config"
+	"github.com/didi/nightingale/src/modules/index/cache"
+	. "github.com/didi/nightingale/src/modules/index/config"
 )
 
 func StartPersist() {

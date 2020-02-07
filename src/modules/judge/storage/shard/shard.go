@@ -3,7 +3,7 @@ package shard
 import (
 	"sync"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/storage/series"
+	"github.com/didi/nightingale/src/modules/judge/storage/series"
 )
 
 // Shard 的主要数据结构是shardMap

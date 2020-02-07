@@ -1,8 +1,8 @@
 package strategy
 
 import (
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/config"
-	"github.com/open-falcon/falcon-ng/src/modules/logcollector/schema"
+	"github.com/didi/nightingale/src/modules/logcollector/config"
+	"github.com/didi/nightingale/src/modules/logcollector/schema"
 
 	"fmt"
 )

@@ -3,7 +3,7 @@ package funcs
 import (
 	"strings"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
+	"github.com/didi/nightingale/src/dataobj"
 )
 
 func NewMetricValue(metric string, val interface{}, dataType string, tags ...string) *dataobj.MetricValue {

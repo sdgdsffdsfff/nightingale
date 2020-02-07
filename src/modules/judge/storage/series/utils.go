@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/open-falcon/falcon-ng/src/modules/judge/schema"
+	"github.com/didi/nightingale/src/modules/judge/schema"
 )
 
 var (

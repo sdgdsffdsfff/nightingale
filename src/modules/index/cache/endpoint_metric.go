@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/open-falcon/falcon-ng/src/dataobj"
-	"github.com/open-falcon/falcon-ng/src/modules/index/config"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/index/config"
 
 	"github.com/toolkits/pkg/logger"
 )
