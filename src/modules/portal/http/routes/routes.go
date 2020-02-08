@@ -27,6 +27,11 @@ func Config(r *gin.Engine) {
 
 		nolog.GET("/stras/effective", effectiveStrasGet)
 		nolog.GET("/stras", strasAll)
+
+		nolog.POST("/report-judge-heartbeat", judgeHeartBeat)
+		nolog.POST("/report-index-heartbeat", indexHeartBeat)
+		nolog.GET("/judges", judgeInstanceGets)
+		nolog.GET("/indexs", indexInstanceGets)
 	}
 
 	login := r.Group("/api/portal").Use(middleware.Logined())
