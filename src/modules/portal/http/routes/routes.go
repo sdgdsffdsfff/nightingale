@@ -10,6 +10,14 @@ func Config(r *gin.Engine) {
 	r.Static("/pub", "./pub")
 	r.StaticFile("/favicon.ico", "./pub/favicon.ico")
 
+	hbs := r.Group("/api/hbs")
+	{
+		hbs.POST("/report-judge-heartbeat", judgeHeartBeat)
+		hbs.POST("/report-index-heartbeat", indexHeartBeat)
+		hbs.GET("/judges", judgeInstanceGets)
+		hbs.GET("/indexs", indexInstanceGets)
+	}
+
 	nolog := r.Group("/api/portal")
 	{
 		nolog.GET("/ping", ping)
@@ -27,11 +35,6 @@ func Config(r *gin.Engine) {
 
 		nolog.GET("/stras/effective", effectiveStrasGet)
 		nolog.GET("/stras", strasAll)
-
-		nolog.POST("/report-judge-heartbeat", judgeHeartBeat)
-		nolog.POST("/report-index-heartbeat", indexHeartBeat)
-		nolog.GET("/judges", judgeInstanceGets)
-		nolog.GET("/indexs", indexInstanceGets)
 	}
 
 	login := r.Group("/api/portal").Use(middleware.Logined())
