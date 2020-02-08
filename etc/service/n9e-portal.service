@@ -13,7 +13,7 @@ Type=simple
 ExecStart=/home/xiaoju/gopath/src/github.com/didi/nightingale/n9e-portal
 WorkingDirectory=/home/xiaoju/gopath/src/github.com/didi/nightingale
 
-Restart=on-failure
+Restart=always
 RestartSec=1
 StartLimitInterval=0
 
