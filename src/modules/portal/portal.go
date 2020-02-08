@@ -42,7 +42,6 @@ func init() {
 	}
 
 	runner.Init()
-	fmt.Println("portal start, use configuration file:", *conf)
 	fmt.Println("runner.Cwd:", runner.Cwd)
 	fmt.Println("runner.Hostname:", runner.Hostname)
 }
@@ -99,5 +98,7 @@ func pconf() {
 	if err := config.Parse(*conf); err != nil {
 		fmt.Println("cannot parse configuration file:", err)
 		os.Exit(1)
+	} else {
+		fmt.Println("portal start, use configuration file:", *conf)
 	}
 }
