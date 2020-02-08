@@ -11,6 +11,7 @@ Group=xiaoju
 Type=simple
 # ExecStart=/home/n9e/n9e-portal
 ExecStart=/home/xiaoju/gopath/src/github.com/didi/nightingale/n9e-portal
+# WorkingDirectory=/home/n9e
 WorkingDirectory=/home/xiaoju/gopath/src/github.com/didi/nightingale
 
 Restart=always
