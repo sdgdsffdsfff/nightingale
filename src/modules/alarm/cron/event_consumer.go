@@ -14,9 +14,9 @@ import (
 	"github.com/didi/nightingale/src/modules/alarm/redi"
 )
 
-const RECOVERY_TIME_PREFIX = "/falcon-ng/recovery/time/"
-const ALERT_TIME_PREFIX = "/falcon-ng/alert/time/"
-const ALERT_UPGRADE_PREFIX = "/falcon-ng/alert/upgrade/"
+const RECOVERY_TIME_PREFIX = "/n9e/recovery/time/"
+const ALERT_TIME_PREFIX = "/n9e/alert/time/"
+const ALERT_UPGRADE_PREFIX = "/n9e/alert/upgrade/"
 
 func consume(event *model.Event, isHigh bool) {
 	if event == nil {

@@ -51,7 +51,7 @@ func main() {
 	pconf()
 
 	config.InitLogger()
-	model.InitMySQL("uic", "portal", "mon")
+	model.InitMySQL("uic", "portal", "mon", "hbs")
 	model.InitRoot()
 	model.InitNode()
 	scache.Init()
@@ -101,4 +101,7 @@ func pconf() {
 	} else {
 		fmt.Println("portal start, use configuration file:", *conf)
 	}
+
+	fmt.Println("redis.idle:", config.Get().Redis.Idle)
+	fmt.Println("redis.timeout.conn:", config.Get().Redis.Timeout.Conn)
 }

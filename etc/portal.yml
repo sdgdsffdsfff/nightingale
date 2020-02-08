@@ -1,12 +1,16 @@
 ---
 salt: "PLACE_SALT"
+
 logger:
   dir: "logs/portal"
   level: "INFO"
   keepHours: 24
+
 http:
-  listen: "0.0.0.0:8022"
+  listen: "0.0.0.0:5800"
   secret: "PLACE_SECRET"
+
+# for ldap authorization
 ldap:
   host: "ldap.example.org"
   port: 389
@@ -18,10 +22,17 @@ ldap:
   authFilter: "(&(uid=%s))"
   tls: false
   startTLS: false
+
+# for alarm event and message queue
+redis:
+  addr: "127.0.0.1:6379"
+  pass: "1234"
+
 # judge sharding, use judge's identity as cluster list
 judges:
   judge01: 127.0.0.1
+
 # just for single host test, use nginx in production
 proxy:
-  transfer: http://127.0.0.1:8040
-  index: http://127.0.0.1:8030
+  transfer: http://127.0.0.1:5810
+  index: http://127.0.0.1:5830

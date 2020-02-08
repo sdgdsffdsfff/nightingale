@@ -1,9 +1,11 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 
+	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
 
@@ -13,8 +15,22 @@ type PortalYml struct {
 	Logger loggerSection     `yaml:"logger"`
 	HTTP   httpSection       `yaml:"http"`
 	LDAP   ldapSection       `yaml:"ldap"`
+	Redis  redisSection      `yaml:"redis"`
 	Proxy  proxySection      `yaml:"proxy"`
 	Judges map[string]string `yaml:"judges"`
+}
+
+type redisSection struct {
+	Addr    string         `yaml:"addr"`
+	Pass    string         `yaml:"pass"`
+	Idle    int            `yaml:"idle"`
+	Timeout timeoutSection `yaml:"timeout"`
+}
+
+type timeoutSection struct {
+	Conn  int `yaml:"conn"`
+	Read  int `yaml:"read"`
+	Write int `yaml:"write"`
 }
 
 type loggerSection struct {
@@ -58,8 +74,26 @@ func Get() *PortalYml {
 
 // Parse configuration file
 func Parse(ymlfile string) error {
+	bs, err := file.ReadBytes(ymlfile)
+	if err != nil {
+		return fmt.Errorf("cannot read yml[%s]: %v", ymlfile, err)
+	}
+
+	viper.SetConfigType("yaml")
+	err = viper.ReadConfig(bytes.NewBuffer(bs))
+	if err != nil {
+		return fmt.Errorf("cannot read yml[%s]: %v", ymlfile, err)
+	}
+
+	viper.SetDefault("redis.idle", 4)
+	viper.SetDefault("redis.timeout", map[string]int{
+		"conn":  500,
+		"read":  3000,
+		"write": 3000,
+	})
+
 	var c PortalYml
-	err := file.ReadYaml(ymlfile, &c)
+	err = viper.Unmarshal(&c)
 	if err != nil {
 		return fmt.Errorf("cannot read yml[%s]: %v", ymlfile, err)
 	}
