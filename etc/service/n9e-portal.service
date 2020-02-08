@@ -8,7 +8,7 @@ Wants=network-online.target
 User=xiaoju
 Group=xiaoju
 
-Type=notify
+Type=simple
 # ExecStart=/home/n9e/n9e-portal
 ExecStart=/home/xiaoju/gopath/src/github.com/didi/nightingale/n9e-portal
 WorkingDirectory=/home/xiaoju/gopath/src/github.com/didi/nightingale
