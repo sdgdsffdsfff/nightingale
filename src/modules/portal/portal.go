@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,7 +16,10 @@ import (
 
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/portal/config"
+	"github.com/didi/nightingale/src/modules/portal/cron"
 	"github.com/didi/nightingale/src/modules/portal/http"
+	"github.com/didi/nightingale/src/modules/portal/mcache"
+	"github.com/didi/nightingale/src/modules/portal/redisc"
 	"github.com/didi/nightingale/src/modules/portal/scache"
 )
 
@@ -51,10 +55,26 @@ func main() {
 	pconf()
 
 	config.InitLogger()
+
 	model.InitMySQL("uic", "portal", "mon", "hbs")
 	model.InitRoot()
 	model.InitNode()
+
 	scache.Init()
+	mcache.Init()
+
+	if err := cron.SyncMaskconf(); err != nil {
+		log.Fatalf("sync maskconf fail: %v", err)
+	}
+
+	if err := cron.SyncStra(); err != nil {
+		log.Fatalf("sync stra fail: %v", err)
+	}
+
+	redisc.InitRedis()
+
+	go cron.SyncMaskconfLoop()
+	go cron.SyncStraLoop()
 
 	http.Start()
 	ending()

@@ -18,6 +18,16 @@ type PortalYml struct {
 	Redis  redisSection      `yaml:"redis"`
 	Proxy  proxySection      `yaml:"proxy"`
 	Judges map[string]string `yaml:"judges"`
+	Alarm  alarmSection      `yaml:"alarm"`
+	Sender senderSection     `yaml:"sender"`
+}
+
+type alarmSection struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type senderSection struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 type redisSection struct {

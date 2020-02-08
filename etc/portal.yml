@@ -23,11 +23,6 @@ ldap:
   tls: false
   startTLS: false
 
-# for alarm event and message queue
-redis:
-  addr: "127.0.0.1:6379"
-  pass: "1234"
-
 # judge sharding, use judge's identity as cluster list
 judges:
   judge01: 127.0.0.1
@@ -36,3 +31,14 @@ judges:
 proxy:
   transfer: http://127.0.0.1:5810
   index: http://127.0.0.1:5830
+
+alarm:
+  enabled: true
+
+sender:
+  enabled: true
+
+# for alarm event and message queue
+redis:
+  addr: "127.0.0.1:6379"
+  pass: "1234"
