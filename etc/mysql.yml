@@ -14,3 +14,8 @@ mon:
   max: 16
   idle: 4
   debug: false
+hbs:
+  addr: "root:1234@tcp(127.0.0.1:3306)/n9e_hbs?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
+  max: 16
+  idle: 4
+  debug: false
