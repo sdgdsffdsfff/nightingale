@@ -170,9 +170,9 @@ func isInConverge(event *model.Event, isUpgrade bool) bool {
 }
 
 // 三种情况，不需要升级报警
-// 1，被认领的报警不需要升级
+// 1，认领的报警不需要升级
 // 2，忽略的报警不需要升级
-// 3，屏蔽的报警，不需要升级
+// 3，屏蔽的报警不需要升级
 func isAlertUpgrade(event *model.Event) (needUpgrade, needNotify bool) {
 	alertUpgradeKey := PrefixAlertUpgrade + fmt.Sprint(event.HashId)
 	eventAlertKey := PrefixAlertTime + fmt.Sprint(event.HashId)
@@ -254,6 +254,11 @@ func isAlertUpgrade(event *model.Event) (needUpgrade, needNotify bool) {
 		return false, false
 	}
 
+	// 还没有升级之前可能已经发过多次告警，并且已经触发了收敛，这时触发升级的告警，可千万不能被收敛
+	// 比如1h内最多报1一次，在1分钟的时候触发告警并发送，6分钟、11分钟、16分钟的时候又触发但被收敛
+	// 要求20分钟未处理则升级，虽然此时仍然在1h时间内，但是升级的情况需要单独来看之前是否有"已升级并且已发送"的事件
+	// 显然，在这个场景下，前面只有"已发送"和"已收敛"的事件，没有"已升级并且已发送"的事件
+	// 所以在21分钟的时候，应该触发升级并发送，在26分钟、31分钟的时候，都是"已升级并且以收敛"
 	if isInConverge(event, true) {
 		return true, false
 	}
