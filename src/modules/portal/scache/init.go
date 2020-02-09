@@ -32,7 +32,7 @@ func Init() {
 }
 
 func SyncStras() {
-	t1 := time.NewTicker(time.Duration(60) * time.Second)
+	t1 := time.NewTicker(time.Duration(10) * time.Second)
 
 	syncStras()
 	logger.Info("[cron] sync stras start...")
