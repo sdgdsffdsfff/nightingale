@@ -12,7 +12,7 @@ import (
 func CleanEventLoop() {
 	for {
 		CleanEvent()
-		time.Sleep(time.Second * time.Duration(60))
+		time.Sleep(time.Hour)
 	}
 }
 
