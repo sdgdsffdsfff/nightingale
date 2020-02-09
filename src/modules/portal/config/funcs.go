@@ -14,7 +14,7 @@ func CryptoPass(raw string) string {
 	return str.MD5(Get().Salt + "<-*ak47^ak47*->" + raw)
 }
 
-// InitLogger init logger toolkits
+// InitLogger x
 func InitLogger() {
 	c := Get().Logger
 
