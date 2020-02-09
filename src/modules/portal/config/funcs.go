@@ -41,7 +41,7 @@ func Set(s []string) []string {
 		m[s[i]] = 1
 	}
 
-	s2 := []string{}
+	var s2 []string
 	for k := range m {
 		s2 = append(s2, k)
 	}
