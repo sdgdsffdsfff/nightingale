@@ -141,7 +141,7 @@ func Parse(ymlfile string) error {
 	})
 
 	viper.SetDefault("cleaner", map[string]interface{}{
-		"days":  31,
+		"days":  366,
 		"batch": 100,
 	})
 
