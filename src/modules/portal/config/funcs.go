@@ -11,7 +11,7 @@ import (
 
 // CryptoPass crypto password use salt
 func CryptoPass(raw string) string {
-	return str.MD5(Get().Salt + "<-*Uk30^96dY*->" + raw)
+	return str.MD5(Get().Salt + "<-*ak47^ak47*->" + raw)
 }
 
 // InitLogger init logger toolkits
