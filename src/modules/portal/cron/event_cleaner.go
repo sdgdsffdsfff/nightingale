@@ -17,7 +17,7 @@ func CleanEventLoop() {
 }
 
 func CleanEvent() {
-	cfg := config.Get().Cleaner
+	cfg := config.Get().Alarm.Cleaner
 	days := cfg.Days
 	batch := cfg.Batch
 

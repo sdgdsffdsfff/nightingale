@@ -14,7 +14,7 @@ import (
 )
 
 func MergeEvent() {
-	mergeCfg := config.Get().Merge
+	mergeCfg := config.Get().Alarm.Merge
 	for {
 		eventMap := getAllEventFromMergeHash(mergeCfg.Hash)
 		if eventMap != nil {
@@ -53,7 +53,7 @@ func storeLowEvent(event *model.Event) {
 		return
 	}
 
-	mergeCfg := config.Get().Merge
+	mergeCfg := config.Get().Alarm.Merge
 
 	if _, err := redisc.HSET(mergeCfg.Hash, string(es), ""); err != nil {
 		logger.Errorf("hset event to %v failed, err: %v, event: %+v", mergeCfg.Hash, err, event)
@@ -64,7 +64,7 @@ func storeLowEvent(event *model.Event) {
 }
 
 func parseMergeEvent(eventMap map[int64][]*model.Event) {
-	mergeCfg := config.Get().Merge
+	mergeCfg := config.Get().Alarm.Merge
 
 	hash := mergeCfg.Hash
 	max := mergeCfg.Max

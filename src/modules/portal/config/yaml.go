@@ -15,20 +15,17 @@ var (
 
 // PortalYml -> etc/portal.yml
 type PortalYml struct {
-	Salt    string              `yaml:"salt"`
-	Logger  loggerSection       `yaml:"logger"`
-	HTTP    httpSection         `yaml:"http"`
-	LDAP    ldapSection         `yaml:"ldap"`
-	Redis   redisSection        `yaml:"redis"`
-	Proxy   proxySection        `yaml:"proxy"`
-	Judges  map[string]string   `yaml:"judges"`
-	Alarm   alarmSection        `yaml:"alarm"`
-	Sender  senderSection       `yaml:"sender"`
-	Queue   queueSection        `yaml:"queue"`
-	Cleaner cleanerSection      `yaml:"cleaner"`
-	Merge   mergeSection        `yaml:"merge"`
-	Link    linkSection         `yaml:"link"`
-	Notify  map[string][]string `yaml:"notify"`
+	Salt   string              `yaml:"salt"`
+	Logger loggerSection       `yaml:"logger"`
+	HTTP   httpSection         `yaml:"http"`
+	LDAP   ldapSection         `yaml:"ldap"`
+	Redis  redisSection        `yaml:"redis"`
+	Proxy  proxySection        `yaml:"proxy"`
+	Judges map[string]string   `yaml:"judges"`
+	Alarm  alarmSection        `yaml:"alarm"`
+	Sender senderSection       `yaml:"sender"`
+	Link   linkSection         `yaml:"link"`
+	Notify map[string][]string `yaml:"notify"`
 }
 
 type linkSection struct {
@@ -44,7 +41,10 @@ type mergeSection struct {
 }
 
 type alarmSection struct {
-	Enabled bool `yaml:"enabled"`
+	Enabled bool           `yaml:"enabled"`
+	Queue   queueSection   `yaml:"queue"`
+	Cleaner cleanerSection `yaml:"cleaner"`
+	Merge   mergeSection   `yaml:"merge"`
 }
 
 type senderSection struct {
@@ -134,18 +134,18 @@ func Parse(ymlfile string) error {
 		"write": 3000,
 	})
 
-	viper.SetDefault("queue", map[string]interface{}{
+	viper.SetDefault("alarm.queue", map[string]interface{}{
 		"high":     []string{"/n9e/event/p1"},
 		"low":      []string{"/n9e/event/p2", "/n9e/event/p3"},
 		"callback": "/n9e/event/callback",
 	})
 
-	viper.SetDefault("cleaner", map[string]interface{}{
+	viper.SetDefault("alarm.cleaner", map[string]interface{}{
 		"days":  366,
 		"batch": 100,
 	})
 
-	viper.SetDefault("merge", map[string]interface{}{
+	viper.SetDefault("alarm.merge", map[string]interface{}{
 		"hash":     "/n9e/event/merge",
 		"max":      100, //merge的最大条数
 		"interval": 10,  //merge等待的数据，单位秒

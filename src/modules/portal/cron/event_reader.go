@@ -14,7 +14,7 @@ import (
 )
 
 func ReadHighEvent() {
-	queues := config.Get().Queue.High
+	queues := config.Get().Alarm.Queue.High
 	if len(queues) == 0 {
 		return
 	}
@@ -32,7 +32,7 @@ func ReadHighEvent() {
 }
 
 func ReadLowEvent() {
-	queues := config.Get().Queue.Low
+	queues := config.Get().Alarm.Queue.Low
 	if len(queues) == 0 {
 		return
 	}
