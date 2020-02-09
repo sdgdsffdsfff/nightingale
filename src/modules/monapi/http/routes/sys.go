@@ -3,7 +3,7 @@ package routes
 import (
 	"os"
 
-	"github.com/didi/nightingale/src/modules/portal/config"
+	"github.com/didi/nightingale/src/modules/monapi/config"
 	"github.com/gin-gonic/gin"
 )
 

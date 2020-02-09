@@ -10,9 +10,9 @@ import (
 	"github.com/toolkits/pkg/net/httplib"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/portal/config"
-	"github.com/didi/nightingale/src/modules/portal/mcache"
-	"github.com/didi/nightingale/src/modules/portal/redisc"
+	"github.com/didi/nightingale/src/modules/monapi/config"
+	"github.com/didi/nightingale/src/modules/monapi/mcache"
+	"github.com/didi/nightingale/src/modules/monapi/redisc"
 )
 
 type CallbackEvent struct {

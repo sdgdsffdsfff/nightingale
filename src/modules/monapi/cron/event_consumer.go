@@ -9,10 +9,10 @@ import (
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/portal/config"
-	"github.com/didi/nightingale/src/modules/portal/mcache"
-	"github.com/didi/nightingale/src/modules/portal/notify"
-	"github.com/didi/nightingale/src/modules/portal/redisc"
+	"github.com/didi/nightingale/src/modules/monapi/config"
+	"github.com/didi/nightingale/src/modules/monapi/mcache"
+	"github.com/didi/nightingale/src/modules/monapi/notify"
+	"github.com/didi/nightingale/src/modules/monapi/redisc"
 )
 
 const (

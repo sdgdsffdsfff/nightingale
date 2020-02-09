@@ -12,7 +12,7 @@ usage()
 start_all()
 {
 	# http: 8022
-	test -x n9e-portal && start portal
+	test -x n9e-monapi && start monapi
 	# http: 8030 ; rpc: 8031
 	test -x n9e-index && start index
 	# http: 8036 ; rpc: 8037
@@ -80,7 +80,7 @@ stop_all()
 	test -x n9e-tsdb && stop tsdb
 	test -x n9e-judge && stop judge
 	test -x n9e-index && stop index
-	test -x n9e-portal && stop portal
+	test -x n9e-monapi && stop monapi
 	test -x n9e-alarm && stop alarm
 	test -x n9e-sender && stop sender
 }
@@ -159,7 +159,7 @@ build()
 		build_one index
 		build_one judge
 		build_one transfer
-		build_one portal
+		build_one monapi
 		build_one alarm
 		build_one sender
 		return
@@ -192,7 +192,7 @@ pack()
 	n9e-index etc/index.yml \
 	n9e-judge etc/judge.yml \
 	n9e-transfer etc/transfer.yml \
-	n9e-portal etc/portal.yml \
+	n9e-monapi etc/monapi.yml \
 	n9e-alarm etc/alarm.yml \
 	n9e-sender etc/sender.yml
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/toolkits/pkg/str"
 	"gopkg.in/ldap.v3"
 
-	"github.com/didi/nightingale/src/modules/portal/config"
+	"github.com/didi/nightingale/src/modules/monapi/config"
 )
 
 type User struct {

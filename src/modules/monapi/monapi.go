@@ -15,12 +15,12 @@ import (
 	"github.com/toolkits/pkg/runner"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/portal/config"
-	"github.com/didi/nightingale/src/modules/portal/cron"
-	"github.com/didi/nightingale/src/modules/portal/http"
-	"github.com/didi/nightingale/src/modules/portal/mcache"
-	"github.com/didi/nightingale/src/modules/portal/redisc"
-	"github.com/didi/nightingale/src/modules/portal/scache"
+	"github.com/didi/nightingale/src/modules/monapi/config"
+	"github.com/didi/nightingale/src/modules/monapi/cron"
+	"github.com/didi/nightingale/src/modules/monapi/http"
+	"github.com/didi/nightingale/src/modules/monapi/mcache"
+	"github.com/didi/nightingale/src/modules/monapi/redisc"
+	"github.com/didi/nightingale/src/modules/monapi/scache"
 )
 
 var (

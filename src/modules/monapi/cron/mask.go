@@ -8,7 +8,7 @@ import (
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/portal/mcache"
+	"github.com/didi/nightingale/src/modules/monapi/mcache"
 )
 
 // SyncMaskconfLoop 周期性同步屏蔽策略，频率是9秒一次，一般采集周期不会低于10秒

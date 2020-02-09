@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
 
-	"github.com/didi/nightingale/src/modules/portal/config"
+	"github.com/didi/nightingale/src/modules/monapi/config"
 )
 
 func selfProfileGet(c *gin.Context) {

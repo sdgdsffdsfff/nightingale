@@ -6,7 +6,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/toolkits/pkg/logger"
 
-	"github.com/didi/nightingale/src/modules/portal/config"
+	"github.com/didi/nightingale/src/modules/monapi/config"
 )
 
 var RedisConnPool *redis.Pool

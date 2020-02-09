@@ -7,7 +7,7 @@ import (
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/portal/mcache"
+	"github.com/didi/nightingale/src/modules/monapi/mcache"
 )
 
 func SyncStraLoop() {

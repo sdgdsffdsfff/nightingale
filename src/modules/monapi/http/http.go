@@ -10,9 +10,9 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 
-	"github.com/didi/nightingale/src/modules/portal/config"
-	"github.com/didi/nightingale/src/modules/portal/http/middleware"
-	"github.com/didi/nightingale/src/modules/portal/http/routes"
+	"github.com/didi/nightingale/src/modules/monapi/config"
+	"github.com/didi/nightingale/src/modules/monapi/http/middleware"
+	"github.com/didi/nightingale/src/modules/monapi/http/routes"
 )
 
 var srv = &http.Server{

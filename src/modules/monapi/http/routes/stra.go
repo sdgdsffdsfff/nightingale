@@ -9,8 +9,8 @@ import (
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/portal/config"
-	"github.com/didi/nightingale/src/modules/portal/scache"
+	"github.com/didi/nightingale/src/modules/monapi/config"
+	"github.com/didi/nightingale/src/modules/monapi/scache"
 )
 
 func straPost(c *gin.Context) {

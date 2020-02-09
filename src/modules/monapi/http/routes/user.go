@@ -8,7 +8,7 @@ import (
 	"github.com/toolkits/pkg/errors"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/portal/config"
+	"github.com/didi/nightingale/src/modules/monapi/config"
 )
 
 func userListGet(c *gin.Context) {

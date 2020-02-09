@@ -4,7 +4,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/didi/nightingale/src/modules/portal/config"
+	"github.com/didi/nightingale/src/modules/monapi/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
