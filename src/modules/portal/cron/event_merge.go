@@ -70,8 +70,7 @@ func parseMergeEvent(eventMap map[int64][]*model.Event) {
 	max := mergeCfg.Max
 
 	// 需要删除redis中已经处理的events
-	eventStringsHashKey := []interface{}{}
-	eventStringsHashKey = append(eventStringsHashKey, hash)
+	eventStringsHashKey := []interface{}{hash}
 
 	now := time.Now().Unix()
 	for _, events := range eventMap {

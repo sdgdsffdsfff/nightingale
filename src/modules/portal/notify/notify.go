@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/portal/redisc"
 	"html/template"
 	"path"
 	"strings"
@@ -67,8 +69,7 @@ func DoNotify(isUpgrade bool, events ...*model.Event) {
 					tos = append(tos, users[j].Phone)
 				}
 
-				content := events[0].Sname
-				send(config.Set(tos), content, "", "voice")
+				send(config.Set(tos), events[0].Sname, "", "voice")
 			}
 		case "sms":
 			var tos []string
@@ -186,6 +187,7 @@ func genContent(isUpgrade bool, events []*model.Event) (string, string) {
 			"HasClaim":  hasClaim,
 			"Clink":     clink,
 			"IsUpgrade": isUpgrade,
+			"Bindings":  model.EndpointBindingsForMail(endpoints(events)),
 		})
 
 		if err != nil {
@@ -225,10 +227,12 @@ func genSubject(isUpgrade bool, events []*model.Event) string {
 	}
 
 	if cnt > 1 {
-		return subject + fmt.Sprintf("[P%d 聚合%s]%s", events[cnt-1].Priority, config.EventTypeMap[events[cnt-1].EventType], events[cnt-1].Sname)
+		subject += fmt.Sprintf("[P%d 聚合%s]%s", events[cnt-1].Priority, config.EventTypeMap[events[cnt-1].EventType], events[cnt-1].Sname)
+	} else {
+		subject += fmt.Sprintf("[P%d %s]%s", events[cnt-1].Priority, config.EventTypeMap[events[cnt-1].EventType], events[cnt-1].Sname)
 	}
 
-	return subject + fmt.Sprintf("[P%d %s]%s", events[cnt-1].Priority, config.EventTypeMap[events[cnt-1].EventType], events[cnt-1].Sname)
+	return subject + " - " + genEndpoint(events)
 }
 
 func genStatus(events []*model.Event) string {
@@ -255,6 +259,14 @@ func genEndpoint(events []*model.Event) string {
 	}
 
 	return fmt.Sprintf("%s（%v）", strings.Join(endpointList, ","), len(endpointList))
+}
+
+func endpoints(events []*model.Event) []string {
+	var list []string
+	for i := 0; i < len(events); i++ {
+		list = append(list, events[i].Endpoint)
+	}
+	return config.Set(list)
 }
 
 func genTags(events []*model.Event) string {
@@ -309,7 +321,31 @@ func genEtime(events []*model.Event) string {
 }
 
 func send(tos []string, content, subject, notifyType string) {
-	// TODO
+	message := dataobj.NotifyMessage{
+		Tos:     tos,
+		Subject: subject,
+		Content: content,
+		Type:    notifyType,
+	}
+
+	logger.Debugf("--->>> send-%s begin", notifyType)
+	logger.Debugf("%+v", message)
+
+	bs, err := json.Marshal(message)
+	if err != nil {
+		logger.Error("json.marshal notifyMessage fail: ", err)
+		return
+	}
+
+	rc := redisc.RedisConnPool.Get()
+	defer rc.Close()
+
+	if _, err := rc.Do("LPUSH", config.NotifyQueue, string(bs)); err != nil {
+		logger.Errorf("lpush %+v error: %v", string(bs), err)
+		return
+	} else {
+		logger.Debugf("--->>> send-%s done", notifyType)
+	}
 }
 
 func getUserIds(users, groups string) ([]int64, error) {

@@ -16,6 +16,5 @@
 
 ## TODO
 
-- alarm的notify
 - portal对judge列表的读取
 - portal重命名为monapi

@@ -43,6 +43,33 @@ func NodeEndpointGetByEndpointIds(endpointsIds []int64) ([]NodeEndpoint, error) 
 	return objs, err
 }
 
+// EndpointBindingsForMail 用来发告警邮件的时候带上各个endpoint的挂载信息
+func EndpointBindingsForMail(endpoints []string) []string {
+	ids, err := EndpointIdsByIdents(endpoints)
+	if err != nil {
+		return []string{fmt.Sprintf("get endpoint ids by idents fail: %v", err)}
+	}
+
+	if len(ids) == 0 {
+		return []string{}
+	}
+
+	bindings, err := EndpointBindings(ids)
+	if err != nil {
+		return []string{fmt.Sprintf("get endpoint bindings fail: %v", err)}
+	}
+
+	var ret []string
+	size := len(bindings)
+	for i := 0; i < size; i++ {
+		for j := 0; j < len(bindings[i].Nodes); j++ {
+			ret = append(ret, bindings[i].Ident+" - "+bindings[i].Alias+" - "+bindings[i].Nodes[j].Path)
+		}
+	}
+
+	return ret
+}
+
 func NodeEndpointGetByNodeIds(nodeIds []int64) ([]NodeEndpoint, error) {
 	if nodeIds == nil || len(nodeIds) == 0 {
 		return []NodeEndpoint{}, nil
