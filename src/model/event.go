@@ -170,11 +170,14 @@ func EventGet(col string, value interface{}) (*Event, error) {
 	return &obj, nil
 }
 
-func DelEventOlder(ts int64, batch int) error {
+func DelEventOlder(ts int64, batch int) (int64, error) {
 	sql := "delete from event where etime < ? limit ?"
-	_, err := DB["mon"].Exec(sql, ts, batch)
+	ret, err := DB["mon"].Exec(sql, ts, batch)
+	if err != nil {
+		return 0, err
+	}
 
-	return err
+	return ret.RowsAffected()
 }
 
 func EventAlertUpgradeUnMarshal(str string) (EventAlertUpgrade, error) {

@@ -137,7 +137,7 @@ func Parse(ymlfile string) error {
 	viper.SetDefault("queue", map[string]interface{}{
 		"high":     []string{"/n9e/event/p1"},
 		"low":      []string{"/n9e/event/p2", "/n9e/event/p3"},
-		"callback": "/n9e/alarm/callback",
+		"callback": "/n9e/event/callback",
 	})
 
 	viper.SetDefault("cleaner", map[string]interface{}{

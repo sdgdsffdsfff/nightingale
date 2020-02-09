@@ -24,13 +24,46 @@ func CleanEvent() {
 	now := time.Now().Unix()
 	ts := now - int64(days*24*3600)
 
-	err := model.DelEventOlder(ts, batch)
-	if err != nil {
-		logger.Errorf("del event older failed, err: %v", err)
-	}
+	cleanEvent(ts, batch)
+	cleanEventCur(ts, batch)
+}
 
-	err = model.DelEventCurOlder(ts, batch)
-	if err != nil {
-		logger.Errorf("del event_cur older failed, err: %v", err)
+func cleanEvent(ts int64, batch int) {
+	var (
+		num int64
+		err error
+	)
+	for {
+		num, err = model.DelEventOlder(ts, batch)
+		if err != nil {
+			logger.Errorf("del event older failed, err: %v", err)
+			return
+		}
+
+		if num == 0 {
+			break
+		} else {
+			time.Sleep(time.Duration(300) * time.Millisecond)
+		}
+	}
+}
+
+func cleanEventCur(ts int64, batch int) {
+	var (
+		num int64
+		err error
+	)
+	for {
+		num, err = model.DelEventCurOlder(ts, batch)
+		if err != nil {
+			logger.Errorf("del event_cur older failed, err: %v", err)
+			return
+		}
+
+		if num == 0 {
+			break
+		} else {
+			time.Sleep(time.Duration(300) * time.Millisecond)
+		}
 	}
 }
