@@ -75,6 +75,11 @@ func main() {
 
 	go cron.SyncMaskconfLoop()
 	go cron.SyncStraLoop()
+	go cron.ReadHighEvent()
+	go cron.ReadLowEvent()
+	go cron.CallbackConsumer()
+	go cron.MergeEvent()
+	go cron.CleanEventLoop()
 
 	http.Start()
 	ending()

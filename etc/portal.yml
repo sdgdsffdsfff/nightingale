@@ -38,6 +38,18 @@ alarm:
 sender:
   enabled: true
 
+# notify support: voice, sms, mail, im
+notify:
+  p1: ["voice", "sms", "mail", "im"]
+  p2: ["sms", "mail", "im"]
+  p3: ["mail", "im"]
+
+# addresses accessible using browsers
+link:
+  stra: http://n9e.x.com/#/monitor/strategy/%v
+  event: http://n9e.x.com/#/monitor/history/his/%v
+  claim: http://n9e.x.com/#/monitor/history/cur/%v
+
 # for alarm event and message queue
 redis:
   addr: "127.0.0.1:6379"

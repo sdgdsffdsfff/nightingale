@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/alarm/config"
 )
 
@@ -89,8 +88,7 @@ func UpdateEventPriority(id int64, priority int) error {
 }
 
 func (e *Event) GetEventDetail() ([]EventDetail, error) {
-	detail := []EventDetail{}
-
+	var detail []EventDetail
 	err := json.Unmarshal([]byte(e.Detail), &detail)
 	return detail, err
 }
@@ -204,7 +202,7 @@ func EventCnt(hashid uint64, stime, etime string, isUpgrade bool) (int64, error)
 	return session.In("status", GetFlagsByStatus([]string{STATUS_SEND})).Count(new(Event))
 }
 
-func EventAlertUpgradeMarshal(alertUpgrade dataobj.AlertUpgrade) (string, error) {
+func EventAlertUpgradeMarshal(alertUpgrade AlertUpgrade) (string, error) {
 	eventAlertUpgrade := EventAlertUpgrade{
 		Duration: alertUpgrade.Duration,
 		Level:    alertUpgrade.Level,

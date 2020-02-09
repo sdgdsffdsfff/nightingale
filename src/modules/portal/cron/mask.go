@@ -66,7 +66,7 @@ func IsMaskEvent(event *model.Event) bool {
 
 	for i := 0; i < len(detail); i++ {
 		eventMetric := detail[i].Metric
-		eventTagsList := []string{}
+		var eventTagsList []string
 
 		for k, v := range detail[i].Tags {
 			eventTagsList = append(eventTagsList, fmt.Sprintf("%s=%s", strings.TrimSpace(k), strings.TrimSpace(v)))

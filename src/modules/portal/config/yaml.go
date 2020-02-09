@@ -9,17 +9,38 @@ import (
 	"github.com/toolkits/pkg/file"
 )
 
+var (
+	EventTypeMap = map[string]string{RECOVERY: "恢复", ALERT: "报警"}
+)
+
 // PortalYml -> etc/portal.yml
 type PortalYml struct {
-	Salt   string            `yaml:"salt"`
-	Logger loggerSection     `yaml:"logger"`
-	HTTP   httpSection       `yaml:"http"`
-	LDAP   ldapSection       `yaml:"ldap"`
-	Redis  redisSection      `yaml:"redis"`
-	Proxy  proxySection      `yaml:"proxy"`
-	Judges map[string]string `yaml:"judges"`
-	Alarm  alarmSection      `yaml:"alarm"`
-	Sender senderSection     `yaml:"sender"`
+	Salt    string              `yaml:"salt"`
+	Logger  loggerSection       `yaml:"logger"`
+	HTTP    httpSection         `yaml:"http"`
+	LDAP    ldapSection         `yaml:"ldap"`
+	Redis   redisSection        `yaml:"redis"`
+	Proxy   proxySection        `yaml:"proxy"`
+	Judges  map[string]string   `yaml:"judges"`
+	Alarm   alarmSection        `yaml:"alarm"`
+	Sender  senderSection       `yaml:"sender"`
+	Queue   queueSection        `yaml:"queue"`
+	Cleaner cleanerSection      `yaml:"cleaner"`
+	Merge   mergeSection        `yaml:"merge"`
+	Link    linkSection         `yaml:"link"`
+	Notify  map[string][]string `yaml:"notify"`
+}
+
+type linkSection struct {
+	Stra  string `yaml:"stra"`
+	Event string `yaml:"event"`
+	Claim string `yaml:"claim"`
+}
+
+type mergeSection struct {
+	Hash     string `yaml:"hash"`
+	Max      int    `yaml:"max"`
+	Interval int    `yaml:"interval"`
 }
 
 type alarmSection struct {
@@ -28,6 +49,17 @@ type alarmSection struct {
 
 type senderSection struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type queueSection struct {
+	High     []interface{} `yaml:"high"`
+	Low      []interface{} `yaml:"low"`
+	Callback string        `yaml:"callback"`
+}
+
+type cleanerSection struct {
+	Days  int `yaml:"days"`
+	Batch int `yaml:"batch"`
 }
 
 type redisSection struct {
@@ -100,6 +132,23 @@ func Parse(ymlfile string) error {
 		"conn":  500,
 		"read":  3000,
 		"write": 3000,
+	})
+
+	viper.SetDefault("queue", map[string]interface{}{
+		"high":     []string{"/n9e/event/p1"},
+		"low":      []string{"/n9e/event/p2", "/n9e/event/p3"},
+		"callback": "/n9e/alarm/callback",
+	})
+
+	viper.SetDefault("cleaner", map[string]interface{}{
+		"days":  31,
+		"batch": 100,
+	})
+
+	viper.SetDefault("merge", map[string]interface{}{
+		"hash":     "/n9e/event/merge",
+		"max":      100, //merge的最大条数
+		"interval": 10,  //merge等待的数据，单位秒
 	})
 
 	var c PortalYml
