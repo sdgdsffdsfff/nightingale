@@ -20,7 +20,7 @@ type Node struct {
 
 // InitNode 初始化第一个node节点
 func InitNode() {
-	num, err := DB["portal"].Where("pid=0").Count(new(Node))
+	num, err := DB["mon"].Where("pid=0").Count(new(Node))
 	if err != nil {
 		log.Fatalln("cannot query portal.node", err)
 	}
@@ -37,7 +37,7 @@ func InitNode() {
 		Note: "公司节点",
 	}
 
-	_, err = DB["portal"].Insert(&node)
+	_, err = DB["mon"].Insert(&node)
 	if err != nil {
 		log.Fatalln("cannot insert node[cop]")
 	}
@@ -47,9 +47,9 @@ func InitNode() {
 
 func NodeGets(where string, args ...interface{}) (nodes []Node, err error) {
 	if where != "" {
-		err = DB["portal"].Where(where, args...).Find(&nodes)
+		err = DB["mon"].Where(where, args...).Find(&nodes)
 	} else {
-		err = DB["portal"].Find(&nodes)
+		err = DB["mon"].Find(&nodes)
 	}
 	return nodes, err
 }
@@ -60,7 +60,7 @@ func NodeGetsByPaths(paths []string) ([]Node, error) {
 	}
 
 	var nodes []Node
-	err := DB["portal"].In("path", paths).Find(&nodes)
+	err := DB["mon"].In("path", paths).Find(&nodes)
 	return nodes, err
 }
 
@@ -73,12 +73,12 @@ func NodeByIds(ids []int64) ([]Node, error) {
 }
 
 func NodeQueryPath(query string, limit int) (nodes []Node, err error) {
-	err = DB["portal"].Where("path like ?", "%"+query+"%").OrderBy("path").Limit(limit).Find(&nodes)
+	err = DB["mon"].Where("path like ?", "%"+query+"%").OrderBy("path").Limit(limit).Find(&nodes)
 	return nodes, err
 }
 
 func TreeSearchByPath(query string) (nodes []Node, err error) {
-	session := DB["portal"].NewSession()
+	session := DB["mon"].NewSession()
 	defer session.Clone()
 
 	if strings.Contains(query, " ") {
@@ -118,7 +118,7 @@ func TreeSearchByPath(query string) (nodes []Node, err error) {
 
 func NodeGet(col string, val interface{}) (*Node, error) {
 	var obj Node
-	has, err := DB["portal"].Where(col+"=?", val).Get(&obj)
+	has, err := DB["mon"].Where(col+"=?", val).Get(&obj)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func NodeGet(col string, val interface{}) (*Node, error) {
 
 func NodesGetByIds(ids []int64) ([]Node, error) {
 	var objs []Node
-	err := DB["portal"].In("id", ids).Find(&objs)
+	err := DB["mon"].In("id", ids).Find(&objs)
 	return objs, err
 }
 
@@ -180,7 +180,7 @@ func (n *Node) CreateChild(name string, leaf int, note string) (int64, error) {
 		Note: note,
 	}
 
-	_, err = DB["portal"].Insert(&child)
+	_, err = DB["mon"].Insert(&child)
 	return child.Id, err
 }
 
@@ -229,7 +229,7 @@ func (n *Node) LeafIds() ([]int64, error) {
 	}
 
 	var nodes []Node
-	err := DB["portal"].Where("path like ? and leaf=1", n.Path+".%").Find(&nodes)
+	err := DB["mon"].Where("path like ? and leaf=1", n.Path+".%").Find(&nodes)
 	if err != nil {
 		return []int64{}, err
 	}
@@ -260,7 +260,7 @@ func (n *Node) Pids() ([]int64, error) {
 		paths = append(paths, path)
 	}
 
-	err := DB["portal"].In("path", paths).Find(&objs)
+	err := DB["mon"].In("path", paths).Find(&objs)
 	if err != nil {
 		return []int64{}, err
 	}
@@ -292,12 +292,12 @@ func (n *Node) Rename(name string) error {
 	}
 
 	var nodes []Node
-	err = DB["portal"].Where("path like ?", oldprefix+"%").Find(&nodes)
+	err = DB["mon"].Where("path like ?", oldprefix+"%").Find(&nodes)
 	if err != nil {
 		return err
 	}
 
-	session := DB["portal"].NewSession()
+	session := DB["mon"].NewSession()
 	defer session.Close()
 
 	if err = session.Begin(); err != nil {
@@ -327,7 +327,7 @@ func (n *Node) Del() error {
 
 	// 叶子节点下不能有endpoint
 	if n.Leaf == 1 {
-		cnt, err := DB["portal"].Where("node_id=?", n.Id).Count(new(NodeEndpoint))
+		cnt, err := DB["mon"].Where("node_id=?", n.Id).Count(new(NodeEndpoint))
 		if err != nil {
 			return err
 		}
@@ -339,7 +339,7 @@ func (n *Node) Del() error {
 
 	// 非叶子节点下不能有子节点
 	if n.Leaf == 0 {
-		cnt, err := DB["portal"].Where("pid=?", n.Id).Count(new(Node))
+		cnt, err := DB["mon"].Where("pid=?", n.Id).Count(new(Node))
 		if err != nil {
 			return err
 		}
@@ -349,6 +349,6 @@ func (n *Node) Del() error {
 		}
 	}
 
-	_, err := DB["portal"].Where("id=?", n.Id).Delete(new(Node))
+	_, err := DB["mon"].Where("id=?", n.Id).Delete(new(Node))
 	return err
 }

@@ -19,7 +19,7 @@ func NodeIdsGetByEndpointId(endpointId int64) ([]int64, error) {
 	}
 
 	var ids []int64
-	err := DB["portal"].Table("node_endpoint").Where("endpoint_id = ?", endpointId).Select("node_id").Find(&ids)
+	err := DB["mon"].Table("node_endpoint").Where("endpoint_id = ?", endpointId).Select("node_id").Find(&ids)
 	return ids, err
 }
 
@@ -29,7 +29,7 @@ func EndpointIdsByNodeIds(nodeIds []int64) ([]int64, error) {
 	}
 
 	var ids []int64
-	err := DB["portal"].Table("node_endpoint").In("node_id", nodeIds).Select("endpoint_id").Find(&ids)
+	err := DB["mon"].Table("node_endpoint").In("node_id", nodeIds).Select("endpoint_id").Find(&ids)
 	return ids, err
 }
 
@@ -39,7 +39,7 @@ func NodeEndpointGetByEndpointIds(endpointsIds []int64) ([]NodeEndpoint, error) 
 	}
 
 	var objs []NodeEndpoint
-	err := DB["portal"].In("endpoint_id", endpointsIds).Find(&objs)
+	err := DB["mon"].In("endpoint_id", endpointsIds).Find(&objs)
 	return objs, err
 }
 
@@ -76,17 +76,17 @@ func NodeEndpointGetByNodeIds(nodeIds []int64) ([]NodeEndpoint, error) {
 	}
 
 	var objs []NodeEndpoint
-	err := DB["portal"].In("node_id", nodeIds).Find(&objs)
+	err := DB["mon"].In("node_id", nodeIds).Find(&objs)
 	return objs, err
 }
 
 func NodeEndpointUnbind(nid, eid int64) error {
-	_, err := DB["portal"].Where("node_id=? and endpoint_id=?", nid, eid).Delete(new(NodeEndpoint))
+	_, err := DB["mon"].Where("node_id=? and endpoint_id=?", nid, eid).Delete(new(NodeEndpoint))
 	return err
 }
 
 func NodeEndpointBind(nid, eid int64) error {
-	total, err := DB["portal"].Where("node_id=? and endpoint_id=?", nid, eid).Count(new(NodeEndpoint))
+	total, err := DB["mon"].Where("node_id=? and endpoint_id=?", nid, eid).Count(new(NodeEndpoint))
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func NodeEndpointBind(nid, eid int64) error {
 		return fmt.Errorf("endpoint[id:%d] not found", eid)
 	}
 
-	_, err = DB["portal"].Insert(&NodeEndpoint{
+	_, err = DB["mon"].Insert(&NodeEndpoint{
 		NodeId:     nid,
 		EndpointId: eid,
 	})

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/alarm/config"
+	"github.com/didi/nightingale/src/modules/monapi/config"
 )
 
 type Event struct {

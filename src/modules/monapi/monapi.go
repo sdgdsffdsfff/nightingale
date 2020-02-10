@@ -56,7 +56,7 @@ func main() {
 
 	config.InitLogger()
 
-	model.InitMySQL("uic", "portal", "mon", "hbs")
+	model.InitMySQL("uic", "mon", "hbs")
 	model.InitRoot()
 	model.InitNode()
 

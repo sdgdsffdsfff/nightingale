@@ -41,7 +41,7 @@ func GetJudgeByIpAndPort(ip, port string) (*Judge, error) {
 
 func GetAllJudges() ([]*Judge, error) {
 	objs := make([]*Judge, 0)
-	err := DB["hbs"].Find(&objs)
+	err := DB["hbs"].OrderBy("id").Find(&objs)
 	if err != nil {
 		return objs, err
 	}
@@ -51,6 +51,13 @@ func GetAllJudges() ([]*Judge, error) {
 			j.Active = true
 		}
 	}
+	return objs, err
+}
+
+func GetActiveJudges() ([]*Judge, error) {
+	now := time.Now().Unix()
+	objs := make([]*Judge, 0)
+	err := DB["hbs"].Where("ts > ?", now-60).OrderBy("id").Find(&objs)
 	return objs, err
 }
 

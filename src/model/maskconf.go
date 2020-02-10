@@ -102,7 +102,7 @@ func MaskconfGets(nodeId int64) ([]Maskconf, error) {
 	}
 
 	var nodes []Node
-	err = DB["portal"].Where("id in ("+str.IdsString(relatedNodeIds)+")").Where("id="+fmt.Sprint(node.Id)+" or path like ?", node.Path+".%").Find(&nodes)
+	err = DB["mon"].Where("id in ("+str.IdsString(relatedNodeIds)+")").Where("id="+fmt.Sprint(node.Id)+" or path like ?", node.Path+".%").Find(&nodes)
 	if err != nil {
 		return nil, err
 	}

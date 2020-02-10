@@ -15,7 +15,7 @@ type Endpoint struct {
 
 func EndpointGet(col string, val interface{}) (*Endpoint, error) {
 	var obj Endpoint
-	has, err := DB["portal"].Where(col+"=?", val).Get(&obj)
+	has, err := DB["mon"].Where(col+"=?", val).Get(&obj)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func EndpointGet(col string, val interface{}) (*Endpoint, error) {
 }
 
 func (e *Endpoint) Update(cols ...string) error {
-	_, err := DB["portal"].Where("id=?", e.Id).Cols(cols...).Update(e)
+	_, err := DB["mon"].Where("id=?", e.Id).Cols(cols...).Update(e)
 	return err
 }
 
@@ -45,7 +45,7 @@ func EndpointGets(query, batch, field string, limit, offset int) ([]Endpoint, er
 }
 
 func buildEndpointWhere(query, batch, field string) *xorm.Session {
-	session := DB["portal"].Table(new(Endpoint))
+	session := DB["mon"].Table(new(Endpoint))
 
 	if batch == "" && query != "" {
 		q := "%" + query + "%"
@@ -68,7 +68,7 @@ func EndpointImport(endpoints []string) error {
 		return nil
 	}
 
-	session := DB["portal"].NewSession()
+	session := DB["mon"].NewSession()
 	defer session.Close()
 
 	for i := 0; i < count; i++ {
@@ -127,7 +127,7 @@ func EndpointDel(ids []int64) error {
 		}
 	}
 
-	if _, err := DB["portal"].In("id", ids).Delete(new(Endpoint)); err != nil {
+	if _, err := DB["mon"].In("id", ids).Delete(new(Endpoint)); err != nil {
 		return err
 	}
 
@@ -135,7 +135,7 @@ func EndpointDel(ids []int64) error {
 }
 
 func buildEndpointUnderNodeWhere(leafids []int64, query, batch, field string) *xorm.Session {
-	session := DB["portal"].Where("id in (select endpoint_id from node_endpoint where node_id in (" + str.IdsString(leafids) + "))")
+	session := DB["mon"].Where("id in (select endpoint_id from node_endpoint where node_id in (" + str.IdsString(leafids) + "))")
 
 	if batch == "" && query != "" {
 		q := "%" + query + "%"
@@ -171,7 +171,7 @@ func EndpointIdsByIdents(idents []string) ([]int64, error) {
 	}
 
 	var objs []Endpoint
-	err := DB["portal"].In("ident", idents).Find(&objs)
+	err := DB["mon"].In("ident", idents).Find(&objs)
 	if err != nil {
 		return []int64{}, err
 	}
@@ -193,7 +193,7 @@ type EndpointBinding struct {
 
 func EndpointBindings(endpointIds []int64) ([]EndpointBinding, error) {
 	var nes []NodeEndpoint
-	err := DB["portal"].In("endpoint_id", endpointIds).Find(&nes)
+	err := DB["mon"].In("endpoint_id", endpointIds).Find(&nes)
 	if err != nil {
 		return []EndpointBinding{}, err
 	}
@@ -211,7 +211,7 @@ func EndpointBindings(endpointIds []int64) ([]EndpointBinding, error) {
 	}
 
 	var endpoints []Endpoint
-	err = DB["portal"].In("id", arr).Find(&endpoints)
+	err = DB["mon"].In("id", arr).Find(&endpoints)
 	if err != nil {
 		return []EndpointBinding{}, err
 	}
@@ -225,7 +225,7 @@ func EndpointBindings(endpointIds []int64) ([]EndpointBinding, error) {
 		}
 
 		var nodes []Node
-		err = DB["portal"].In("id", nodeids).Find(&nodes)
+		err = DB["mon"].In("id", nodeids).Find(&nodes)
 		if err != nil {
 			return []EndpointBinding{}, err
 		}
@@ -248,6 +248,6 @@ func EndpointUnderLeafs(leafIds []int64) ([]Endpoint, error) {
 		return []Endpoint{}, nil
 	}
 
-	err := DB["portal"].Where("id in (select endpoint_id from node_endpoint where node_id in (" + str.IdsString(leafIds) + "))").Find(&endpoints)
+	err := DB["mon"].Where("id in (select endpoint_id from node_endpoint where node_id in (" + str.IdsString(leafIds) + "))").Find(&endpoints)
 	return endpoints, err
 }
