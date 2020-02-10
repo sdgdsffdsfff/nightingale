@@ -8,24 +8,15 @@ import (
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/monapi/config"
 )
 
 var JudgeHashRing *ConsistentHashRing
+var JudgeActiveNode = NewNodeMap()
 
 func Init() {
 	// 初始化默认参数
-
-	cfg := config.Get()
-	nodes := []string{}
-
-	for node := range cfg.Judges {
-		nodes = append(nodes, node)
-	}
-
 	StraCache = NewStraCache()
 	CollectCache = NewCollectCache()
-	JudgeHashRing = NewConsistentHashRing(int32(500), nodes)
 
 	go SyncStras()
 	go SyncCollects()
@@ -71,12 +62,14 @@ func syncStras() {
 		if err != nil {
 			logger.Warningf("get node err:%v %v", err, stra)
 		}
+
 		if _, exists := strasMap[node]; exists {
 			strasMap[node] = append(strasMap[node], stra)
 		} else {
 			strasMap[node] = []*model.Stra{stra}
 		}
 	}
+
 	StraCache.SetAll(strasMap)
 }
 

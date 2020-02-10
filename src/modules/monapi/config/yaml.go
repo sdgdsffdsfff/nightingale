@@ -13,7 +13,7 @@ var (
 	EventTypeMap = map[string]string{RECOVERY: "恢复", ALERT: "报警"}
 )
 
-// PortalYml -> etc/portal.yml
+// PortalYml -> etc/monapi.yml
 type PortalYml struct {
 	Salt   string              `yaml:"salt"`
 	Logger loggerSection       `yaml:"logger"`
@@ -21,7 +21,6 @@ type PortalYml struct {
 	LDAP   ldapSection         `yaml:"ldap"`
 	Redis  redisSection        `yaml:"redis"`
 	Proxy  proxySection        `yaml:"proxy"`
-	Judges map[string]string   `yaml:"judges"`
 	Alarm  alarmSection        `yaml:"alarm"`
 	Sender senderSection       `yaml:"sender"`
 	Link   linkSection         `yaml:"link"`

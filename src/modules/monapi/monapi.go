@@ -71,6 +71,10 @@ func main() {
 		log.Fatalf("sync stra fail: %v", err)
 	}
 
+	if err := cron.CheckJudge(); err != nil {
+		log.Fatalf("check judge fail: %v", err)
+	}
+
 	redisc.InitRedis()
 
 	go cron.SyncMaskconfLoop()
@@ -80,6 +84,7 @@ func main() {
 	go cron.CallbackConsumer()
 	go cron.MergeEvent()
 	go cron.CleanEventLoop()
+	go cron.CheckJudgeLoop()
 
 	http.Start()
 	ending()
@@ -109,7 +114,7 @@ func aconf() {
 		return
 	}
 
-	*conf = "etc/portal.yml"
+	*conf = "etc/monapi.yml"
 	if file.IsExist(*conf) {
 		return
 	}

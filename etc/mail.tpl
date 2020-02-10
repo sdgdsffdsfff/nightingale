@@ -21,7 +21,12 @@
 <body>
 	<table id="t">
 	    {{if .IsUpgrade}}
-	        <tr>[报警已升级]</tr>
+	        <tr>
+				<td colspan="2" style="color: red;font-weight: bold;" align="center">
+					报警已升级
+					<hr style="border:1px solid #ff0000;">
+				</td>
+			</tr>
 	    {{end}}
 
 		<tr>

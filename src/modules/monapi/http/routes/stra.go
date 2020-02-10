@@ -1,16 +1,11 @@
 package routes
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 
-	"github.com/toolkits/pkg/errors"
-	"github.com/toolkits/pkg/logger"
-
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/monapi/config"
 	"github.com/didi/nightingale/src/modules/monapi/scache"
+	"github.com/toolkits/pkg/errors"
 )
 
 func straPost(c *gin.Context) {
@@ -105,23 +100,10 @@ func strasAll(c *gin.Context) {
 }
 
 func effectiveStrasGet(c *gin.Context) {
-	ip := mustQueryStr(c, "ip")
-	node, err := GetNodeBy(ip)
+	instance := mustQueryStr(c, "instance")
+	node, err := scache.JudgeActiveNode.GetNodeBy(instance)
 	errors.Dangerous(err)
 
 	stras := scache.StraCache.GetByNode(node)
 	renderData(c, stras, nil)
-}
-
-func GetNodeBy(ip string) (string, error) {
-	logger.Debug(ip)
-
-	cluster := config.Get().Judges
-	logger.Debug(cluster)
-	for node, ipv := range cluster {
-		if ipv == ip {
-			return node, nil
-		}
-	}
-	return "", fmt.Errorf("node not found by %s", ip)
 }
