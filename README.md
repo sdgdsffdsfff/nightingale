@@ -16,4 +16,5 @@
 
 ## TODO
 
-- portal对judge列表的读取
+- alarm不再做告警聚合了
+- alarm直接把event推送给redis，就算完活，sender是单独一个组件，不放到nightingale的repo里，放n9e group，mail-sender sms-sender dingding-sender wechat-sender每个都单独一个

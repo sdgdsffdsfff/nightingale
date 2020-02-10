@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/monapi/redisc"
 	"html/template"
 	"path"
 	"strings"
@@ -13,8 +11,10 @@ import (
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 
+	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/monapi/config"
+	"github.com/didi/nightingale/src/modules/monapi/redisc"
 )
 
 func DoNotify(isUpgrade bool, events ...*model.Event) {

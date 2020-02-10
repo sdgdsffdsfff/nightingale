@@ -22,7 +22,6 @@ type PortalYml struct {
 	Redis  redisSection        `yaml:"redis"`
 	Proxy  proxySection        `yaml:"proxy"`
 	Alarm  alarmSection        `yaml:"alarm"`
-	Sender senderSection       `yaml:"sender"`
 	Link   linkSection         `yaml:"link"`
 	Notify map[string][]string `yaml:"notify"`
 }
@@ -44,10 +43,6 @@ type alarmSection struct {
 	Queue   queueSection   `yaml:"queue"`
 	Cleaner cleanerSection `yaml:"cleaner"`
 	Merge   mergeSection   `yaml:"merge"`
-}
-
-type senderSection struct {
-	Enabled bool `yaml:"enabled"`
 }
 
 type queueSection struct {

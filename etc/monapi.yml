@@ -31,14 +31,18 @@ proxy:
 alarm:
   enabled: true
 
-sender:
-  enabled: true
-
 # notify support: voice, sms, mail, im
+# if we have all of notice channel
+# notify:
+#   p1: ["voice", "sms", "mail", "im"]
+#   p2: ["sms", "mail", "im"]
+#   p3: ["mail", "im"]
+
+# if we only have mail channel
 notify:
-  p1: ["voice", "sms", "mail", "im"]
-  p2: ["sms", "mail", "im"]
-  p3: ["mail", "im"]
+  p1: ["mail"]
+  p2: ["mail"]
+  p3: ["mail"]
 
 # addresses accessible using browsers
 link:
