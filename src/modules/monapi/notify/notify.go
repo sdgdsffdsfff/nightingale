@@ -55,8 +55,11 @@ func DoNotify(isUpgrade bool, events ...*model.Event) {
 		return
 	}
 
-	content, mailContent := genContent(isUpgrade, events)
-	subject := genSubject(isUpgrade, events)
+	endpoint := genEndpoint(events)
+	metric := genMetric(events, cnt)
+
+	smsContent, mailContent := genContent(isUpgrade, events, endpoint, metric)
+	subject := genSubject(isUpgrade, events, endpoint)
 
 	notifyTypes := config.Get().Notify[prio]
 
@@ -69,7 +72,9 @@ func DoNotify(isUpgrade bool, events ...*model.Event) {
 					tos = append(tos, users[j].Phone)
 				}
 
+				logger.Debugf("--->>> send-voice begin, metric: %s, endpoint: %s", metric, endpoint)
 				send(config.Set(tos), events[0].Sname, "", "voice")
+				logger.Debugf("--->>> send-voice done, metric: %s, endpoint: %s", metric, endpoint)
 			}
 		case "sms":
 			var tos []string
@@ -77,28 +82,34 @@ func DoNotify(isUpgrade bool, events ...*model.Event) {
 				tos = append(tos, users[j].Phone)
 			}
 
-			send(config.Set(tos), content, "", "sms")
+			logger.Debugf("--->>> send-sms begin, metric: %s, endpoint: %s", metric, endpoint)
+			send(config.Set(tos), smsContent, "", "sms")
+			logger.Debugf("--->>> send-sms done, metric: %s, endpoint: %s", metric, endpoint)
 		case "mail":
 			var tos []string
 			for j := 0; j < len(users); j++ {
 				tos = append(tos, users[j].Email)
 			}
 
+			logger.Debugf("--->>> send-mail begin, metric: %s, endpoint: %s", metric, endpoint)
 			send(config.Set(tos), mailContent, subject, "mail")
+			logger.Debugf("--->>> send-mail done, metric: %s, endpoint: %s", metric, endpoint)
 		case "im":
 			var tos []string
 			for j := 0; j < len(users); j++ {
 				tos = append(tos, users[j].Im)
 			}
 
-			send(config.Set(tos), content, "", "im")
+			logger.Debugf("--->>> send-im begin, metric: %s, endpoint: %s", metric, endpoint)
+			send(config.Set(tos), smsContent, "", "im")
+			logger.Debugf("--->>> send-im done, metric: %s, endpoint: %s", metric, endpoint)
 		default:
 			logger.Errorf("not support %s to send notify, events: %+v", notifyTypes[i], events)
 		}
 	}
 }
 
-func genContent(isUpgrade bool, events []*model.Event) (string, string) {
+func genContent(isUpgrade bool, events []*model.Event, endpoint, metric string) (string, string) {
 	cnt := len(events)
 	if cnt == 0 {
 		return "", ""
@@ -106,21 +117,8 @@ func genContent(isUpgrade bool, events []*model.Event) (string, string) {
 
 	cfg := config.Get()
 
-	var metricList []string
-	detail, err := events[cnt-1].GetEventDetail()
-	if err != nil {
-		logger.Errorf("get event detail failed, event: %+v, err: %v", events[cnt-1], err)
-	} else {
-		for i := 0; i < len(detail); i++ {
-			metricList = append(metricList, detail[0].Metric)
-		}
-	}
-
-	metric := strings.Join(metricList, ",")
-
 	status := genStatus(events)
 	sname := events[cnt-1].Sname
-	endpoint := genEndpoint(events)
 	tags := genTags(events)
 	value := events[cnt-1].Value
 	info := events[cnt-1].Info
@@ -201,6 +199,20 @@ func genContent(isUpgrade bool, events []*model.Event) (string, string) {
 	return content, mailContent
 }
 
+func genMetric(events []*model.Event, cnt int) string {
+	var metricList []string
+	detail, err := events[cnt-1].GetEventDetail()
+	if err != nil {
+		logger.Errorf("[genMetric] get event detail failed, event: %+v, err: %v", events[cnt-1], err)
+	} else {
+		for i := 0; i < len(detail); i++ {
+			metricList = append(metricList, detail[0].Metric)
+		}
+	}
+
+	return strings.Join(metricList, ",")
+}
+
 func genClaimLink(events []*model.Event) string {
 	for i := 0; i < len(events); i++ {
 		eventCur, err := model.EventCurGet("hashid", events[i].HashId)
@@ -218,7 +230,7 @@ func genClaimLink(events []*model.Event) string {
 	return ""
 }
 
-func genSubject(isUpgrade bool, events []*model.Event) string {
+func genSubject(isUpgrade bool, events []*model.Event, endpoint string) string {
 	cnt := len(events)
 
 	subject := ""
@@ -232,7 +244,7 @@ func genSubject(isUpgrade bool, events []*model.Event) string {
 		subject += fmt.Sprintf("[P%d %s]%s", events[cnt-1].Priority, config.EventTypeMap[events[cnt-1].EventType], events[cnt-1].Sname)
 	}
 
-	return subject + " - " + genEndpoint(events)
+	return subject + " - " + endpoint
 }
 
 func genStatus(events []*model.Event) string {
@@ -328,7 +340,6 @@ func send(tos []string, content, subject, notifyType string) {
 		Type:    notifyType,
 	}
 
-	logger.Debugf("--->>> send-%s begin", notifyType)
 	logger.Debugf("%+v", message)
 
 	bs, err := json.Marshal(message)
@@ -342,9 +353,6 @@ func send(tos []string, content, subject, notifyType string) {
 
 	if _, err := rc.Do("LPUSH", config.NotifyQueue, string(bs)); err != nil {
 		logger.Errorf("lpush %+v error: %v", string(bs), err)
-		return
-	} else {
-		logger.Debugf("--->>> send-%s done", notifyType)
 	}
 }
 
