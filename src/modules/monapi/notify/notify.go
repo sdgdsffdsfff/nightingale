@@ -340,19 +340,20 @@ func send(tos []string, content, subject, notifyType string) {
 		Type:    notifyType,
 	}
 
-	logger.Debugf("%+v", message)
-
 	bs, err := json.Marshal(message)
 	if err != nil {
 		logger.Error("json.marshal notifyMessage fail: ", err)
 		return
 	}
 
+	payload := string(bs)
+	logger.Debug(payload)
+
 	rc := redisc.RedisConnPool.Get()
 	defer rc.Close()
 
-	if _, err := rc.Do("LPUSH", config.NotifyQueue, string(bs)); err != nil {
-		logger.Errorf("lpush %+v error: %v", string(bs), err)
+	if _, err := rc.Do("LPUSH", config.NotifyQueue, payload); err != nil {
+		logger.Errorf("LPUSH %s error: %v", payload, err)
 	}
 }
 
