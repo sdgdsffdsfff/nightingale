@@ -13,8 +13,7 @@ var (
 	EventTypeMap = map[string]string{RECOVERY: "恢复", ALERT: "报警"}
 )
 
-// PortalYml -> etc/monapi.yml
-type PortalYml struct {
+type Config struct {
 	Salt   string              `yaml:"salt"`
 	Logger loggerSection       `yaml:"logger"`
 	HTTP   httpSection         `yaml:"http"`
@@ -97,12 +96,12 @@ type proxySection struct {
 }
 
 var (
-	yaml *PortalYml
+	yaml *Config
 	lock = new(sync.RWMutex)
 )
 
 // Get configuration file
-func Get() *PortalYml {
+func Get() *Config {
 	lock.RLock()
 	defer lock.RUnlock()
 	return yaml
@@ -145,7 +144,7 @@ func Parse(ymlfile string) error {
 		"interval": 10,  //merge等待的数据，单位秒
 	})
 
-	var c PortalYml
+	var c Config
 	err = viper.Unmarshal(&c)
 	if err != nil {
 		return fmt.Errorf("cannot read yml[%s]: %v", ymlfile, err)
