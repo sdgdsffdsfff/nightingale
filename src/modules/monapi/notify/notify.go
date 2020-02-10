@@ -352,7 +352,7 @@ func send(tos []string, content, subject, notifyType string) {
 	rc := redisc.RedisConnPool.Get()
 	defer rc.Close()
 
-	if _, err := rc.Do("LPUSH", config.NotifyQueue, payload); err != nil {
+	if _, err := rc.Do("LPUSH", config.NotifyQueue+notifyType, payload); err != nil {
 		logger.Errorf("LPUSH %s error: %v", payload, err)
 	}
 }
