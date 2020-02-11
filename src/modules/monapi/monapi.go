@@ -107,7 +107,7 @@ func aconf() {
 		return
 	}
 
-	*conf = "etc/portal.local.yml"
+	*conf = "etc/monapi.local.yml"
 	if file.IsExist(*conf) {
 		return
 	}
