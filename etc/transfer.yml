@@ -5,11 +5,11 @@ logger:
   rotatemb: 10
 http:
   enabled: true
-  listen: "0.0.0.0:8040"
+  listen: "0.0.0.0:5810"
   access: "access.log"
 rpc:
   enabled: true
-  listen: "0.0.0.0:8041"
+  listen: "0.0.0.0:5811"
 tsdb:
   enabled: true
   batch: 200
@@ -20,7 +20,7 @@ tsdb:
   maxIdle: 32
   replicas: 500
   cluster:
-    tsdb01: "127.0.0.1:8047"
+    tsdb01: "127.0.0.1:5821"
 index:
   addrs:
     - "http://127.0.0.1:8030/api/index/counter/fullmatch"

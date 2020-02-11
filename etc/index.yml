@@ -11,11 +11,11 @@ logger:
   rotatemb: 10
 http:
   enabled: true
-  listen: "0.0.0.0:8030"
+  listen: "0.0.0.0:5830"
   access: "access.log"
 rpc:
   enabled: true
-  listen: "0.0.0.0:8031"
+  listen: "0.0.0.0:5831"
 limit:
   ui: 1000000
   cludeLogCounter: 100000
