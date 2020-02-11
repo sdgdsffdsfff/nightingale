@@ -160,10 +160,10 @@ func doCallback(event *model.Event) {
 		url = "http://" + url
 	}
 
-	resp, err := httplib.PostJSON(url, 5, callbackEvent, map[string]string{})
+	resp, code, err := httplib.PostJSON(url, 5*time.Second, callbackEvent, map[string]string{})
 	if err != nil {
-		logger.Errorf("callback[%s] fail, callback content: %+v, resp: %s, err: %v", url, callbackEvent, string(resp), err)
+		logger.Errorf("callback[%s] fail, callback content: %+v, resp: %s, code: %d, err: %v", url, callbackEvent, string(resp), code, err)
 	} else {
-		logger.Infof("callback[%s] succ, callback content: %+v, resp: %s", url, callbackEvent, string(resp))
+		logger.Infof("callback[%s] succ, callback content: %+v, resp: %s, code: %d", url, callbackEvent, string(resp), code)
 	}
 }

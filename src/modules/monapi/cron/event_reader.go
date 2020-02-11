@@ -13,7 +13,7 @@ import (
 	"github.com/didi/nightingale/src/modules/monapi/redisc"
 )
 
-func ReadEvent() {
+func EventConsumer() {
 	queues := config.Get().Queue.EventQueues
 	if len(queues) == 0 {
 		return

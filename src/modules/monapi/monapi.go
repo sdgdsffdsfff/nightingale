@@ -79,7 +79,7 @@ func main() {
 
 	go cron.SyncMaskconfLoop()
 	go cron.SyncStraLoop()
-	go cron.ReadEvent()
+	go cron.EventConsumer()
 	go cron.CallbackConsumer()
 	go cron.CleanEventLoop()
 	go cron.CheckJudgeLoop()

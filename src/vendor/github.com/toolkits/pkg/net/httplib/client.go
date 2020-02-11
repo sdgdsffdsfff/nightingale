@@ -2,15 +2,15 @@ package httplib
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
-func PostJSON(url string, timeout int, v interface{}, headers map[string]string) (response []byte, err error) {
+// PostJSON 方法废弃，后面都使用beego的那些方法，beego的httplib做了改动，会复用transport
+func PostJSON(url string, timeout time.Duration, v interface{}, headers map[string]string) (response []byte, code int, err error) {
 	var bs []byte
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
@@ -22,14 +22,16 @@ func PostJSON(url string, timeout int, v interface{}, headers map[string]string)
 	bf := bytes.NewBuffer(bs)
 
 	client := http.Client{
-		Timeout: time.Duration(timeout) * time.Second,
+		Timeout: timeout,
 	}
 
 	req, err := http.NewRequest("POST", url, bf)
 	req.Header.Set("Content-Type", "application/json")
-	
-	for k, v := range headers {
-		req.Header.Add(k, v)
+
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Add(k, v)
+		}
 	}
 
 	var resp *http.Response
@@ -38,16 +40,11 @@ func PostJSON(url string, timeout int, v interface{}, headers map[string]string)
 		return
 	}
 
+	code = resp.StatusCode
+
 	if resp.Body != nil {
 		defer resp.Body.Close()
 		response, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return
-		}
-	}
-
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("status code not equals 200")
 	}
 
 	return

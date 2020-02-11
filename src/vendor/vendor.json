@@ -391,10 +391,10 @@
 			"revisionTime": "2019-07-26T01:25:16Z"
 		},
 		{
-			"checksumSHA1": "w1x7qBwv9xm3Tmf4vuXCdcJI0to=",
+			"checksumSHA1": "53CXIdNN1hUl2R+y6DwIHrP7sGE=",
 			"path": "github.com/toolkits/pkg/net/httplib",
-			"revision": "d8dddbe257f448e3eb039ef62fb4055483ee5394",
-			"revisionTime": "2019-07-24T04:24:32Z"
+			"revision": "f7b361f7753e41eaa4748e460f3862788e403739",
+			"revisionTime": "2019-11-22T08:41:33Z"
 		},
 		{
 			"checksumSHA1": "zW7MGIwXuHXzyioRkiiqH4thZU8=",
