@@ -43,9 +43,9 @@ notify:
 
 # addresses accessible using browsers
 link:
-  stra: http://n9e.x.com/#/monitor/strategy/%v
-  event: http://n9e.x.com/#/monitor/history/his/%v
-  claim: http://n9e.x.com/#/monitor/history/cur/%v
+  stra: http://n9e.example.com/#/monitor/strategy/%v
+  event: http://n9e.example.com/#/monitor/history/his/%v
+  claim: http://n9e.example.com/#/monitor/history/cur/%v
 
 # for alarm event and message queue
 redis:
