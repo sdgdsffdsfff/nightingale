@@ -34,9 +34,10 @@ type linkSection struct {
 }
 
 type queueSection struct {
-	EventPrefix string        `yaml:"eventPrefix"`
-	EventQueues []interface{} `yaml:"-"`
-	Callback    string        `yaml:"callback"`
+	EventPrefix  string        `yaml:"eventPrefix"`
+	EventQueues  []interface{} `yaml:"-"`
+	Callback     string        `yaml:"callback"`
+	SenderPrefix string        `yaml:"senderPrefix"`
 }
 
 type cleanerSection struct {
@@ -117,8 +118,9 @@ func Parse(ymlfile string) error {
 	})
 
 	viper.SetDefault("queue", map[string]interface{}{
-		"eventPrefix": "/n9e/event/",
-		"callback":    "/n9e/event/callback",
+		"eventPrefix":  "/n9e/event/",
+		"callback":     "/n9e/event/callback",
+		"senderPrefix": "/n9e/sender/",
 	})
 
 	viper.SetDefault("cleaner", map[string]interface{}{
