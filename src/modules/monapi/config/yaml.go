@@ -10,10 +10,6 @@ import (
 	"github.com/toolkits/pkg/file"
 )
 
-var (
-	EventTypeMap = map[string]string{RECOVERY: "恢复", ALERT: "报警"}
-)
-
 type Config struct {
 	Salt    string              `yaml:"salt"`
 	Logger  loggerSection       `yaml:"logger"`
