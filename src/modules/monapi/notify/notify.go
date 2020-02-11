@@ -23,6 +23,7 @@ type Message struct {
 	Metrics          []string     `json:"metrics"`
 	ReadableEndpoint string       `json:"readable_endpoint"`
 	ReadableTags     string       `json:"readable_tags"`
+	IsUpgrade        bool         `json:"is_upgrade"`
 }
 
 func getUserIds(users, groups string) ([]int64, error) {
@@ -168,6 +169,7 @@ func DoNotify(isUpgrade bool, event *model.Event) {
 		Metrics:          genMetrics(event),
 		ReadableTags:     genTags(event),
 		ReadableEndpoint: genEndpoint(event),
+		IsUpgrade:        isUpgrade,
 	}
 
 	notifyTypes := config.Get().Notify[prio]
