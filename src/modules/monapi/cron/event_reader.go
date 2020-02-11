@@ -13,8 +13,8 @@ import (
 	"github.com/didi/nightingale/src/modules/monapi/redisc"
 )
 
-func ReadHighEvent() {
-	queues := config.Get().Alarm.Queue.High
+func ReadEvent() {
+	queues := config.Get().Queue.EventQueues
 	if len(queues) == 0 {
 		return
 	}
@@ -27,25 +27,7 @@ func ReadHighEvent() {
 			time.Sleep(duration)
 			continue
 		}
-		consume(event, true)
-	}
-}
-
-func ReadLowEvent() {
-	queues := config.Get().Alarm.Queue.Low
-	if len(queues) == 0 {
-		return
-	}
-
-	duration := time.Duration(400) * time.Millisecond
-
-	for {
-		event, sleep := popEvent(queues)
-		if sleep {
-			time.Sleep(duration)
-			continue
-		}
-		consume(event, false)
+		consume(event)
 	}
 }
 

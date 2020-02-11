@@ -38,7 +38,7 @@ type CallbackEvent struct {
 }
 
 func CallbackConsumer() {
-	queue := config.Get().Alarm.Queue.Callback
+	queue := config.Get().Queue.Callback
 	for {
 		callbackEvent := PopCallbackEvent(queue)
 		if callbackEvent == nil {
@@ -63,7 +63,7 @@ func NeedCallback(sid int64) bool {
 }
 
 func PushCallbackEvent(event *model.Event) error {
-	callbackQueue := config.Get().Alarm.Queue.Callback
+	callbackQueue := config.Get().Queue.Callback
 
 	es, err := json.Marshal(event)
 	if err != nil {

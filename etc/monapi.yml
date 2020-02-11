@@ -28,9 +28,6 @@ proxy:
   transfer: http://127.0.0.1:5810
   index: http://127.0.0.1:5830
 
-alarm:
-  enabled: true
-
 # notify support: voice, sms, mail, im
 # if we have all of notice channel
 # notify:

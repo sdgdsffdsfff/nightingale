@@ -33,7 +33,8 @@ func CheckJudge() error {
 	size := len(judges)
 	if size == 0 {
 		// 看来所有的judge都挂了，此时更新hash环也没啥意义
-		return fmt.Errorf("judges count is zero")
+		logger.Warningf("judges count is zero")
+		return nil
 	}
 
 	jmap := make(map[string]string, size)

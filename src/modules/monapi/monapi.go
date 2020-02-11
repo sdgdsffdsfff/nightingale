@@ -46,8 +46,8 @@ func init() {
 	}
 
 	runner.Init()
-	fmt.Println("runner.Cwd:", runner.Cwd)
-	fmt.Println("runner.Hostname:", runner.Hostname)
+	fmt.Println("runner.cwd:", runner.Cwd)
+	fmt.Println("runner.hostname:", runner.Hostname)
 }
 
 func main() {
@@ -79,10 +79,8 @@ func main() {
 
 	go cron.SyncMaskconfLoop()
 	go cron.SyncStraLoop()
-	go cron.ReadHighEvent()
-	go cron.ReadLowEvent()
+	go cron.ReadEvent()
 	go cron.CallbackConsumer()
-	go cron.MergeEvent()
 	go cron.CleanEventLoop()
 	go cron.CheckJudgeLoop()
 

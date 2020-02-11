@@ -21,7 +21,7 @@ const (
 	PrefixAlertUpgrade = "/n9e/alert/upgrade/"
 )
 
-func consume(event *model.Event, isHigh bool) {
+func consume(event *model.Event) {
 	if event == nil {
 		return
 	}
@@ -94,11 +94,6 @@ func consume(event *model.Event, isHigh bool) {
 	// 没有配置报警接收人，修改event状态为无接收人
 	if strings.TrimSpace(event.Users) == "[]" && strings.TrimSpace(event.Groups) == "[]" {
 		SetEventStatus(event, model.STATUS_NONEUSER)
-		return
-	}
-
-	if !isHigh {
-		storeLowEvent(event)
 		return
 	}
 

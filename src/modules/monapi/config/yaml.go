@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -14,15 +15,16 @@ var (
 )
 
 type Config struct {
-	Salt   string              `yaml:"salt"`
-	Logger loggerSection       `yaml:"logger"`
-	HTTP   httpSection         `yaml:"http"`
-	LDAP   ldapSection         `yaml:"ldap"`
-	Redis  redisSection        `yaml:"redis"`
-	Proxy  proxySection        `yaml:"proxy"`
-	Alarm  alarmSection        `yaml:"alarm"`
-	Link   linkSection         `yaml:"link"`
-	Notify map[string][]string `yaml:"notify"`
+	Salt    string              `yaml:"salt"`
+	Logger  loggerSection       `yaml:"logger"`
+	HTTP    httpSection         `yaml:"http"`
+	LDAP    ldapSection         `yaml:"ldap"`
+	Redis   redisSection        `yaml:"redis"`
+	Proxy   proxySection        `yaml:"proxy"`
+	Queue   queueSection        `yaml:"queue"`
+	Cleaner cleanerSection      `yaml:"cleaner"`
+	Link    linkSection         `yaml:"link"`
+	Notify  map[string][]string `yaml:"notify"`
 }
 
 type linkSection struct {
@@ -31,23 +33,10 @@ type linkSection struct {
 	Claim string `yaml:"claim"`
 }
 
-type mergeSection struct {
-	Hash     string `yaml:"hash"`
-	Max      int    `yaml:"max"`
-	Interval int    `yaml:"interval"`
-}
-
-type alarmSection struct {
-	Enabled bool           `yaml:"enabled"`
-	Queue   queueSection   `yaml:"queue"`
-	Cleaner cleanerSection `yaml:"cleaner"`
-	Merge   mergeSection   `yaml:"merge"`
-}
-
 type queueSection struct {
-	High     []interface{} `yaml:"high"`
-	Low      []interface{} `yaml:"low"`
-	Callback string        `yaml:"callback"`
+	EventPrefix string        `yaml:"eventPrefix"`
+	EventQueues []interface{} `yaml:"-"`
+	Callback    string        `yaml:"callback"`
 }
 
 type cleanerSection struct {
@@ -127,27 +116,39 @@ func Parse(ymlfile string) error {
 		"write": 3000,
 	})
 
-	viper.SetDefault("alarm.queue", map[string]interface{}{
-		"high":     []string{"/n9e/event/p1"},
-		"low":      []string{"/n9e/event/p2", "/n9e/event/p3"},
-		"callback": "/n9e/event/callback",
+	viper.SetDefault("queue", map[string]interface{}{
+		"eventPrefix": "/n9e/event/",
+		"callback":    "/n9e/event/callback",
 	})
 
-	viper.SetDefault("alarm.cleaner", map[string]interface{}{
+	viper.SetDefault("cleaner", map[string]interface{}{
 		"days":  366,
 		"batch": 100,
-	})
-
-	viper.SetDefault("alarm.merge", map[string]interface{}{
-		"hash":     "/n9e/event/merge",
-		"max":      100, //merge的最大条数
-		"interval": 10,  //merge等待的数据，单位秒
 	})
 
 	var c Config
 	err = viper.Unmarshal(&c)
 	if err != nil {
 		return fmt.Errorf("cannot read yml[%s]: %v", ymlfile, err)
+	}
+
+	size := len(c.Notify)
+	if size == 0 {
+		return fmt.Errorf("config.notify invalid")
+	}
+
+	prios := make([]string, size)
+	i := 0
+	for elt := range c.Notify {
+		prios[i] = elt
+		i++
+	}
+
+	sort.Strings(prios)
+
+	prefix := c.Queue.EventPrefix
+	for i := 0; i < size; i++ {
+		c.Queue.EventQueues = append(c.Queue.EventQueues, prefix+prios[i])
 	}
 
 	lock.Lock()

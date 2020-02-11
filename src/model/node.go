@@ -22,7 +22,7 @@ type Node struct {
 func InitNode() {
 	num, err := DB["mon"].Where("pid=0").Count(new(Node))
 	if err != nil {
-		log.Fatalln("cannot query portal.node", err)
+		log.Fatalln("cannot query first node", err)
 	}
 
 	if num > 0 {
