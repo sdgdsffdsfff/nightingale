@@ -17,6 +17,7 @@ func Init() {
 	// 初始化默认参数
 	StraCache = NewStraCache()
 	CollectCache = NewCollectCache()
+	JudgeHashRing = NewConsistentHashRing(500, []string{})
 
 	go SyncStras()
 	go SyncCollects()
