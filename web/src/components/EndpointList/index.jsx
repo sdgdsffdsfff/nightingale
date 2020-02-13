@@ -206,7 +206,7 @@ class index extends BaseComponent {
         {
           this.renderTable({
             locale: {
-              emptyText: '系统中暂无 endpoint，请安装agent或去超管页面导入',
+              emptyText: '系统中暂无 endpoint，请安装agent或去全部对象页面导入',
             },
             rowSelection: {
               selectedRowKeys: this.state.selectedRowKeys,

@@ -30,7 +30,7 @@ class App extends BaseComponent {
             name: '节点下对象',
             path: 'endpoints',
           }, {
-            name: '节点树管理',
+            name: '树节点管理',
             path: 'node',
           },
         ],
