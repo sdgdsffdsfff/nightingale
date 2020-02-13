@@ -49,4 +49,7 @@ _test
 /src/modules/portal/portal
 /src/modules/sender/sender
 
+/web/node_modules
+/web/.cache-loader
+
 
