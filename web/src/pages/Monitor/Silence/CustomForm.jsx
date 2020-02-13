@@ -144,7 +144,7 @@ class CustomForm extends Component {
           <FormItem
             {...formItemLayout}
             label="屏蔽 tags"
-            help="示例：key1=value1,value2;key2=value3,value4"
+            help="示例：key1=value1,key2=value2"
           >
             {getFieldDecorator('tags', {
               initialValue: initialValues.tags,
