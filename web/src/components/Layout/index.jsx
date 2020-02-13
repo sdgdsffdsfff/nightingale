@@ -222,7 +222,7 @@ class NILayout extends BaseComponent {
     const { checkAuthenticateLoading, collapsed, selectedNode, nsTreeVisible } = this.state;
     const prefixCls = `${this.prefixCls}-layout`;
     const { dispname, isroot } = auth.getSelftProfile();
-    const logoSrc = collapsed ? require('../../assets/logo-s.svg') : require('../../assets/logo-l.svg');
+    const logoSrc = collapsed ? require('../../assets/logo-s.png') : require('../../assets/logo-l.png');
     const userIconSrc = require('../../assets/favicon.ico');
 
     if (checkAuthenticateLoading) {

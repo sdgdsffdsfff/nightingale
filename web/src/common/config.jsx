@@ -1,4 +1,4 @@
-const prefixCls = 'falcon-ng';
+const prefixCls = 'nightingale';
 const aliasMap = {
   dept: '根',
 };
