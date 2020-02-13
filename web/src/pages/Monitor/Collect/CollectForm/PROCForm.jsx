@@ -127,11 +127,12 @@ class CollectForm extends BaseComponent {
                 initialValue: service,
                 rules: [
                   { required: true, message: '不能为空!' },
-                  { pattern: /^[a-zA-Z0-9-_.]+$/, message: '只能允许填写英文、数字、中划线、下划线、点!' },
+                  { pattern: /^[a-zA-Z0-9-]+$/, message: '只能允许填写英文、数字、中划线!' },
                 ],
               })}
               size="default"
               style={{ width: 500 }}
+              placeholder="全局唯一的进程英文名"
             />
           </FormItem>
           <FormItem {...formItemLayout} label="采集方式" required>
