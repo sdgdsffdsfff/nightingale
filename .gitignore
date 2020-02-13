@@ -38,7 +38,6 @@ _test
 .cache-loader
 
 /n9e-*
-/pub
 
 /src/modules/alarm/alarm
 /src/modules/index/index
