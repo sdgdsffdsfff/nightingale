@@ -1,4 +1,4 @@
-<img src="https://s3-gzpu-inter.didistatic.com/n9e-pub/image/n9e-logo-bg-white.png" width="" ="150" alt="Nightingale"/>
+<img src="https://s3-gzpu-inter.didistatic.com/n9e-pub/image/n9e-logo-bg-white.png" width="150" alt="Nightingale"/>
 <br>
 <br>
 
