@@ -8,6 +8,10 @@ Nightingale是一套衍生自Open-Falcon的互联网监控解决方案，融入�
 
 使用手册请参考：[夜莺使用手册](http://116.85.39.93/zh_1.0/)
 
+## 团队
+
+由于一些安全性考虑，源码提交历史都抹除了，实际重度参与项目的同事包括：[laiwei](https://github.com/laiwei) [ulricqin](https://github.com/ulricqin) [710leo](https://github.com/710leo) [xiaqing]() [huchong]() [qianwei]() [zhangzhao]()，感谢大家的付出
+
 ## 协议
 
 <img alt="Apache-2.0 license" src="https://s3-gz01.didistatic.com/n9e-pub/image/apache.jpeg" width="128">
