@@ -8,9 +8,18 @@ Nightingale是一套衍生自Open-Falcon的互联网监控解决方案，融入�
 
 使用手册请参考：[夜莺使用手册](http://116.85.39.93/zh_1.0/)
 
+## 编译
+
+```bash
+mkdir -p $GOPATH/src/github.com/didi
+cd $GOPATH/src/github.com/didi
+git clone https://github.com/didi/nightingale.git
+cd nightingale && ./control build 
+```
+
 ## 团队
 
-由于一些安全性考虑，源码提交历史都抹除了，实际重度参与项目的同事包括：[laiwei](https://github.com/laiwei) [ulricqin](https://github.com/ulricqin) [710leo](https://github.com/710leo) [xiaqing]() [huchong]() [qianwei]() [zhangzhao]()，感谢大家的付出
+由于一些安全性考虑，源码提交历史都抹除了，实际重度参与项目的小伙伴包括：[laiwei](https://github.com/laiwei) [ulricqin](https://github.com/ulricqin) [710leo](https://github.com/710leo) [xiaqing]() [huchong]() [n4mine](https://github.com/n4mine) [zhangzhao]()，感谢大家的付出
 
 ## 协议
 
