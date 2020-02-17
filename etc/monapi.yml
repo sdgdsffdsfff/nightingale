@@ -2,7 +2,7 @@
 salt: "PLACE_SALT"
 
 logger:
-  dir: "logs/portal"
+  dir: "logs/monapi"
   level: "INFO"
   keepHours: 24
 
