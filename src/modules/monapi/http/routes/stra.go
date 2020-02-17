@@ -3,7 +3,6 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
-	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/monapi/scache"
@@ -54,7 +53,6 @@ func straPut(c *gin.Context) {
 
 	errors.Dangerous(stra.Update())
 
-	logger.Info("put--->>> ", stra.NotifyUser, stra.NotifyUserStr)
 	renderData(c, "ok", nil)
 }
 
@@ -93,10 +91,6 @@ func strasGet(c *gin.Context) {
 	priority := queryInt(c, "priority", 4)
 	nid := queryInt64(c, "nid", 0)
 	list, err := model.StrasList(name, priority, nid)
-	logger.Info("get--->>>")
-	for i := 0; i < len(list); i++ {
-		logger.Info("user: ", list[i].NotifyUser, list[i].NotifyUserStr)
-	}
 	renderData(c, list, err)
 }
 
