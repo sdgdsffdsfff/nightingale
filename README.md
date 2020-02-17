@@ -14,12 +14,12 @@ Nightingale是一套衍生自Open-Falcon的互联网监控解决方案，融入�
 mkdir -p $GOPATH/src/github.com/didi
 cd $GOPATH/src/github.com/didi
 git clone https://github.com/didi/nightingale.git
-cd nightingale && ./control build 
+cd nightingale && ./control build
 ```
 
 ## 团队
 
-由于一些安全性考虑，源码提交历史都抹除了，实际重度参与项目的小伙伴包括：[laiwei](https://github.com/laiwei) [ulricqin](https://github.com/ulricqin) [710leo](https://github.com/710leo) [xiaqing]() [huchong]() [n4mine](https://github.com/n4mine) [zhangzhao]()，感谢大家的付出
+参与项目的小伙伴包括：[laiwei](https://github.com/laiwei) [ulricqin](https://github.com/ulricqin) [710leo](https://github.com/710leo) [xiaqing]() [huchong]() [n4mine](https://github.com/n4mine) [zhangzhao]()，感谢大家的付出
 
 ## 协议
 
