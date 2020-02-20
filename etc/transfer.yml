@@ -1,23 +1,21 @@
 http:
-  listen: 0.0.0.0:7900
+  listen: 0.0.0.0:5810
 rpc:
-  listen: 0.0.0.0:7901
+  listen: 0.0.0.0:5811
 tsdb:
   # in ms
   # connTimeout: 1000
   # callTimeout: 3000
   cluster:
-    tsdb01: 127.0.0.1:7903
+    tsdb01: 127.0.0.1:5821
 index:
   addrs:
-    - http://127.0.0.1:80/api/index/counter/fullmatch
+    - http://127.0.0.1:5830/api/index/counter/fullmatch
   # in ms
   # timeout: 1000
 api:
-  uic: 
-    - http://127.0.0.1:7990
   monapi:
-    - http://127.0.0.1:7910
+    - http://127.0.0.1:5800
 logger:
   dir: logs/transfer
   level: WARNING

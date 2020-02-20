@@ -8,10 +8,10 @@ logger:
   level: WARNING
   keepHours: 2
 http:
-  listen: 0.0.0.0:1949
+  listen: 0.0.0.0:2058
 transfer:
   addrs:
-    - 127.0.0.1:7901
+    - 127.0.0.1:5811
   # in ms
   # timeout: 1000
   # interval: 20
@@ -25,7 +25,7 @@ collector:
   mountIgnorePrefix:
     - /var/lib
   addrs: 
-    - 127.0.0.1:80
+    - 127.0.0.1:5800
   # in ms
   # timeout: 1000
 ignoreMetrics: 

@@ -1,13 +1,13 @@
 http:
-  listen: 0.0.0.0:7902
+  listen: 0.0.0.0:5820
 rpc:
-  listen: 0.0.0.0:7903
+  listen: 0.0.0.0:5821
 rrd: 
-  storage: data/7903
+  storage: data/5821
 logger:
   dir: logs/tsdb
   level: WARNING
   keepHours: 2
 api:
-  uic: 
-    - 127.0.0.1:80
+  monapi: 
+    - 127.0.0.1:5800
