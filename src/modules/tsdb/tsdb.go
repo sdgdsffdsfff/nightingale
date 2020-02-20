@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/didi/nightingale/src/modules/tsdb/backend/nsq"
 	brpc "github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
 	"github.com/didi/nightingale/src/modules/tsdb/cache"
 	"github.com/didi/nightingale/src/modules/tsdb/chunk"
@@ -61,10 +60,6 @@ func main() {
 	cache.Init()
 	index.Init()
 	brpc.Init()
-
-	if config.Config.NSQ.Enabled {
-		nsq.Init()
-	}
 
 	cache.InitChunkSlot()
 	rrdtool.Init()

@@ -20,7 +20,6 @@ type ConfYaml struct {
 	RRD            *RRDSection         `yaml:"rrd"`
 	Logger         *LoggerSection      `yaml:"logger"`
 	Migrate        *MigrateSection     `yaml:"migrate"`
-	NSQ            *NSQSection         `yaml:"nsq"`
 	Index          *IndexSection       `yaml:"index"`
 	Cache          *CacheSection       `yaml:"cache"`
 	Api            map[string][]string `yaml:"api"`
@@ -45,14 +44,6 @@ type IndexSection struct {
 	MaxIdle         int      `yaml:"maxIdle"`
 	ConnTimeout     int      `yaml:"connTimeout"`
 	CallTimeout     int      `yaml:"callTimeout"`
-}
-
-type NSQSection struct {
-	Enabled   bool     `yaml:"enabled"`
-	Addrs     []string `yaml:"addrs"`
-	FullTopic []string `yaml:"fullTopic"`
-	IncrTopic []string `yaml:"incrTopic"`
-	Batch     int      `yaml:"batch"`
 }
 
 type MigrateSection struct {
@@ -162,13 +153,6 @@ func Parse(conf string) error {
 		"maxIdle":         320,   //建立的连接池的最大空闲数
 		"connTimeout":     1000,  //链接超时时间，单位毫秒
 		"callTimeout":     3000,  //访问超时时间，单位毫秒
-	})
-
-	viper.SetDefault("nsq", map[string]interface{}{
-		"enabled":   false,
-		"fullTopic": []string{"mon_full_index"},
-		"incrTopic": []string{"mon_incr_index"},
-		"batch":     200,
 	})
 
 	err = viper.Unmarshal(&Config)

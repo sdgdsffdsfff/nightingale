@@ -20,7 +20,6 @@ type ConfYaml struct {
 	HTTP            HTTPSection     `yaml:"http"`
 	RPC             RPCSection      `yaml:"rpc"`
 	Limit           LimitSection    `yaml:"limit"`
-	NSQ             NSQSection      `yaml:"nsq"`
 	Tree            TreeSection     `yaml:"tree"`
 	Identity        IdentitySection `yaml:"identity"`
 	Report          ReportSection   `yaml:"report"`
@@ -40,15 +39,6 @@ type IdentitySection struct {
 type TreeSection struct {
 	Timeout int      `yaml:"timeout"`
 	Addrs   []string `yaml:"addrs"`
-}
-
-type NSQSection struct {
-	Enabled   bool     `yaml:"enabled"`
-	Lookupds  []string `yaml:"lookupds"`
-	FullTopic string   `yaml:"fullTopic"`
-	IncrTopic string   `yaml:"incrTopic"`
-	Chan      string   `yaml:"chan"`
-	Worker    int      `yaml:"worker"`
 }
 
 type LimitSection struct {
@@ -113,14 +103,6 @@ func Parse(conf string) error {
 		"fullmatchLogCounter": 100000, //每次从待落盘队列中间等待间隔，单位毫秒
 		"ui":    1000000, //ui请求的最大曲线个数
 		"clude": 1000000, //clude接口支持查询的最大曲线个数
-	})
-
-	viper.SetDefault("nsq", map[string]interface{}{
-		"enabled":   false,
-		"chan":      "use_local_ip",
-		"fullTopic": "mon_full_index",
-		"incrTopic": "mon_incr_index",
-		"worker":    10,
 	})
 
 	viper.SetDefault("report", map[string]interface{}{

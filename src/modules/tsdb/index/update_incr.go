@@ -44,7 +44,7 @@ func StartIndexUpdateIncrTask() {
 
 func updateIndexIncr() int {
 	ret := 0
-	aggrNum := config.Config.NSQ.Batch
+	aggrNum := 200
 
 	for idx, _ := range UnIndexedItemCacheBigMap {
 		if UnIndexedItemCacheBigMap[idx] == nil || UnIndexedItemCacheBigMap[idx].Size() <= 0 {

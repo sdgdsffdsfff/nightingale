@@ -3,7 +3,7 @@ package dataobj
 import (
 	"strconv"
 
-	"ecmc/mon/src/toolkits/str"
+	"github.com/didi/nightingale/src/toolkits/str"
 
 	gstr "github.com/toolkits/pkg/str"
 )

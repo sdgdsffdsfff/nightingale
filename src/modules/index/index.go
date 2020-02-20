@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/didi/nightingale/src/modules/index/backend/nsq"
 	"github.com/didi/nightingale/src/modules/index/cache"
 	"github.com/didi/nightingale/src/modules/index/config"
 	"github.com/didi/nightingale/src/modules/index/cron"
@@ -58,10 +57,6 @@ func main() {
 	go cron.StartPersist()
 	go cron.Report()
 	go cron.Statstic()
-
-	if config.Config.NSQ.Enabled {
-		go nsq.StartNsqWorker()
-	}
 
 	go rpc.Start()
 	http.Start()

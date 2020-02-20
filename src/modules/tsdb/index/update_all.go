@@ -32,12 +32,11 @@ func StartUpdateIndexTask() {
 	}
 }
 
-// 重建所有索引，推往nsq
 func RebuildAllIndex() error {
 	//postTms := time.Now().Unix()
 	start := time.Now().Unix()
 	lastTs := start - Config.Index.ActiveDuration
-	aggrNum := Config.NSQ.Batch
+	aggrNum := 200
 
 	if !UpdateIndexToNSQLock.TryAcquire() {
 		return fmt.Errorf("RebuildAllIndex already Rebuiding..")
