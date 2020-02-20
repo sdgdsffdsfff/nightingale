@@ -1,27 +1,24 @@
-logger:  
-  level: "DEBUG"
-  dir: "logs/transfer"
-  rotatenum: 3
-  rotatemb: 10
 http:
-  enabled: true
-  listen: "0.0.0.0:5810"
-  access: "access.log"
+  listen: 0.0.0.0:7900
 rpc:
-  enabled: true
-  listen: "0.0.0.0:5811"
+  listen: 0.0.0.0:7901
 tsdb:
-  enabled: true
-  batch: 200
-  connTimeout: 1000
-  callTimeout: 3000
-  workerNum: 32
-  maxConns: 32
-  maxIdle: 32
-  replicas: 500
+  # in ms
+  # connTimeout: 1000
+  # callTimeout: 3000
   cluster:
-    tsdb01: "127.0.0.1:5821"
+    tsdb01: 127.0.0.1:7903
 index:
   addrs:
-    - "http://127.0.0.1:8030/api/index/counter/fullmatch"
-  timeout: 3000
+    - http://127.0.0.1:80/api/index/counter/fullmatch
+  # in ms
+  # timeout: 1000
+api:
+  uic: 
+    - http://127.0.0.1:7990
+  monapi:
+    - http://127.0.0.1:7910
+logger:
+  dir: logs/transfer
+  level: WARNING
+  keepHours: 2

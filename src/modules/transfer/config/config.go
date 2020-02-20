@@ -1,22 +1,25 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"sync"
 
+	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
 
 type ConfYaml struct {
-	Debug   bool          `yaml:"debug"`
-	MinStep int           `yaml:"minStep"`
-	Logger  LoggerSection `yaml:"logger"`
-	HTTP    HTTPSection   `yaml:"http"`
-	RPC     RPCSection    `yaml:"rpc"`
-	Judge   JudgeSection  `yaml:"judge"`
-	Tsdb    TsdbSection   `yaml:"tsdb"`
-	Index   IndexSection  `yaml:"index"`
+	Debug   bool                `yaml:"debug"`
+	MinStep int                 `yaml:"minStep"`
+	Logger  LoggerSection       `yaml:"logger"`
+	HTTP    HTTPSection         `yaml:"http"`
+	RPC     RPCSection          `yaml:"rpc"`
+	Tsdb    TsdbSection         `yaml:"tsdb"`
+	Judge   JudgeSection        `yaml:"judge"`
+	Index   IndexSection        `yaml:"index"`
+	API     map[string][]string `yaml:"api"`
 }
 
 type IndexSection struct {
@@ -25,10 +28,9 @@ type IndexSection struct {
 }
 
 type LoggerSection struct {
-	Level     string `yaml:"level"`
 	Dir       string `yaml:"dir"`
-	Rotatenum int    `yaml:"rotatenum"`
-	Rotatemb  uint64 `yaml:"rotatemb"`
+	Level     string `yaml:"level"`
+	KeepHours uint   `yaml:"keepHours"`
 }
 
 type HTTPSection struct {
@@ -42,18 +44,6 @@ type RPCSection struct {
 	Listen  string `yaml:"listen"`
 }
 
-type JudgeSection struct {
-	Enabled     bool              `yaml:"enabled"`
-	Batch       int               `yaml:"batch"`
-	ConnTimeout int               `yaml:"connTimeout"`
-	CallTimeout int               `yaml:"callTimeout"`
-	WorkerNum   int               `yaml:"workerNum"`
-	MaxConns    int               `yaml:"maxConns"`
-	MaxIdle     int               `yaml:"maxIdle"`
-	Replicas    int               `yaml:"replicas"`
-	Cluster     map[string]string `yaml:"cluster"`
-}
-
 type TsdbSection struct {
 	Enabled     bool                    `yaml:"enabled"`
 	Batch       int                     `yaml:"batch"`
@@ -65,6 +55,17 @@ type TsdbSection struct {
 	Replicas    int                     `yaml:"replicas"`
 	Cluster     map[string]string       `yaml:"cluster"`
 	ClusterList map[string]*ClusterNode `json:"clusterList"`
+}
+
+type JudgeSection struct {
+	Enabled     bool `yaml:"enabled"`
+	Batch       int  `yaml:"batch"`
+	ConnTimeout int  `yaml:"connTimeout"`
+	CallTimeout int  `yaml:"callTimeout"`
+	WorkerNum   int  `yaml:"workerNum"`
+	MaxConns    int  `yaml:"maxConns"`
+	MaxIdle     int  `yaml:"maxIdle"`
+	Replicas    int  `yaml:"replicas"`
 }
 
 var (
@@ -103,16 +104,51 @@ func GetCfgYml() *ConfYaml {
 }
 
 func Parse(conf string) error {
-	var c ConfYaml
-	err := file.ReadYaml(conf, &c)
+	bs, err := file.ReadBytes(conf)
 	if err != nil {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
-	c.Tsdb.ClusterList = formatClusterItems(c.Tsdb.Cluster)
 
 	lock.Lock()
 	defer lock.Unlock()
-	Config = &c
+
+	viper.SetConfigType("yaml")
+	err = viper.ReadConfig(bytes.NewBuffer(bs))
+	if err != nil {
+		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
+	}
+
+	viper.SetDefault("http.enabled", true)
+	viper.SetDefault("index.timeout", 3000)
+	viper.SetDefault("minStep", 1)
+
+	viper.SetDefault("tsdb", map[string]interface{}{
+		"enabled":     true,
+		"batch":       200, //每次拉取文件的个数
+		"replicas":    500, //一致性has虚拟节点
+		"workerNum":   32,
+		"maxConns":    32,   //查询和推送数据的并发个数
+		"maxIdle":     32,   //建立的连接池的最大空闲数
+		"connTimeout": 1000, //链接超时时间，单位毫秒
+		"callTimeout": 3000, //访问超时时间，单位毫秒
+	})
+
+	viper.SetDefault("judge", map[string]interface{}{
+		"enabled":     true,
+		"batch":       200, //每次拉取文件的个数
+		"workerNum":   32,
+		"maxConns":    32,   //查询和推送数据的并发个数
+		"maxIdle":     32,   //建立的连接池的最大空闲数
+		"connTimeout": 1000, //链接超时时间，单位毫秒
+		"callTimeout": 3000, //访问超时时间，单位毫秒
+	})
+
+	err = viper.Unmarshal(&Config)
+	if err != nil {
+		return fmt.Errorf("cannot read yml[%s]: %v\n", conf, err)
+	}
+
+	Config.Tsdb.ClusterList = formatClusterItems(Config.Tsdb.Cluster)
 
 	return err
 }

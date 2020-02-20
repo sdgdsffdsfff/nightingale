@@ -136,7 +136,7 @@ status()
 build_one()
 {
 	mod=$1
-	go build -o n9e-${mod} src/modules/${mod}/${mod}.go
+	go build -o n9e-${mod} --tags "md5" src/modules/${mod}/${mod}.go
 }
 
 build()
@@ -152,7 +152,7 @@ build()
 		return
 	fi
 
-	build_one $mod
+	build_one $mod 
 }
 
 reload()

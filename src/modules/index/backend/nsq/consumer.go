@@ -3,6 +3,7 @@ package nsq
 import (
 	"encoding/json"
 	"os"
+	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/index/cache"
@@ -67,24 +68,17 @@ func (this *NSQWorker) HandleMessage(message *nsq.Message) error {
 		logger.Errorf("nsq message unmarshal error : %v\n", err)
 	}
 
+	now := time.Now().Unix()
 	for _, item := range indexList {
-		itemByte, _ := json.Marshal(item)
-		itemCopy := dataobj.IndexModel{}
-		json.Unmarshal(itemByte, &itemCopy)
-
 		nsemaPush.Acquire()
-		go func(item dataobj.IndexModel) {
+		go func(item dataobj.IndexModel, now int64) {
 			defer nsemaPush.Release()
-
 			logger.Debugf("<index %v", item)
-			if _, exists := DEFAULT_METRIC[item.Metric]; exists {
-				return
-			}
-			err := cache.EndpointDBObj.Push(item)
+			err := cache.EndpointDBObj.Push(item, now)
 			if err != nil {
 				logger.Errorf("nsq message push failed : %v", err)
 			}
-		}(itemCopy)
+		}(item, now)
 	}
 
 	return nil

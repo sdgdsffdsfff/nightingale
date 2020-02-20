@@ -45,6 +45,7 @@ type Stra struct {
 	LeafNids         []int64      `xorm:"-" json:"leaf_nids"` //叶子节点id
 	Endpoints        []string     `xorm:"-" json:"endpoints"`
 	AlertUpgrade     AlertUpgrade `xorm:"-" json:"alert_upgrade"`
+	JudgeInstance    string       `xorm:"-" json:"judge_instance"`
 }
 
 type StraLog struct {
@@ -276,16 +277,6 @@ func StrasAll() ([]*Stra, error) {
 	return stras, err
 }
 
-func GetPnids(nid int64) ([]int64, error) {
-	node, err := NodeGet("id", nid)
-	if err != nil {
-		return []int64{}, err
-	}
-
-	ids, err := node.Pids()
-	return ids, err
-}
-
 func EffectiveStrasList() ([]*Stra, error) {
 	session := DB["mon"].NewSession()
 	defer session.Close()
@@ -294,9 +285,9 @@ func EffectiveStrasList() ([]*Stra, error) {
 	t := time.Now()
 
 	now := t.Format("15:04")
-	weekday := t.Weekday().String()
+	weekday := strconv.Itoa(int(t.Weekday()))
 
-	err := session.Where("(enable_stime <= ? and enable_etime >= ? or (enable_stime > enable_etime and !(enable_stime > ? and enable_etime < ?)) and enable_days_of_week like ?)", now, now, now, now, "%"+weekday+"%").Find(&objs)
+	err := session.Where("((enable_stime <= ? and enable_etime >= ? or (enable_stime > enable_etime and !(enable_stime > ? and enable_etime < ?))) and enable_days_of_week like ?)", now, now, now, now, "%"+weekday+"%").Find(&objs)
 	if err != nil {
 		return objs, err
 	}

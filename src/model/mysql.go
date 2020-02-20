@@ -5,10 +5,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/runner"
+	"xorm.io/core"
 )
 
 type MySQLConf struct {

@@ -9,10 +9,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/toolkits/pkg/logger"
-
 	. "github.com/didi/nightingale/src/modules/transfer/config"
 
+	"github.com/toolkits/pkg/logger"
 	"github.com/ugorji/go/codec"
 )
 

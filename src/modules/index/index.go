@@ -12,6 +12,7 @@ import (
 	"github.com/didi/nightingale/src/modules/index/config"
 	"github.com/didi/nightingale/src/modules/index/cron"
 	"github.com/didi/nightingale/src/modules/index/http"
+	"github.com/didi/nightingale/src/modules/index/rpc"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
@@ -51,13 +52,18 @@ func main() {
 	config.InitLogger()
 
 	cache.InitDB()
-	cache.RebuildFromDisk()
+	cache.Rebuild()
 
 	go cron.StartCleaner()
 	go cron.StartPersist()
-	go nsq.StartNsqWorker()
+	go cron.Report()
+	go cron.Statstic()
 
-	//go rpc.Start()
+	if config.Config.NSQ.Enabled {
+		go nsq.StartNsqWorker()
+	}
+
+	go rpc.Start()
 	http.Start()
 	ending()
 }

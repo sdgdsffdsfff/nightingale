@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-
-	"github.com/toolkits/pkg/errors"
-	"github.com/toolkits/pkg/logger"
-	"github.com/toolkits/pkg/net/httplib"
+	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/backend"
 	. "github.com/didi/nightingale/src/modules/transfer/config"
 
 	"github.com/gin-gonic/gin"
+	"github.com/toolkits/pkg/errors"
+	"github.com/toolkits/pkg/logger"
+	"github.com/toolkits/pkg/net/httplib"
 )
 
 type QueryDataReq struct {
@@ -74,9 +74,17 @@ func QueryDataForUI(c *gin.Context) {
 	var input dataobj.QueryDataForUI
 
 	errors.Dangerous(c.ShouldBindJSON(&input))
-	logger.Info("debug: ", input)
 
 	resp := backend.FetchDataForUI(input)
+	if len(input.Comparisons) > 1 {
+		for i := 1; i < len(input.Comparisons); i++ {
+			input.Start = input.Start - input.Comparisons[i]
+			input.End = input.End - input.Comparisons[i]
+			res := backend.FetchDataForUI(input)
+			resp = append(resp, res...)
+		}
+	}
+
 	renderData(c, resp, nil)
 }
 
@@ -95,9 +103,13 @@ func GetSeries(start, end int64, req []SeriesReq) ([]dataobj.QueryData, error) {
 	i := rand.Intn(len(Config.Index.Addrs))
 	addr := Config.Index.Addrs[i]
 
-	resp, err := httplib.PostJSON(addr, Config.Index.Timeout, req, nil)
+	resp, code, err := httplib.PostJSON(addr, time.Duration(Config.Index.Timeout)*time.Millisecond, req, nil)
 	if err != nil {
 		return queryDatas, err
+	}
+
+	if code != 200 {
+		return nil, fmt.Errorf("index response status code != 200")
 	}
 
 	err = json.Unmarshal(resp, &res)

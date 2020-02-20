@@ -21,7 +21,7 @@ type QueryDataForUI struct {
 	GroupKey    []string `json:"groupKey"` //聚合维度
 	AggrFunc    string   `json:"aggrFunc"` //聚合计算
 	ConsolFunc  string   `json:"consolFunc"`
-	Comparisons []int    `json:"comparisons"` //环比多少时间
+	Comparisons []int64  `json:"comparisons"` //环比多少时间
 }
 
 type QueryDataResp struct {

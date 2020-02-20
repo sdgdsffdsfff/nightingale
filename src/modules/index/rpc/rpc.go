@@ -1,0 +1,54 @@
+package rpc
+
+import (
+	"bufio"
+	"io"
+	"net"
+	"net/rpc"
+	"os"
+	"reflect"
+	"time"
+
+	"github.com/didi/nightingale/src/modules/index/config"
+
+	"github.com/toolkits/pkg/concurrent/semaphore"
+	"github.com/toolkits/pkg/logger"
+	"github.com/ugorji/go/codec"
+)
+
+type Index int
+
+func Start() {
+	addr := config.Config.RPC.Listen
+
+	server := rpc.NewServer()
+	server.Register(new(Index))
+
+	l, e := net.Listen("tcp", addr)
+	if e != nil {
+		logger.Fatal("cannot listen ", addr, e)
+		os.Exit(1)
+	}
+	logger.Info("listening ", addr)
+	nsemaPush = semaphore.NewSemaphore(config.Config.BuildWorker)
+
+	var mh codec.MsgpackHandle
+	mh.MapType = reflect.TypeOf(map[string]interface{}(nil))
+
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			logger.Warning("listener accept error: ", err)
+			time.Sleep(time.Duration(100) * time.Millisecond)
+			continue
+		}
+
+		var bufconn = struct {
+			io.Closer
+			*bufio.Reader
+			*bufio.Writer
+		}{conn, bufio.NewReader(conn), bufio.NewWriter(conn)}
+
+		go server.ServeCodec(codec.MsgpackSpecRpc.ServerCodec(bufconn, &mh))
+	}
+}

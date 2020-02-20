@@ -8,3 +8,10 @@ type IndexModel struct {
 	Tags      map[string]string `json:"tags"`
 	Timestamp int64             `json:"ts"`
 }
+
+type IndexResp struct {
+	Msg     string
+	Total   int
+	Invalid int
+	Latency int64
+}

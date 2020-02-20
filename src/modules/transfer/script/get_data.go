@@ -11,9 +11,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/toolkits/pkg/concurrent/semaphore"
-
 	"github.com/didi/nightingale/src/dataobj"
+
+	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/ugorji/go/codec"
 )
 

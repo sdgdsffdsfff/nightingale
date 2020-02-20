@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"github.com/didi/nightingale/src/modules/index/config"
+
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +22,10 @@ func Config(r *gin.Engine) {
 		sys.POST("/counter/fullmatch", FullmatchByEndpoint)
 		sys.POST("/counter/clude", CludeByEndpoint)
 		sys.POST("/dump", DumpIndex)
+		sys.GET("/dumpfile", DumpFile)
+	}
 
+	if config.GetCfgYml().Logger.Level == "DEBUG" {
+		pprof.Register(r, "/api/index/debug/pprof")
 	}
 }

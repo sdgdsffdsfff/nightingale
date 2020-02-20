@@ -9,6 +9,7 @@ import (
 
 	"github.com/didi/nightingale/src/modules/transfer/backend"
 	"github.com/didi/nightingale/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/modules/transfer/cron"
 	"github.com/didi/nightingale/src/modules/transfer/http"
 	"github.com/didi/nightingale/src/modules/transfer/rpc"
 
@@ -50,6 +51,7 @@ func main() {
 	config.InitLogger()
 
 	backend.Init()
+	cron.Init()
 
 	go rpc.Start()
 	http.Start()

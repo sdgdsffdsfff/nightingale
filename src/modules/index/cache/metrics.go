@@ -2,6 +2,8 @@ package cache
 
 import (
 	"sync"
+
+	"github.com/toolkits/pkg/logger"
 )
 
 type MetricsStruct struct { // metrics
@@ -9,20 +11,21 @@ type MetricsStruct struct { // metrics
 	MetricMap map[string]*MetricStruct
 }
 
-func (m *MetricsStruct) Clean(now, timeDuration int64) {
+func (m *MetricsStruct) Clean(now, timeDuration int64, endpoint string) {
 	m.Lock()
 	defer m.Unlock()
 	for metric, metricStruct := range m.MetricMap {
 		if now-metricStruct.Updated > timeDuration {
 			//清理metric
 			delete(m.MetricMap, metric)
+			logger.Errorf("[clean index metric] endpoint:%s metric:%s now:%d time duration:%d updated:%d", endpoint, metric, now, timeDuration, metricStruct.Updated)
+
 		} else {
 			//清理tagk
 			metricStruct.Tagks.Clean(now, timeDuration)
 
 			//清理counter
-			metricStruct.Counters.Clean(now, timeDuration)
-
+			metricStruct.Counters.Clean(now, timeDuration, endpoint, metric)
 		}
 	}
 }
@@ -56,20 +59,14 @@ func (m *MetricsStruct) Len() int {
 
 func (m *MetricsStruct) MustGetMetricStruct(metric string, now int64) *MetricStruct {
 	var nsmetric *MetricStruct
-	m.RLock()
+	m.Lock()
 	if _, ok := m.MetricMap[metric]; !ok {
-		m.RUnlock()
-		m.Lock()
-		if _, ok := m.MetricMap[metric]; !ok {
-			m.MetricMap[metric] = MetricStruct{}.New(metric, now)
-		}
-		nsmetric = m.MetricMap[metric]
-		m.Unlock()
-
+		m.MetricMap[metric] = MetricStruct{}.New(metric, now)
 	} else {
-		nsmetric = m.MetricMap[metric]
-		m.RUnlock()
+		m.MetricMap[metric].Updated = now
 	}
+	nsmetric = m.MetricMap[metric]
+	m.Unlock()
 	return nsmetric
 }
 

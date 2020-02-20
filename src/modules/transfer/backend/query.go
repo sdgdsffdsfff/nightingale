@@ -5,106 +5,141 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
+
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/transfer/calc"
+	. "github.com/didi/nightingale/src/modules/transfer/config"
 
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/pool"
-
-	"github.com/didi/nightingale/src/dataobj"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
 )
 
 func FetchData(inputs []dataobj.QueryData) []*dataobj.TsdbQueryResponse {
 	resp := []*dataobj.TsdbQueryResponse{}
+	workerNum := 100
+	worker := make(chan struct{}, workerNum) //控制goroutine并发数
+	dataChan := make(chan *dataobj.TsdbQueryResponse, 20000)
+
 	for _, input := range inputs {
 		for _, endpoint := range input.Endpoints {
 			for _, counter := range input.Counters {
-				data, err := fetchData(input.Start, input.End, input.ConsolFunc, endpoint, counter, input.Step)
-				if err != nil {
-					logger.Errorf("query %s %s tsdb got error: %s", endpoint, counter, err)
-					continue
-				}
-				resp = append(resp, data)
+				worker <- struct{}{}
+				go fetchDataSync(input.Start, input.End, input.ConsolFunc, endpoint, counter, input.Step, worker, dataChan)
 			}
 		}
 	}
+
+	//等待所有goroutine执行完成
+	for i := 0; i < workerNum; i++ {
+		worker <- struct{}{}
+	}
+
+	close(dataChan)
+	for {
+		d, ok := <-dataChan
+		if !ok {
+			break
+		}
+		logger.Debugf("aggr data:%v ", d)
+		resp = append(resp, d)
+	}
+
 	return resp
 }
 
 func FetchDataForUI(input dataobj.QueryDataForUI) []*dataobj.TsdbQueryResponse {
 	resp := []*dataobj.TsdbQueryResponse{}
+	workerNum := 100
+	worker := make(chan struct{}, workerNum) //控制goroutine并发数
+	dataChan := make(chan *dataobj.TsdbQueryResponse, 20000)
 
-	if input.AggrFunc != "" && AggrFuncValide(input.AggrFunc) {
-		groupCounter := GetAggrCounter(input)
-
-		for groupTag, tagMapArr := range groupCounter {
-			aggrData := dataobj.TsdbQueryResponse{
-				Start:   input.Start,
-				End:     input.End,
-				Counter: groupTag,
-				DsType:  input.DsType,
-			}
-
-			workerNum := 100
-			worker := make(chan struct{}, workerNum) //控制goroutine并发数
-			dataChan := make(chan *dataobj.TsdbQueryResponse, 200)
-
-			for _, tagMap := range tagMapArr {
-				endpoint, counter, err := getEndpointCounter(input.Metric, "", tagMap)
-				if err != nil {
-					logger.Warningf("get counter error:%v metric:%s tag:%v", err, input.Metric, tagMap)
-				}
-
-				worker <- struct{}{}
-				go fetchDataSync(input.Start, input.End, input.ConsolFunc, endpoint, counter, input.Step, worker, dataChan)
-
-			}
-
-			//等待所有goroutine执行完成
-			for i := 0; i < workerNum; i++ {
-				worker <- struct{}{}
-			}
-
-			res := []*dataobj.TsdbQueryResponse{}
-			close(dataChan)
-			for {
-				d, ok := <-dataChan
-				if !ok {
-					break
-				}
-				logger.Debugf("aggr data:%v ", d)
-				res = append(res, d)
-			}
-
-			aggrData.Values = compute(input.AggrFunc, res)
-			logger.Debugf("aggr compute:%v ", aggrData.Values)
-
-			resp = append(resp, &aggrData)
-		}
-		return resp
-	}
 	for _, endpoint := range input.Endpoints {
 		if len(input.Tags) == 0 {
 			counter, err := getCounter(input.Metric, "", nil)
-			data, err := fetchData(input.Start, input.End, input.ConsolFunc, endpoint, counter, input.Step)
 			if err != nil {
-				logger.Errorf("query %s %s tsdb got error: %s", endpoint, counter, err)
+				logger.Error(err)
 				continue
 			}
-			resp = append(resp, data)
-			continue
-		}
-		for _, tag := range input.Tags {
-			counter, err := getCounter(input.Metric, tag, nil)
-			data, err := fetchData(input.Start, input.End, input.ConsolFunc, endpoint, counter, input.Step)
-			if err != nil {
-				logger.Errorf("query %s %s tsdb got error: %s", endpoint, counter, err)
-				continue
+			worker <- struct{}{}
+			go fetchDataSync(input.Start, input.End, input.ConsolFunc, endpoint, counter, input.Step, worker, dataChan)
+		} else {
+			for _, tag := range input.Tags {
+				counter, err := getCounter(input.Metric, tag, nil)
+				if err != nil {
+					logger.Error(err)
+					continue
+				}
+				worker <- struct{}{}
+				go fetchDataSync(input.Start, input.End, input.ConsolFunc, endpoint, counter, input.Step, worker, dataChan)
 			}
-			resp = append(resp, data)
 		}
 	}
 
+	//等待所有goroutine执行完成
+	for i := 0; i < workerNum; i++ {
+		worker <- struct{}{}
+	}
+
+	close(dataChan)
+	for {
+		d, ok := <-dataChan
+		if !ok {
+			break
+		}
+		logger.Debugf("aggr data:%v ", d)
+		resp = append(resp, d)
+	}
+
+	//进行数据计算
+	aggrDatas := []*dataobj.TsdbQueryResponse{}
+	if input.AggrFunc != "" && len(resp) > 1 {
+		aggrData := &dataobj.TsdbQueryResponse{
+			Start: input.Start,
+			End:   input.End,
+		}
+
+		aggrCounter := make(map[string][]*dataobj.TsdbQueryResponse)
+		if len(input.GroupKey) == 0 || getTags(resp[0].Counter) == "" {
+			//没有聚合 tag, 或者曲线没有其他 tags, 直接所有曲线进行计算
+			aggrData.Values = calc.Compute(input.AggrFunc, resp)
+			aggrDatas = append(aggrDatas, aggrData)
+		} else {
+			for _, data := range resp {
+				counterMap := make(map[string]string)
+
+				tagsMap, err := dataobj.SplitTagsString(getTags(data.Counter))
+				if err != nil {
+					logger.Warning(err)
+					continue
+				}
+				tagsMap["endpoint"] = data.Endpoint
+
+				for _, key := range input.GroupKey {
+					value, exists := tagsMap[key]
+					if exists {
+						counterMap[key] = value
+					}
+				}
+
+				counter := dataobj.SortedTags(counterMap)
+				if _, exists := aggrCounter[counter]; exists {
+					aggrCounter[counter] = append(aggrCounter[counter], data)
+				} else {
+					aggrCounter[counter] = []*dataobj.TsdbQueryResponse{data}
+				}
+			}
+
+			for counter, datas := range aggrCounter {
+				aggrData.Counter = counter
+				aggrData.Values = calc.Compute(input.AggrFunc, datas)
+
+				aggrDatas = append(aggrDatas, aggrData)
+			}
+		}
+		return aggrDatas
+	}
 	return resp
 }
 
@@ -116,26 +151,7 @@ func getCounter(metric, tag string, tagMap map[string]string) (counter string, e
 			return
 		}
 	}
-	tagStr := dataobj.SortedTags(tagMap)
-	counter = dataobj.PKWithTags(metric, tagStr)
-	return
-}
 
-func getEndpointCounter(metric, tag string, tagMap map[string]string) (endpoint string, counter string, err error) {
-	if tagMap == nil {
-		tagMap, err = dataobj.SplitTagsString(tag)
-		if err != nil {
-			logger.Warning(err, tag)
-			return
-		}
-	}
-
-	endpoint, exists := tagMap["endpoint"]
-	if !exists {
-		logger.Warning("not found endpoint", tag)
-		return
-	}
-	delete(tagMap, "endpoint")
 	tagStr := dataobj.SortedTags(tagMap)
 	counter = dataobj.PKWithTags(metric, tagStr)
 	return
@@ -149,20 +165,13 @@ func fetchDataSync(start, end int64, consolFun, endpoint, counter string, step i
 	data, err := fetchData(start, end, consolFun, endpoint, counter, step)
 	if err != nil {
 		logger.Warning(err)
-		return
 	}
 	dataChan <- data
 	return
 }
 
 func fetchData(start, end int64, consolFun, endpoint, counter string, step int) (*dataobj.TsdbQueryResponse, error) {
-	var err error
-	if step <= 0 {
-		step, err = getCounterStep(endpoint, counter)
-		if err != nil {
-			return nil, err
-		}
-	}
+	var resp *dataobj.TsdbQueryResponse
 
 	qparm := GenQParam(start, end, consolFun, endpoint, counter, step)
 	resp, err := QueryOne(qparm)
@@ -254,12 +263,12 @@ func QueryOne(para dataobj.TsdbQueryParam) (resp *dataobj.TsdbQueryResponse, err
 		select {
 		case <-time.After(time.Duration(callTimeout) * time.Millisecond):
 			pool.ForceClose(conn)
-			logger.Warning("%s, call timeout. proc: %s", addr, pool.Proc())
+			logger.Warningf("%s, call timeout. proc: %s", addr, pool.Proc())
 			break
 		case r := <-ch:
 			if r.Err != nil {
 				pool.ForceClose(conn)
-				logger.Warning("%s, call failed, err %v. proc: %s", addr, r.Err, pool.Proc())
+				logger.Warningf("%s, call failed, err %v. proc: %s", addr, r.Err, pool.Proc())
 				break
 
 			} else {
@@ -275,11 +284,7 @@ func QueryOne(para dataobj.TsdbQueryParam) (resp *dataobj.TsdbQueryResponse, err
 						continue
 					}
 
-					if (r.Resp.DsType == "DERIVE" || r.Resp.DsType == "COUNTER") && v.Value < 0 {
-						fixed = append(fixed, &dataobj.RRDData{Timestamp: v.Timestamp, Value: dataobj.JsonFloat(math.NaN())})
-					} else {
-						fixed = append(fixed, v)
-					}
+					fixed = append(fixed, v)
 				}
 				r.Resp.Values = fixed
 			}
@@ -327,4 +332,12 @@ func selectPoolByPK(pk string) ([]Pool, error) {
 
 	return pools, nil
 
+}
+
+func getTags(counter string) (tags string) {
+	idx := strings.IndexAny(counter, "/")
+	if idx == -1 {
+		return ""
+	}
+	return counter[idx+1:]
 }
