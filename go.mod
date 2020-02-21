@@ -11,13 +11,11 @@ require (
 	github.com/gin-contrib/sessions v0.0.3
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/go-xorm/xorm v0.7.9
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/mux v1.6.2
 	github.com/hpcloud/tail v1.0.0
 	github.com/json-iterator/go v1.1.9
 	github.com/mattn/go-isatty v0.0.12
-	github.com/nsqio/go-nsq v1.0.7 // indirect
 	github.com/open-falcon/rrdlite v0.0.0-20200214140804-bf5829f786ad
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.4.0
