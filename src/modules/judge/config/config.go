@@ -12,16 +12,14 @@ import (
 )
 
 type ConfYaml struct {
-	Logger           LoggerSection      `yaml:"logger"`
-	Query            SeriesQuerySection `yaml:"query"`
-	Publisher        PublisherSection   `yaml:"publisher"`
-	Strategy         StrategySection    `yaml:"strategy"`
-	Identity         IdentitySection    `yaml:"identity"`
-	Http             HttpSection        `yaml:"http"`
-	Rpc              RpcSection         `yaml:"rpc"`
-	Report           ReportSection      `yaml:"report"`
-	MinAlertInterval int64              `yaml:"minAlertInterval"`
-	Remain           int                `yaml:"remain"`
+	Logger   LoggerSection      `yaml:"logger"`
+	Query    SeriesQuerySection `yaml:"query"`
+	Redis    RedisSection       `yaml:"redis"`
+	Strategy StrategySection    `yaml:"strategy"`
+	Identity IdentitySection    `yaml:"identity"`
+	Http     HttpSection        `yaml:"http"`
+	Rpc      RpcSection         `yaml:"rpc"`
+	Report   ReportSection      `yaml:"report"`
 }
 
 var (
@@ -44,22 +42,6 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("storage", map[string]interface{}{
-		"queryTimeout":       1500,
-		"queryConcurrency":   10,
-		"queryBatch":         10,
-		"queryMergeSize":     30,
-		"enqueueTimeout":     200,
-		"dequeueTimeout":     500,
-		"queryQueueSize":     10000,
-		"queuedQueryTimeout": 2200,
-		"shardsetSize":       10,
-		"historySize":        5,
-	})
-
-	viper.SetDefault("remain", 60)
-	viper.SetDefault("minAlertInterval", 60)
-
 	viper.SetDefault("query", map[string]interface{}{
 		"maxConn":          10,
 		"maxIdle":          10,
@@ -68,19 +50,15 @@ func Parse(conf string) error {
 		"indexCallTimeout": 2000,
 	})
 
-	viper.SetDefault("publisher.redis", map[string]interface{}{
-		"balance":              "round_robbin", //balance: round_robbin/random
-		"maxIdle":              10,
-		"bufferSize":           1024,
-		"bufferEnqueueTimeout": 200,
-		"connTimeout":          200,
-		"readTimeout":          500,
-		"writeTimeout":         500,
-		"idleTimeout":          100,
+	viper.SetDefault("redis.idle", 5)
+	viper.SetDefault("redis.timeout", map[string]int{
+		"conn":  500,
+		"read":  3000,
+		"write": 3000,
 	})
 
 	viper.SetDefault("strategy", map[string]interface{}{
-		"partitionApi":   "/api/mon/stras/effective?instance=%s",
+		"partitionApi":   "/api/portal/stras/effective?instance=%s",
 		"updateInterval": 9000,
 		"indexInterval":  60000,
 		"timeout":        5000,
@@ -97,22 +75,17 @@ func Parse(conf string) error {
 	return err
 }
 
-type PublisherSection struct {
-	Type  string                `yaml:"type"`
-	Redis RedisPublisherSection `yaml:"redis,omitempty"`
+type RedisSection struct {
+	Addrs   []string       `yaml:"addrs"`
+	Pass    string         `yaml:"pass"`
+	Idle    int            `yaml:"idle"`
+	Timeout TimeoutSection `yaml:"timeout"`
 }
 
-type RedisPublisherSection struct {
-	Addrs                []string `yaml:"addrs"`                // 直连下游redis的地址
-	Password             string   `yaml:"password"`             // 密码
-	Balance              string   `yaml:"balance"`              // load balance, 负载均衡算法
-	ConnTimeout          int      `yaml:"connTimeout"`          // 连接超时
-	ReadTimeout          int      `yaml:"readTimeout"`          // 读超时
-	WriteTimeout         int      `yaml:"writeTimeout"`         // 写超时
-	MaxIdle              int      `yaml:"maxIdle"`              // idle
-	IdleTimeout          int      `yaml:"idleTimeout"`          // 超时
-	BufferSize           int      `yaml:"bufferSize"`           // 缓存个数
-	BufferEnqueueTimeout int      `yaml:"bufferEnqueueTimeout"` // 缓存入队列超时
+type TimeoutSection struct {
+	Conn  int `yaml:"conn"`
+	Read  int `yaml:"read"`
+	Write int `yaml:"write"`
 }
 
 type SeriesQuerySection struct {
@@ -121,7 +94,6 @@ type SeriesQuerySection struct {
 	MaxIdle          int      `json:"maxIdle"`          //
 	ConnTimeout      int      `json:"connTimeout"`      // 连接超时
 	CallTimeout      int      `json:"callTimeout"`      // 请求超时
-	IndexEnable      bool     `json:"indexEnable"`      //
 	IndexAddrs       []string `json:"indexAddrs"`       // 直连下游index的地址
 	IndexCallTimeout int      `json:"indexCallTimeout"` // 请求超时
 }
@@ -132,9 +104,9 @@ type ReportSection struct {
 }
 
 type LoggerSection struct {
-	Path      string `yaml:"path"`
+	Dir       string `yaml:"dir"`
 	Level     string `yaml:"level"`
-	KeepHours int    `yaml:"keepHours"`
+	KeepHours uint   `yaml:"keepHours"`
 }
 
 type StrategySection struct {

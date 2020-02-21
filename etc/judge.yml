@@ -11,20 +11,14 @@ query:
   indexAddrs:
   - http://127.0.0.1:5830/api/index/counter/clude
   # indexCallTimeout: 2000
-publisher:
-  # type: redis(for prod) | file(for dev)
-  type: redis
-  file:
-    name: ./logs/judge/event.log
-  redis:
-    addrs:
-      - 127.0.0.1:6379
-    password: 1234
-    # in ms
-    # connTimeout: 200
-    # readTimeout: 500
-    # writeTimeout: 500
-    # idleTimeout: 100
+redis:
+  addrs: 
+    - 127.0.0.1:6379
+  pass: 1234
+  # timeout:
+  #   conn: 500
+  #   read: 3000
+  #   write: 3000
 strategy:
   addrs:
     - 127.0.0.1:5800
@@ -36,6 +30,6 @@ report:
   addrs:
     - 127.0.0.1:5800
 logger:
-  path: logs/judge
+  dir: logs/alarm
   level: WARNING
   keepHours: 2

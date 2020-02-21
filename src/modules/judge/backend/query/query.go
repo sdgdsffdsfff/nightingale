@@ -7,9 +7,9 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/judge/config"
-	"github.com/didi/nightingale/src/modules/judge/logger"
 	"github.com/didi/nightingale/src/toolkits/str"
 
+	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
 )
 
@@ -114,7 +114,7 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 		url := config.Config.Query.IndexAddrs[perm[i]]
 		err := httplib.Post(url).JSONBodyQuiet([]IndexReq{*request}).SetTimeout(time.Duration(config.Config.Query.IndexCallTimeout) * time.Millisecond).ToJSON(&result)
 		if err != nil {
-			logger.Warningf(0, "index xclude failed, error:%v, req:%v", err, request)
+			logger.Warningf("index xclude failed, error:%v, req:%v", err, request)
 			continue
 		} else {
 			succ = true

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -10,15 +9,15 @@ import (
 	"syscall"
 
 	"github.com/didi/nightingale/src/modules/judge/backend/query"
-	redisp "github.com/didi/nightingale/src/modules/judge/backend/redis"
+	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/modules/judge/cron"
 	"github.com/didi/nightingale/src/modules/judge/http"
-	"github.com/didi/nightingale/src/modules/judge/logger"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
 
 	"github.com/toolkits/pkg/file"
+	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
 )
 
@@ -73,17 +72,7 @@ func main() {
 	cache.Strategy = cache.NewStrategyMap()
 	cache.NodataStra = cache.NewStrategyMap()
 	cache.SeriesMap = cache.NewIndexMap()
-
-	// 初始化publisher组件
-	switch cfg.Publisher.Type {
-	case "redis":
-		redisp.Pub, err = redisp.NewRedisPublisher(cfg.Publisher.Redis)
-	default:
-		err = errors.New("unknown publish type")
-	}
-	if err != nil {
-		log.Fatalln("[F] init publisher failed:", err)
-	}
+	redi.InitRedis()
 
 	go http.Start(cfg.Http.Listen, cfg.Logger.Level)
 	go rpc.Start()
@@ -92,14 +81,7 @@ func main() {
 	go cron.GetStrategy()
 	go cron.NodataJudge()
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	select {
-	case <-c:
-		logger.Info(0, "stop signal caught, try to stop judge server")
-	}
-	logger.Info(0, "judge server stopped succefully")
-	logger.Close()
+	ending()
 }
 
 // auto detect configuration file
@@ -135,4 +117,18 @@ func start() {
 	fmt.Println("transfer start, use configuration file:", *conf)
 	fmt.Println("runner.Cwd:", runner.Cwd)
 	fmt.Println("runner.Hostname:", runner.Hostname)
+}
+
+func ending() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	select {
+	case <-c:
+		fmt.Printf("stop signal caught, stopping... pid=%d\n", os.Getpid())
+	}
+
+	logger.Close()
+	http.Shutdown()
+	redi.CloseRedis()
+	fmt.Println("alarm stopped successfully")
 }

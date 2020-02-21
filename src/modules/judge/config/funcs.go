@@ -1,19 +1,23 @@
 package config
 
 import (
-	"log"
+	"fmt"
+	"os"
 
-	"github.com/didi/nightingale/src/modules/judge/logger"
+	"github.com/toolkits/pkg/logger"
 )
 
 func InitLogger() {
-	backend, err := logger.NewFileBackend(Config.Logger.Path)
+	c := Config.Logger
+
+	lb, err := logger.NewFileBackend(c.Dir)
 	if err != nil {
-		log.Fatalln("[F] InitLog failed:", err)
+		fmt.Println("cannot init logger:", err)
+		os.Exit(1)
 	}
 
-	// 初始化日志库
-	logger.SetLogging(Config.Logger.Level, backend)
-	backend.SetRotateByHour(true)
-	backend.SetKeepHours(uint(Config.Logger.KeepHours))
+	lb.SetRotateByHour(true)
+	lb.SetKeepHours(c.KeepHours)
+
+	logger.SetLogging(c.Level, lb)
 }

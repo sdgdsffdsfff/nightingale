@@ -9,9 +9,9 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/modules/judge/judge"
-	"github.com/didi/nightingale/src/modules/judge/logger"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
+	"github.com/toolkits/pkg/logger"
 )
 
 var nodataJob *semaphore.Semaphore
@@ -34,7 +34,7 @@ func nodataJudge() {
 		now := time.Now().Unix()
 		respData, err := judge.GetData(stra, stra.Exprs[0], nil, now, false)
 		if err != nil {
-			logger.Errorf(stra.Id, "stra:%v get query data err:%v", stra, err)
+			logger.Errorf("stra:%v get query data err:%v", stra, err)
 			//获取数据报错，直接出发nodata
 			for _, endpoint := range stra.Endpoints {
 				if endpoint == "" {

@@ -13,13 +13,13 @@ import (
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/judge/backend/query"
-	"github.com/didi/nightingale/src/modules/judge/backend/redis"
+	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
-	"github.com/didi/nightingale/src/modules/judge/logger"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/spaolacci/murmur3"
+	"github.com/toolkits/pkg/logger"
 )
 
 var (
@@ -62,7 +62,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 	atomic.AddInt64(&config.JudgeRun, 1)
 
 	if len(exps) < 1 {
-		logger.Errorf(stra.Id, "stra:%v exp is null", stra)
+		logger.Errorf("stra:%v exp is null", stra)
 		return
 	}
 	exp := exps[0]
@@ -86,7 +86,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 		if len(exps) == 1 {
 			bytes, err := json.Marshal(history)
 			if err != nil {
-				logger.Error(0, "Marshal history:%v err:%v", history, err)
+				logger.Error("Marshal history:%v err:%v", history, err)
 			}
 			event := &config.Event{
 				ID:        fmt.Sprintf("s_%d_%s", stra.Id, firstItem.PrimaryKey()),
@@ -114,7 +114,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 		if exps[1].Func == "nodata" { //nodata重新查询索引来进行告警判断
 			respData, err := GetData(stra, exps[1], firstItem, now, false)
 			if err != nil {
-				logger.Errorf(stra.Id, "stra:%v get query data err:%v", stra, err)
+				logger.Errorf("stra:%v get query data err:%v", stra, err)
 
 				judgeItem := &dataobj.JudgeItem{
 					Endpoint: firstItem.Endpoint,
@@ -142,7 +142,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 				respData, err = GetData(stra, exps[1], firstItem, now, false)
 			}
 			if err != nil {
-				logger.Errorf(stra.Id, "stra:%v get query data err:%v", stra, err)
+				logger.Errorf("stra:%v get query data err:%v", stra, err)
 				return
 			}
 			for i, _ := range respData {
@@ -164,13 +164,13 @@ func judgeItemWithStrategy(stra *model.Stra, historyData []*dataobj.RRDData, exp
 	switch straFunc {
 	case "happen":
 		if len(exp.Params) < 1 {
-			logger.Errorf(stra.Id, "exp:%v stra param is null", exp)
+			logger.Errorf("stra:%d exp:%v stra param is null", stra.Id, exp)
 			return
 		}
 		straParam = append(straParam, exp.Params[0])
 	case "c_avg", "c_avg_abs", "c_avg_rate", "c_avg_rate_abs":
 		if len(exp.Params) < 1 {
-			logger.Errorf(stra.Id, "exp:%v stra param is null", exp)
+			logger.Errorf("stra:%d exp:%v stra param is null", stra.Id, exp)
 			return
 		}
 
@@ -181,12 +181,12 @@ func judgeItemWithStrategy(stra *model.Stra, historyData []*dataobj.RRDData, exp
 
 		respItems, err := GetData(stra, exp, firstItem, now-int64(exp.Params[0]), true)
 		if err != nil {
-			logger.Errorf(stra.Id, "%v get compare data err:%v", exp, err)
+			logger.Errorf("stra:%v %v get compare data err:%v", stra.Id, exp, err)
 			return
 		}
 
 		if len(respItems) != 1 || len(respItems[0].Values) < 1 {
-			logger.Errorf(stra.Id, "%v get compare data err, respItems:%v", exp, respItems)
+			logger.Errorf("stra:%d %v get compare data err, respItems:%v", stra.Id, exp, respItems)
 			return
 		}
 
@@ -202,7 +202,7 @@ func judgeItemWithStrategy(stra *model.Stra, historyData []*dataobj.RRDData, exp
 
 	fn, err := ParseFuncFromString(straFunc, straParam, exp.Eopt, exp.Threshold)
 	if err != nil {
-		logger.Errorf(stra.Id, "%v parse func fail: %v", exp, err)
+		logger.Errorf("stra:%d %v parse func fail: %v", stra.Id, exp, err)
 		return
 	}
 
@@ -379,11 +379,6 @@ func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64
 			return
 		}
 
-		if now-lastEvent.Etime < config.Config.MinAlertInterval {
-			// 报警不能太频繁，两次报警之间至少要间隔MinInterval秒，否则就不能报警
-			return
-		}
-
 		sendEvent(event)
 	} else {
 		// 如果LastEvent是Problem，报OK，否则啥都不做
@@ -398,7 +393,10 @@ func sendEvent(event *config.Event) {
 	// update last event
 	cache.LastEvents.Set(event.ID, event)
 
-	redis.Pub.Publish(event)
+	err := redi.Push(event)
+	if err != nil {
+		logger.Errorf("push event:%v err:%v", event, err)
+	}
 }
 
 func getHashId(sid int64, item *dataobj.JudgeItem) uint64 {

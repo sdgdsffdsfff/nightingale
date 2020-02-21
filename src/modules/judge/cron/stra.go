@@ -9,8 +9,8 @@ import (
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
-	"github.com/didi/nightingale/src/modules/judge/logger"
 
+	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
 )
 
@@ -30,7 +30,7 @@ func GetStrategy() {
 
 func getStrategy(opts config.StrategySection) {
 	if len(opts.Addrs) == 0 {
-		logger.Error(0, "empty config addr")
+		logger.Error("empty config addr")
 		return
 	}
 
@@ -41,12 +41,12 @@ func getStrategy(opts config.StrategySection) {
 		err := httplib.Get(url).SetTimeout(time.Duration(opts.Timeout) * time.Millisecond).ToJSON(&resp)
 
 		if err != nil {
-			logger.Warningf(0, "get strategy from remote failed, error:%v", err)
+			logger.Warningf("get strategy from remote failed, error:%v", err)
 			continue
 		}
 
 		if resp.Err != "" {
-			logger.Warningf(0, "get strategy from remote failed, error:%v", resp.Err)
+			logger.Warningf("get strategy from remote failed, error:%v", resp.Err)
 			continue
 		}
 
@@ -57,7 +57,7 @@ func getStrategy(opts config.StrategySection) {
 	for _, stra := range resp.Data {
 		atomic.AddInt64(&config.Stra, 1)
 		if len(stra.Exprs) < 1 {
-			logger.Warningf(stra.Id, "strategy exprs < 1 :%v", stra)
+			logger.Warningf("strategy:%v exprs < 1", stra)
 			continue
 		}
 

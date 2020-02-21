@@ -45,7 +45,7 @@ func NewMetricValue(metric string, value int64) dataobj.MetricValue {
 func pushToMonitor(items []dataobj.MetricValue) {
 	bs, err := json.Marshal(items)
 	if err != nil {
-		logger.Error(0, err)
+		logger.Error(err)
 		return
 	}
 
@@ -53,7 +53,7 @@ func pushToMonitor(items []dataobj.MetricValue) {
 
 	resp, err := http.Post("http://127.0.0.1:1949/api/collector/push", "application/json", bf)
 	if err != nil {
-		logger.Error(0, err)
+		logger.Error(err)
 		return
 	}
 

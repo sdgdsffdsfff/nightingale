@@ -9,10 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/judge/logger"
-
 	"github.com/gin-gonic/gin"
 	"github.com/mattn/go-isatty"
+	"github.com/toolkits/pkg/logger"
 )
 
 type consoleColorModeValue int
@@ -278,10 +277,10 @@ func LoggerWithConfig(conf LoggerConfig) gin.HandlerFunc {
 			param.Path = path
 
 			// fmt.Fprint(out, formatter(param))
-			logger.Info(0, formatter(param))
+			logger.Info(formatter(param))
 
 			if c.Request.Method != "GET" {
-				logger.Info(0, readBody(rdr1))
+				logger.Info(readBody(rdr1))
 			}
 		}
 	}

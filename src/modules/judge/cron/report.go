@@ -5,8 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/judge/logger"
-
+	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
 )
 
@@ -35,14 +34,14 @@ func report(ip, port string, addrs []string) {
 			"port": port,
 		}
 
-		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(3 * time.Second).ToJSON(&body)
+		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(time.Second * 2).ToJSON(&body)
 		if err != nil {
-			logger.Warningf(0, "curl %s fail: %v", url, err)
+			logger.Warningf("curl %s fail: %v", url, err)
 			continue
 		}
 
 		if body.Err != "" {
-			logger.Warningf(0, "curl %s fail: %v", url, body.Err)
+			logger.Warningf("curl %s fail: %v", url, body.Err)
 			continue
 		}
 
