@@ -33,7 +33,7 @@ type reportRes struct {
 func report(ip, rpcPort, httpPort string, addrs []string) {
 	perm := rand.Perm(len(addrs))
 	for i := range perm {
-		url := fmt.Sprintf("http://%s/v1/uic/report-index-heartbeat", addrs[perm[i]])
+		url := fmt.Sprintf("http://%s/api/hbs/report-index-heartbeat", addrs[perm[i]])
 
 		m := map[string]string{
 			"ip":        ip,
@@ -42,7 +42,7 @@ func report(ip, rpcPort, httpPort string, addrs []string) {
 		}
 
 		var body reportRes
-		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(time.Second).Header("x-srv-token", "uic-builtin-token").ToJSON(&body)
+		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(3 * time.Second).ToJSON(&body)
 		if err != nil {
 			logger.Errorf("curl %s fail: %v", url, err)
 			continue

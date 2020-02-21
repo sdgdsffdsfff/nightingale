@@ -38,7 +38,7 @@ func getStrategy() {
 	var stras StraResp
 	perm := rand.Perm(len(addrs))
 	for i := range perm {
-		url := fmt.Sprintf("%s/api/mon/stras/effective?all=1", addrs[perm[i]])
+		url := fmt.Sprintf("%s/api/portal/stras/effective?all=1", addrs[perm[i]])
 		err := httplib.Get(url).SetTimeout(time.Duration(3000) * time.Millisecond).ToJSON(&stras)
 
 		if err != nil {

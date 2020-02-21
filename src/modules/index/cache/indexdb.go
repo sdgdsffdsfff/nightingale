@@ -153,8 +153,8 @@ func GetIndex() []*model.Idx {
 	var body indexRes
 
 	for i := range perm {
-		url := fmt.Sprintf("http://%s/v1/uic/indexs", addrs[perm[i]])
-		err := httplib.Get(url).SetTimeout(time.Second*3).Header("x-srv-token", "uic-builtin-token").ToJSON(&body)
+		url := fmt.Sprintf("http://%s/api/hbs/indexs", addrs[perm[i]])
+		err := httplib.Get(url).SetTimeout(3 * time.Second).ToJSON(&body)
 
 		if err != nil {
 			logger.Warningf("curl %s fail: %v", url, err)

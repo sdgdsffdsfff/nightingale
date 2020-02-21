@@ -52,7 +52,6 @@ func GetCollectsRetry() (model.Collect, error) {
 		if err == nil {
 			if resp.Err != "" {
 				err = fmt.Errorf(resp.Err)
-				logger.Warningf("get collect err:%v", err)
 				continue
 			}
 			return resp.Dat, err
@@ -68,7 +67,7 @@ func getCollects() (CollectResp, error) {
 	i := rand.Intn(len(config.Config.Collector.Addrs))
 	addr := config.Config.Collector.Addrs[i]
 
-	url := fmt.Sprintf("http://%s/api/mon/collects/%s", addr, config.Endpoint)
+	url := fmt.Sprintf("http://%s/api/portal/collects/%s", addr, config.Endpoint)
 	err = httplib.Get(url).SetTimeout(time.Duration(config.Config.Collector.Timeout) * time.Millisecond).ToJSON(&res)
 	if err != nil {
 		err = fmt.Errorf("get collects from remote failed, error:%v", err)

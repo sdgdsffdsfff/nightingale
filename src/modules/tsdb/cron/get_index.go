@@ -29,12 +29,12 @@ type indexRes struct {
 }
 
 func GetIndex() {
-	addrs := config.Config.Api["uic"]
+	addrs := config.Config.Api["monapi"]
 	perm := rand.Perm(len(addrs))
 	var body indexRes
 	for i := range perm {
-		url := fmt.Sprintf("http://%s/v1/uic/indexs", addrs[perm[i]])
-		err := httplib.Get(url).SetTimeout(time.Second).Header("x-srv-token", "uic-builtin-token").ToJSON(&body)
+		url := fmt.Sprintf("http://%s/api/hbs/indexs", addrs[perm[i]])
+		err := httplib.Get(url).SetTimeout(time.Second).ToJSON(&body)
 		if err != nil {
 			logger.Warningf("curl %s fail: %v", url, err)
 			continue

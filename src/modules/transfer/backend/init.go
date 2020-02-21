@@ -89,15 +89,15 @@ type judgeRes struct {
 }
 
 func GetJudges() []string {
-	addrs := Config.API["uic"]
+	addrs := Config.API["monapi"]
 	perm := rand.Perm(len(addrs))
 	judgeInstance := []string{}
 
 	var body judgeRes
 
 	for i := range perm {
-		url := fmt.Sprintf("%s/v1/uic/judges", addrs[perm[i]])
-		err := httplib.Get(url).SetTimeout(time.Second*3).Header("x-srv-token", "uic-builtin-token").ToJSON(&body)
+		url := fmt.Sprintf("%s/api/hbs/judges", addrs[perm[i]])
+		err := httplib.Get(url).SetTimeout(3 * time.Second).ToJSON(&body)
 
 		if err != nil {
 			logger.Warningf("curl %s fail: %v", url, err)

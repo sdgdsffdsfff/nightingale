@@ -28,14 +28,14 @@ func report(ip, port string, addrs []string) {
 	perm := rand.Perm(len(addrs))
 	var body reportRes
 	for i := range perm {
-		url := fmt.Sprintf("http://%s/v1/uic/report-judge-heartbeat", addrs[perm[i]])
+		url := fmt.Sprintf("http://%s/api/hbs/report-judge-heartbeat", addrs[perm[i]])
 
 		m := map[string]string{
 			"ip":   ip,
 			"port": port,
 		}
 
-		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(time.Second*2).Header("x-srv-token", "uic-builtin-token").ToJSON(&body)
+		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(3 * time.Second).ToJSON(&body)
 		if err != nil {
 			logger.Warningf(0, "curl %s fail: %v", url, err)
 			continue
