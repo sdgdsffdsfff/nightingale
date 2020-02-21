@@ -3,7 +3,8 @@ package model
 import (
 	"fmt"
 
-	"github.com/go-xorm/xorm"
+	"xorm.io/xorm"
+
 	jsoniter "github.com/json-iterator/go"
 	"github.com/toolkits/pkg/str"
 )

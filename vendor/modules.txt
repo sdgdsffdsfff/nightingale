@@ -33,8 +33,6 @@ github.com/go-playground/locales/currency
 github.com/go-playground/universal-translator
 # github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
-# github.com/go-xorm/xorm v0.7.9
-github.com/go-xorm/xorm
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
 # github.com/gomodule/redigo v2.0.0+incompatible
@@ -196,3 +194,5 @@ honnef.co/go/tools/internal/renameio
 xorm.io/builder
 # xorm.io/core v0.7.3
 xorm.io/core
+# xorm.io/xorm v0.8.1
+xorm.io/xorm
