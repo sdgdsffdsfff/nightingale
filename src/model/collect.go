@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-xorm/xorm"
+	"xorm.io/xorm"
 )
 
 type Collect struct {

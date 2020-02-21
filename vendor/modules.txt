@@ -196,3 +196,5 @@ honnef.co/go/tools/internal/renameio
 xorm.io/builder
 # xorm.io/core v0.7.3
 xorm.io/core
+# xorm.io/xorm v0.8.1
+xorm.io/xorm

@@ -19,7 +19,6 @@ require (
 	github.com/mattn/go-isatty v0.0.12
 	github.com/nsqio/go-nsq v1.0.7 // indirect
 	github.com/open-falcon/rrdlite v0.0.0-20200214140804-bf5829f786ad
-	github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.4.0
 	github.com/toolkits/pkg v1.1.1
@@ -28,4 +27,5 @@ require (
 	go.uber.org/automaxprocs v1.3.0 // indirect
 	gopkg.in/ldap.v3 v3.1.0
 	xorm.io/core v0.7.3
+	xorm.io/xorm v0.8.1
 )
