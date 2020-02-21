@@ -68,4 +68,5 @@ func getStrategy(opts config.StrategySection) {
 		}
 	}
 
+	cache.Strategy.Clean()
 }

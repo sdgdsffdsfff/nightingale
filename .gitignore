@@ -39,14 +39,11 @@ _test
 
 /n9e-*
 
-/src/modules/alarm/alarm
 /src/modules/index/index
-/src/modules/judge/judge
 /src/modules/collector/collector
 /src/modules/transfer/transfer
 /src/modules/tsdb/tsdb
-/src/modules/portal/portal
-/src/modules/sender/sender
+/src/modules/monapi/monapi
 
 /web/node_modules
 /web/.cache-loader
