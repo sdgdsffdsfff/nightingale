@@ -16,6 +16,7 @@ type ConfYaml struct {
 	RebuildWorker   int             `yaml:"rebuildWorker"`
 	BuildWorker     int             `yaml:"buildWorker"`
 	DefaultStep     int             `yaml:"defaultStep"`
+	PushUrl         string          `yaml:"pushUrl"`
 	Logger          LoggerSection   `yaml:"logger"`
 	HTTP            HTTPSection     `yaml:"http"`
 	RPC             RPCSection      `yaml:"rpc"`
@@ -96,13 +97,15 @@ func Parse(conf string) error {
 	viper.SetDefault("buildWorker", 20)      //往内存中推索引的并发个数
 	viper.SetDefault("defaultStep", 60)      //系统监控指标默认周期，需要和collector模块中的上报周期一致
 
+	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
+
 	viper.SetDefault("http.enabled", true)
 	viper.SetDefault("rpc.enabled", true)
 
 	viper.SetDefault("limit", map[string]int{
-		"fullmatchLogCounter": 100000, //每次从待落盘队列中间等待间隔，单位毫秒
-		"ui":    1000000, //ui请求的最大曲线个数
-		"clude": 1000000, //clude接口支持查询的最大曲线个数
+		"fullmatchLogCounter": 100000,  //每次从待落盘队列中间等待间隔，单位毫秒
+		"ui":                  1000000, //ui请求的最大曲线个数
+		"clude":               1000000, //clude接口支持查询的最大曲线个数
 	})
 
 	viper.SetDefault("report", map[string]interface{}{
