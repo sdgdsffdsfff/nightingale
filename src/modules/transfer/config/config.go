@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
@@ -23,8 +22,8 @@ type ConfYaml struct {
 }
 
 type IndexSection struct {
-	Addrs   []string `yaml:"addrs"`
-	Timeout int      `yaml:"timeout"`
+	Path    string `yaml:"path"`
+	Timeout int    `yaml:"timeout"`
 }
 
 type LoggerSection struct {
@@ -68,7 +67,6 @@ type JudgeSection struct {
 
 var (
 	Config *ConfYaml
-	lock   = new(sync.RWMutex)
 )
 
 // CLUSTER NODE
@@ -95,20 +93,11 @@ func formatClusterItems(cluster map[string]string) map[string]*ClusterNode {
 	return ret
 }
 
-func GetCfgYml() *ConfYaml {
-	lock.RLock()
-	defer lock.RUnlock()
-	return Config
-}
-
 func Parse(conf string) error {
 	bs, err := file.ReadBytes(conf)
 	if err != nil {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
-
-	lock.Lock()
-	defer lock.Unlock()
 
 	viper.SetConfigType("yaml")
 	err = viper.ReadConfig(bytes.NewBuffer(bs))
@@ -117,6 +106,7 @@ func Parse(conf string) error {
 	}
 
 	viper.SetDefault("http.enabled", true)
+	viper.SetDefault("index.path", "/api/index/counter/fullmatch")
 	viper.SetDefault("index.timeout", 3000)
 	viper.SetDefault("minStep", 1)
 

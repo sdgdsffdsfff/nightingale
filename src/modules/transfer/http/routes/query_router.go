@@ -6,14 +6,15 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/transfer/backend"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
-
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
+
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/transfer/backend"
+	"github.com/didi/nightingale/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 type QueryDataReq struct {
@@ -96,14 +97,16 @@ func GetSeries(start, end int64, req []SeriesReq) ([]dataobj.QueryData, error) {
 		return queryDatas, fmt.Errorf("req err")
 	}
 
-	if len(Config.Index.Addrs) < 1 {
+	addrs := address.GetHTTPAddresses("index")
+
+	if len(addrs) < 1 {
 		return queryDatas, fmt.Errorf("index addr is nil")
 	}
 
-	i := rand.Intn(len(Config.Index.Addrs))
-	addr := Config.Index.Addrs[i]
+	i := rand.Intn(len(addrs))
+	addr := fmt.Sprintf("http://%s%s", addrs[i], config.Config.Index.Path)
 
-	resp, code, err := httplib.PostJSON(addr, time.Duration(Config.Index.Timeout)*time.Millisecond, req, nil)
+	resp, code, err := httplib.PostJSON(addr, time.Duration(config.Config.Index.Timeout)*time.Millisecond, req, nil)
 	if err != nil {
 		return queryDatas, err
 	}
