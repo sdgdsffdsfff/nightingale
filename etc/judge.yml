@@ -14,7 +14,7 @@ query:
 redis:
   addrs: 
     - 127.0.0.1:6379
-  pass: 1234
+  pass: ""
   # timeout:
   #   conn: 500
   #   read: 3000
