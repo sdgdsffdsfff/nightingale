@@ -27,7 +27,7 @@ func GetCollects() {
 }
 
 func loopDetect() {
-	t1 := time.NewTicker(time.Duration(config.Config.Collector.Interval) * time.Second)
+	t1 := time.NewTicker(time.Duration(config.Config.Collector.SyncInterval) * time.Second)
 	for {
 		<-t1.C
 		detect()
@@ -68,7 +68,7 @@ func getCollects() (CollectResp, error) {
 	addr := config.Config.Collector.Addrs[i]
 
 	url := fmt.Sprintf("http://%s/api/portal/collects/%s", addr, config.Endpoint)
-	err = httplib.Get(url).SetTimeout(time.Duration(config.Config.Collector.Timeout) * time.Millisecond).ToJSON(&res)
+	err = httplib.Get(url).SetTimeout(time.Duration(config.Config.Collector.SyncTimeout) * time.Millisecond).ToJSON(&res)
 	if err != nil {
 		err = fmt.Errorf("get collects from remote failed, error:%v", err)
 	}

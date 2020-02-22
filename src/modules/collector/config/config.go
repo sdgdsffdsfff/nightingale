@@ -59,8 +59,8 @@ type CollectorSection struct {
 	MountIgnorePrefix []string `yaml:"mountIgnorePrefix"`
 	SyncCollect       bool     `yaml:"syncCollect"`
 	Addrs             []string `yaml:"addrs"`
-	Timeout           int      `yaml:"timeout"`
-	Interval          int      `yaml:"interval"`
+	SyncTimeout       int      `yaml:"syncTimeout"`
+	SyncInterval      int      `yaml:"syncInterval"`
 }
 
 var (

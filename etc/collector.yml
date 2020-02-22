@@ -17,7 +17,10 @@ transfer:
 
 collector:
   syncCollect: true
-  interval: 10
+  # in second
+  syncInterval: 10
+  # in ms
+  syncTimeout: 1000
   ifacePrefix:
     - eth
     - em
@@ -26,8 +29,6 @@ collector:
     - /var/lib
   addrs: 
     - 127.0.0.1:5800
-  # in ms
-  # timeout: 1000
 
 ignoreMetrics:
   - cpu.core.idle

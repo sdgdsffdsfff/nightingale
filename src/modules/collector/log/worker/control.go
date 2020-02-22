@@ -63,7 +63,7 @@ func UpdateConfigsLoop() {
 
 		//更新counter
 		GlobalCount.UpdateByStrategy(strategyMap)
-		time.Sleep(time.Second * time.Duration(config.Config.Collector.Interval))
+		time.Sleep(time.Second * time.Duration(config.Config.Collector.SyncInterval))
 	}
 }
 
