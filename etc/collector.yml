@@ -1,20 +1,20 @@
 ntpServers: []
+
 # use shell if specify is blank
 endpoint:
   specify: ""
   shell: /usr/sbin/ifconfig `/usr/sbin/route|grep '^default'|awk '{print $NF}'`|grep inet|awk '{print $2}'|head -n 1
+
 logger:
   dir: logs/collector
   level: WARNING
   keepHours: 2
-http:
-  listen: 0.0.0.0:2058
+
+# timeout in ms
 transfer:
-  addrs:
-    - 127.0.0.1:5811
-  # in ms
-  # timeout: 1000
-  # interval: 20
+  timeout: 1000
+  interval: 20
+
 collector:
   syncCollect: true
   interval: 10
@@ -28,7 +28,8 @@ collector:
     - 127.0.0.1:5800
   # in ms
   # timeout: 1000
-ignoreMetrics: 
+
+ignoreMetrics:
   - cpu.core.idle
   - cpu.core.util
   - cpu.core.sys

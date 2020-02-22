@@ -9,18 +9,18 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/config"
-
 	"github.com/toolkits/pkg/logger"
 	"github.com/ugorji/go/codec"
+
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 func Push(items []*dataobj.MetricValue) {
 	var mh codec.MsgpackHandle
 	mh.MapType = reflect.TypeOf(map[string]interface{}(nil))
 
-	addrs := config.Config.Transfer.Addrs
+	addrs := address.GetRPCAddresses("transfer")
 	count := len(addrs)
 	retry := 0
 	for {

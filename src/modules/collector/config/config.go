@@ -23,7 +23,6 @@ type ConfYaml struct {
 	Endpoint         EndpointSection     `yaml:"endpoint"`
 	Logger           LoggerSection       `yaml:"logger"`
 	Transfer         TransferSection     `yaml:"transfer"`
-	HTTP             HTTPSection         `yaml:"http"`
 	Collector        CollectorSection    `yaml:"collector"`
 	Worker           WorkerSection       `yaml:"worker"`
 	IgnoreMetrics    []string            `yaml:"ignoreMetrics"`
@@ -43,20 +42,15 @@ type EndpointSection struct {
 }
 
 type TransferSection struct {
-	Enabled  string   `yaml:"enabled"`
-	Addrs    []string `yaml:"addrs"`
-	Interval int      `yaml:"interval"`
-	Timeout  int      `yaml:"timeout"`
+	Enabled  string `yaml:"enabled"`
+	Interval int    `yaml:"interval"`
+	Timeout  int    `yaml:"timeout"`
 }
 
 type LoggerSection struct {
 	Dir       string `yaml:"dir"`
 	Level     string `yaml:"level"`
 	KeepHours uint   `yaml:"keepHours"`
-}
-
-type HTTPSection struct {
-	Listen string `yaml:"listen"`
 }
 
 type CollectorSection struct {
