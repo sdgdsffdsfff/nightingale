@@ -1,7 +1,3 @@
-http:
-  listen: 0.0.0.0:5840
-rpc:
-  listen: 0.0.0.0:5841
 # same to transfer
 query:
   addrs:

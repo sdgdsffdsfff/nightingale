@@ -16,8 +16,6 @@ type ConfYaml struct {
 	Redis    RedisSection       `yaml:"redis"`
 	Strategy StrategySection    `yaml:"strategy"`
 	Identity IdentitySection    `yaml:"identity"`
-	Http     HttpSection        `yaml:"http"`
-	Rpc      RpcSection         `yaml:"rpc"`
 	Report   ReportSection      `yaml:"report"`
 	PushUrl  string             `yaml:"pushUrl"`
 }
@@ -120,15 +118,6 @@ type StrategySection struct {
 type IdentitySection struct {
 	Specify string `yaml:"specify"`
 	Shell   string `yaml:"shell"`
-}
-
-type HttpSection struct {
-	Listen string `yaml:"listen"`
-	Secret string `yaml:"secret"`
-}
-
-type RpcSection struct {
-	Listen string `yaml:"listen"`
 }
 
 func GetIdentity(opts IdentitySection) (string, error) {

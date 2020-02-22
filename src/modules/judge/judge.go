@@ -8,6 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/toolkits/pkg/file"
+	"github.com/toolkits/pkg/logger"
+	"github.com/toolkits/pkg/runner"
+
 	"github.com/didi/nightingale/src/modules/judge/backend/query"
 	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
@@ -15,10 +19,7 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/cron"
 	"github.com/didi/nightingale/src/modules/judge/http"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
-
-	"github.com/toolkits/pkg/file"
-	"github.com/toolkits/pkg/logger"
-	"github.com/toolkits/pkg/runner"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 const version = 1
@@ -59,7 +60,7 @@ func main() {
 		log.Fatalln("[F] cannot get identity:", err)
 	}
 
-	port, err := config.GetPort(cfg.Rpc.Listen)
+	port, err := config.GetPort(address.GetRPCListen("judge"))
 	if err != nil {
 		log.Fatalln("[F] cannot get identity:", err)
 	}
@@ -74,7 +75,7 @@ func main() {
 	cache.SeriesMap = cache.NewIndexMap()
 	redi.InitRedis()
 
-	go http.Start(cfg.Http.Listen, cfg.Logger.Level)
+	go http.Start(address.GetHTTPListen("judge"), cfg.Logger.Level)
 	go rpc.Start()
 	go cron.Report(ident, port, cfg.Report.Addrs, cfg.Report.Interval)
 	go cron.Statstic()
