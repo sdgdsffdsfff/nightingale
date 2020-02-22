@@ -18,6 +18,6 @@ identity:
   shell: /usr/sbin/ifconfig `/usr/sbin/route|grep '^default'|awk '{print $NF}'`|grep inet|awk '{print $2}'|head -n 1
 
 logger:
-  dir: logs/alarm
+  dir: logs/judge
   level: WARNING
   keepHours: 2
