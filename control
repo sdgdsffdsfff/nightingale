@@ -19,7 +19,7 @@ start_all()
 	test -x n9e-tsdb && start tsdb
 	# http: 5830 ; rpc: 5831
 	test -x n9e-index && start index
-	# http: 5840
+	# http: 5840 ; rpc: 5841
 	test -x n9e-judge && start judge
 	# http: 2058
 	test -x n9e-collector && start collector
