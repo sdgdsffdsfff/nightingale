@@ -95,8 +95,7 @@ type SeriesQuerySection struct {
 }
 
 type ReportSection struct {
-	Addrs    []string `yaml:"addrs"`
-	Interval int      `yaml:"interval"`
+	Interval int `yaml:"interval"`
 }
 
 type LoggerSection struct {
@@ -106,13 +105,12 @@ type LoggerSection struct {
 }
 
 type StrategySection struct {
-	Addrs          []string `yaml:"addrs"` // 形如 http://IP:port/url
-	PartitionApi   string   `yaml:"partitionApi"`
-	Timeout        int      `yaml:"timeout"`
-	Token          string   `yaml:"token"`
-	UpdateInterval int      `yaml:"updateInterval"`
-	IndexInterval  int      `yaml:"indexInterval"`
-	ReportInterval int      `yaml:"reportInterval"`
+	PartitionApi   string `yaml:"partitionApi"`
+	Timeout        int    `yaml:"timeout"`
+	Token          string `yaml:"token"`
+	UpdateInterval int    `yaml:"updateInterval"`
+	IndexInterval  int    `yaml:"indexInterval"`
+	ReportInterval int    `yaml:"reportInterval"`
 }
 
 type IdentitySection struct {

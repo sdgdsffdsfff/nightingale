@@ -6,12 +6,13 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/toolkits/pkg/logger"
+	"github.com/toolkits/pkg/net/httplib"
+
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
-
-	"github.com/toolkits/pkg/logger"
-	"github.com/toolkits/pkg/net/httplib"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 type StrasResp struct {
@@ -29,15 +30,16 @@ func GetStrategy() {
 }
 
 func getStrategy(opts config.StrategySection) {
-	if len(opts.Addrs) == 0 {
+	addrs := address.GetHTTPAddresses("monapi")
+	if len(addrs) == 0 {
 		logger.Error("empty config addr")
 		return
 	}
 
 	var resp StrasResp
-	perm := rand.Perm(len(opts.Addrs))
+	perm := rand.Perm(len(addrs))
 	for i := range perm {
-		url := fmt.Sprintf("http://%s"+opts.PartitionApi, opts.Addrs[perm[i]], config.Identity)
+		url := fmt.Sprintf("http://%s"+opts.PartitionApi, addrs[perm[i]], config.Identity)
 		err := httplib.Get(url).SetTimeout(time.Duration(opts.Timeout) * time.Millisecond).ToJSON(&resp)
 
 		if err != nil {

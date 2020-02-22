@@ -77,7 +77,7 @@ func main() {
 
 	go http.Start(address.GetHTTPListen("judge"), cfg.Logger.Level)
 	go rpc.Start()
-	go cron.Report(ident, port, cfg.Report.Addrs, cfg.Report.Interval)
+	go cron.Report(ident, port, address.GetHTTPAddresses("monapi"), cfg.Report.Interval)
 	go cron.Statstic()
 	go cron.GetStrategy()
 	go cron.NodataJudge()
