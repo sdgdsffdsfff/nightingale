@@ -36,15 +36,15 @@ func Statstic() {
 		logger.Infof("stats FlushRRDErrCount:%d", flushRRDErrCount)
 
 		var items []dataobj.MetricValue
-		items = append(items, NewMetricValue("point_in", pointIn))
-		items = append(items, NewMetricValue("point_in_err", pointInErr))
-		items = append(items, NewMetricValue("query_count", queryCount))
-		items = append(items, NewMetricValue("flush_rrd_count", flushRRDCount))
-		items = append(items, NewMetricValue("flush_rrd_err_count", flushRRDErrCount))
-		items = append(items, NewMetricValue("push_index", pushIndex))
-		items = append(items, NewMetricValue("push_index_err", pushIndexErr))
-		items = append(items, NewMetricValue("push_index_incr", pushIncrIndex))
-		items = append(items, NewMetricValue("old_index", oldIndex))
+		items = append(items, NewMetricValue("n9e.tsdb.point_in", pointIn))
+		items = append(items, NewMetricValue("n9e.tsdb.point_in_err", pointInErr))
+		items = append(items, NewMetricValue("n9e.tsdb.query_count", queryCount))
+		items = append(items, NewMetricValue("n9e.tsdb.flush_rrd_count", flushRRDCount))
+		items = append(items, NewMetricValue("n9e.tsdb.flush_rrd_err_count", flushRRDErrCount))
+		items = append(items, NewMetricValue("n9e.tsdb.push_index", pushIndex))
+		items = append(items, NewMetricValue("n9e.tsdb.push_index_err", pushIndexErr))
+		items = append(items, NewMetricValue("n9e.tsdb.push_index_incr", pushIncrIndex))
+		items = append(items, NewMetricValue("n9e.tsdb.old_index", oldIndex))
 
 		pushToMonitor(items)
 
