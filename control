@@ -170,7 +170,7 @@ reload()
 pack()
 {
 	v=$(date +%Y-%m-%d-%H-%M-%S)
-	tar zcvf n9e-$v.tar.gz control sql plugin pub etc/log etc/port etc/service etc/nginx.conf etc/mysql.yml \
+	tar zcvf n9e-$v.tar.gz control sql plugin pub etc/log etc/port etc/service etc/nginx.conf etc/mysql.yml etc/address.yml \
 	n9e-collector etc/collector.yml \
 	n9e-tsdb etc/tsdb.yml \
 	n9e-index etc/index.yml \
