@@ -23,11 +23,9 @@ func Statstic() {
 		judgeRun := atomic.SwapInt64(&config.JudgeRun, 0)
 
 		var items []dataobj.MetricValue
-		items = append(items, NewMetricValue("stra.count", stra))
-		items = append(items, NewMetricValue("judge.run", judgeRun))
-
+		items = append(items, NewMetricValue("n9e.judge.stra.count", stra))
+		items = append(items, NewMetricValue("n9e.judge.run", judgeRun))
 		pushToMonitor(items)
-
 	}
 }
 
