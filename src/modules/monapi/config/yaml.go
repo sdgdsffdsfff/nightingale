@@ -113,15 +113,20 @@ func Parse(ymlfile string) error {
 		"write": 3000,
 	})
 
-	viper.SetDefault("queue", map[string]interface{}{
+	viper.SetDefault("queue", map[string]string{
 		"eventPrefix":  "/n9e/event/",
 		"callback":     "/n9e/event/callback",
 		"senderPrefix": "/n9e/sender/",
 	})
 
-	viper.SetDefault("cleaner", map[string]interface{}{
+	viper.SetDefault("cleaner", map[string]int{
 		"days":  366,
 		"batch": 100,
+	})
+
+	viper.SetDefault("proxy", map[string]string{
+		"transfer": "http://127.0.0.1:5810",
+		"index":    "http://127.0.0.1:5830",
 	})
 
 	var c Config

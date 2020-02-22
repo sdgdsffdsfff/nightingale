@@ -24,9 +24,9 @@ ldap:
   startTLS: false
 
 # just for single host test, use nginx in production
-proxy:
-  transfer: http://127.0.0.1:5810
-  index: http://127.0.0.1:5830
+# proxy:
+  # transfer: http://127.0.0.1:5810
+  # index: http://127.0.0.1:5830
 
 # notify support: voice, sms, mail, im
 # if we have all of notice channel
