@@ -23,10 +23,10 @@ func Statstic() {
 		indexErr := atomic.SwapInt64(&config.IndexInErr, 0)
 		indexClean := atomic.SwapInt64(&config.IndexClean, 0)
 
-		items = append(items, NewMetricValue("index_in", indexIn))
-		items = append(items, NewMetricValue("incr_index_in", incrIndexIn))
-		items = append(items, NewMetricValue("index_err", indexErr))
-		items = append(items, NewMetricValue("index_clean", indexClean))
+		items = append(items, NewMetricValue("n9e.index.index_in", indexIn))
+		items = append(items, NewMetricValue("n9e.index.incr_index_in", incrIndexIn))
+		items = append(items, NewMetricValue("n9e.index.index_err", indexErr))
+		items = append(items, NewMetricValue("n9e.index.index_clean", indexClean))
 		pushToMonitor(items)
 	}
 }
