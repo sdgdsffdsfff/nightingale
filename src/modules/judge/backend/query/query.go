@@ -2,15 +2,17 @@ package query
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
-	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/judge/config"
-	"github.com/didi/nightingale/src/toolkits/str"
-
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
+
+	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/modules/judge/config"
+	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/str"
 )
 
 var (
@@ -101,7 +103,8 @@ type IndexResp struct {
 
 // index的xclude 不支持批量查询, 暂时不做
 func Xclude(request *IndexReq) ([]IndexData, error) {
-	if len(config.Config.Query.IndexAddrs) == 0 {
+	addrs := address.GetHTTPAddresses("index")
+	if len(addrs) == 0 {
 		return nil, errors.New("empty index addr")
 	}
 
@@ -109,9 +112,9 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 		result IndexResp
 		succ   bool = false
 	)
-	perm := rand.Perm(len(config.Config.Query.IndexAddrs))
+	perm := rand.Perm(len(addrs))
 	for i := range perm {
-		url := config.Config.Query.IndexAddrs[perm[i]]
+		url := fmt.Sprintf("http://%s%s", addrs[perm[i]], config.Config.Query.IndexPath)
 		err := httplib.Post(url).JSONBodyQuiet([]IndexReq{*request}).SetTimeout(time.Duration(config.Config.Query.IndexCallTimeout) * time.Millisecond).ToJSON(&result)
 		if err != nil {
 			logger.Warningf("index xclude failed, error:%v, req:%v", err, request)

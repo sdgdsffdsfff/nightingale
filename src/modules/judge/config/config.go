@@ -42,6 +42,7 @@ func Parse(conf string) error {
 		"connTimeout":      1000,
 		"callTimeout":      2000,
 		"indexCallTimeout": 2000,
+		"indexPath":        "/api/index/counter/clude",
 	})
 
 	viper.SetDefault("redis.idle", 5)
@@ -85,12 +86,12 @@ type TimeoutSection struct {
 }
 
 type SeriesQuerySection struct {
-	MaxConn          int      `json:"maxConn"`          //
-	MaxIdle          int      `json:"maxIdle"`          //
-	ConnTimeout      int      `json:"connTimeout"`      // 连接超时
-	CallTimeout      int      `json:"callTimeout"`      // 请求超时
-	IndexAddrs       []string `json:"indexAddrs"`       // 直连下游index的地址
-	IndexCallTimeout int      `json:"indexCallTimeout"` // 请求超时
+	MaxConn          int    `json:"maxConn"`     //
+	MaxIdle          int    `json:"maxIdle"`     //
+	ConnTimeout      int    `json:"connTimeout"` // 连接超时
+	CallTimeout      int    `json:"callTimeout"` // 请求超时
+	IndexPath        string `json:"indexPath"`
+	IndexCallTimeout int    `json:"indexCallTimeout"` // 请求超时
 }
 
 type ReportSection struct {

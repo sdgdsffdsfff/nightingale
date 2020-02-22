@@ -2,17 +2,16 @@
 query:
   connTimeout: 1000
   callTimeout: 2000
-  indexAddrs:
-  - http://127.0.0.1:5830/api/index/counter/clude
-  # indexCallTimeout: 2000
+  indexCallTimeout: 2000
+
 redis:
   addrs: 
     - 127.0.0.1:6379
   pass: ""
-  # timeout:
-  #   conn: 500
-  #   read: 3000
-  #   write: 3000
+  timeout:
+    conn: 500
+    read: 3000
+    write: 3000
 
 identity:
   specify: ""
