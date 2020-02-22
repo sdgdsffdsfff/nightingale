@@ -11,6 +11,7 @@ logger:
   keepHours: 2
 
 # timeout in ms
+# interval in second
 transfer:
   timeout: 1000
   interval: 20
@@ -27,8 +28,6 @@ collector:
   mountPoint: []
   mountIgnorePrefix:
     - /var/lib
-  addrs: 
-    - 127.0.0.1:5800
 
 ignoreMetrics:
   - cpu.core.idle

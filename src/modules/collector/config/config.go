@@ -57,7 +57,6 @@ type CollectorSection struct {
 	MountPoint        []string `yaml:"mountPoint"`
 	MountIgnorePrefix []string `yaml:"mountIgnorePrefix"`
 	SyncCollect       bool     `yaml:"syncCollect"`
-	Addrs             []string `yaml:"addrs"`
 	SyncTimeout       int      `yaml:"syncTimeout"`
 	SyncInterval      int      `yaml:"syncInterval"`
 }

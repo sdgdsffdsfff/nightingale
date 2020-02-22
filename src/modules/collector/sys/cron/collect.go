@@ -5,11 +5,12 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/collector/config"
-
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
+
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/collector/config"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 type CollectResp struct {
@@ -44,7 +45,7 @@ func detect() {
 }
 
 func GetCollectsRetry() (model.Collect, error) {
-	count := len(config.Config.Collector.Addrs)
+	count := len(address.GetHTTPAddresses("monapi"))
 	var resp CollectResp
 	var err error
 	for i := 0; i < count; i++ {
@@ -62,10 +63,12 @@ func GetCollectsRetry() (model.Collect, error) {
 }
 
 func getCollects() (CollectResp, error) {
+	addrs := address.GetHTTPAddresses("monapi")
+	i := rand.Intn(len(addrs))
+	addr := addrs[i]
+
 	var res CollectResp
 	var err error
-	i := rand.Intn(len(config.Config.Collector.Addrs))
-	addr := config.Config.Collector.Addrs[i]
 
 	url := fmt.Sprintf("http://%s/api/portal/collects/%s", addr, config.Endpoint)
 	err = httplib.Get(url).SetTimeout(time.Duration(config.Config.Collector.SyncTimeout) * time.Millisecond).ToJSON(&res)
