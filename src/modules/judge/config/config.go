@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
@@ -20,11 +19,11 @@ type ConfYaml struct {
 	Http     HttpSection        `yaml:"http"`
 	Rpc      RpcSection         `yaml:"rpc"`
 	Report   ReportSection      `yaml:"report"`
+	PushUrl  string             `yaml:"pushUrl"`
 }
 
 var (
 	Config *ConfYaml
-	lock   = new(sync.RWMutex)
 )
 
 func Parse(conf string) error {
@@ -32,9 +31,6 @@ func Parse(conf string) error {
 	if err != nil {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
-
-	lock.Lock()
-	defer lock.Unlock()
 
 	viper.SetConfigType("yaml")
 	err = viper.ReadConfig(bytes.NewBuffer(bs))
@@ -67,6 +63,8 @@ func Parse(conf string) error {
 	viper.SetDefault("report", map[string]interface{}{
 		"interval": 4000,
 	})
+
+	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
 
 	err = viper.Unmarshal(&Config)
 	if err != nil {

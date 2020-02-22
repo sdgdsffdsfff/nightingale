@@ -51,7 +51,7 @@ func pushToMonitor(items []dataobj.MetricValue) {
 
 	bf := bytes.NewBuffer(bs)
 
-	resp, err := http.Post("http://127.0.0.1:1949/api/collector/push", "application/json", bf)
+	resp, err := http.Post(config.Config.PushUrl, "application/json", bf)
 	if err != nil {
 		logger.Error(err)
 		return
