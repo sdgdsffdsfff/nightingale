@@ -60,7 +60,6 @@ type loggerSection struct {
 }
 
 type httpSection struct {
-	Listen string `yaml:"listen"`
 	Secret string `yaml:"secret"`
 }
 

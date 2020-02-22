@@ -7,7 +7,6 @@ logger:
   keepHours: 24
 
 http:
-  listen: "0.0.0.0:5800"
   secret: "PLACE_SECRET"
 
 # for ldap authorization
