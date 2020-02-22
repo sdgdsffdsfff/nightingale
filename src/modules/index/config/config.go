@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
+
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 type ConfYaml struct {
@@ -27,9 +29,8 @@ type ConfYaml struct {
 }
 
 type ReportSection struct {
-	Enabled  bool     `yaml:"enabled"`
-	Interval int      `yaml:"interval"`
-	Addrs    []string `yaml:"addrs"`
+	Enabled  bool `yaml:"enabled"`
+	Interval int  `yaml:"interval"`
 }
 
 type IdentitySection struct {
@@ -55,13 +56,11 @@ type LoggerSection struct {
 }
 
 type HTTPSection struct {
-	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
+	Enabled bool `yaml:"enabled"`
 }
 
 type RPCSection struct {
-	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
+	Enabled bool `yaml:"enabled"`
 }
 
 var (
@@ -123,12 +122,12 @@ func Parse(conf string) error {
 		return fmt.Errorf("err %v", err)
 	}
 
-	HttpPort, err = GetPort(Config.HTTP.Listen)
+	HttpPort, err = GetPort(address.GetHTTPListen("index"))
 	if err != nil {
 		return fmt.Errorf("err %v", err)
 	}
 
-	RpcPort, err = GetPort(Config.RPC.Listen)
+	RpcPort, err = GetPort(address.GetRPCListen("index"))
 
 	return err
 }

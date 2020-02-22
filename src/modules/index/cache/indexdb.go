@@ -10,14 +10,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/didi/nightingale/src/model"
-	. "github.com/didi/nightingale/src/modules/index/config"
-	"github.com/didi/nightingale/src/toolkits/compress"
-
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
+
+	"github.com/didi/nightingale/src/model"
+	. "github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/compress"
 )
 
 var EndpointDBObj *EndpointMetricsStruct
@@ -146,7 +147,7 @@ type indexRes struct {
 }
 
 func GetIndex() []*model.Idx {
-	addrs := Config.Report.Addrs
+	addrs := address.GetHTTPAddresses("monapi")
 	perm := rand.Perm(len(addrs))
 	activeIndexs := []*model.Idx{}
 

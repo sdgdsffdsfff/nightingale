@@ -5,10 +5,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/index/config"
-
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
+
+	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 func Report() {
@@ -17,11 +18,13 @@ func Report() {
 		return
 	}
 
+	addrs := address.GetHTTPAddresses("monapi")
+
 	t1 := time.NewTicker(time.Duration(ReportCfg.Interval) * time.Millisecond)
-	report(config.Identity, config.RpcPort, config.HttpPort, ReportCfg.Addrs)
+	report(config.Identity, config.RpcPort, config.HttpPort, addrs)
 	for {
 		<-t1.C
-		report(config.Identity, config.RpcPort, config.HttpPort, ReportCfg.Addrs)
+		report(config.Identity, config.RpcPort, config.HttpPort, addrs)
 	}
 }
 

@@ -9,17 +9,18 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/index/config"
-
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
 	"github.com/ugorji/go/codec"
+
+	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 type Index int
 
 func Start() {
-	addr := config.Config.RPC.Listen
+	addr := address.GetRPCListen("index")
 
 	server := rpc.NewServer()
 	server.Register(new(Index))
