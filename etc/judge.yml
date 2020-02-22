@@ -1,9 +1,7 @@
-# same to transfer
+# alias transfer
 query:
-  addrs:
-    - 127.0.0.1:5811
-  # connTimeout: 1000
-  # callTimeout: 2000
+  connTimeout: 1000
+  callTimeout: 2000
   indexAddrs:
   - http://127.0.0.1:5830/api/index/counter/clude
   # indexCallTimeout: 2000

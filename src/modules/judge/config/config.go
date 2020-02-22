@@ -85,7 +85,6 @@ type TimeoutSection struct {
 }
 
 type SeriesQuerySection struct {
-	Addrs            []string `json:"addrs"`            // 直连下游query的地址
 	MaxConn          int      `json:"maxConn"`          //
 	MaxIdle          int      `json:"maxIdle"`          //
 	ConnTimeout      int      `json:"connTimeout"`      // 连接超时
