@@ -26,6 +26,7 @@ type ConfYaml struct {
 	CallTimeout    int                 `yaml:"callTimeout"`
 	IOWorkerNum    int                 `yaml:"ioWorkerNum"`
 	FirstBytesSize int                 `yaml:"firstBytesSize"`
+	PushUrl        string              `yaml:"pushUrl"`
 }
 
 type CacheSection struct {
@@ -154,6 +155,8 @@ func Parse(conf string) error {
 		"connTimeout":     1000,  //链接超时时间，单位毫秒
 		"callTimeout":     3000,  //访问超时时间，单位毫秒
 	})
+
+	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
 
 	err = viper.Unmarshal(&Config)
 	if err != nil {
