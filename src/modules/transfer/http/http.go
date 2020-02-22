@@ -7,11 +7,12 @@ import (
 	_ "net/http/pprof"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/didi/nightingale/src/modules/transfer/config"
 	"github.com/didi/nightingale/src/modules/transfer/http/middleware"
 	"github.com/didi/nightingale/src/modules/transfer/http/routes"
-
-	"github.com/gin-gonic/gin"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 var srv = &http.Server{
@@ -39,7 +40,7 @@ func Start() {
 
 	routes.Config(r)
 
-	srv.Addr = c.HTTP.Listen
+	srv.Addr = address.GetHTTPListen("transfer")
 	srv.Handler = r
 
 	go func() {

@@ -35,13 +35,11 @@ type LoggerSection struct {
 
 type HTTPSection struct {
 	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
 	Access  string `yaml:"access"`
 }
 
 type RPCSection struct {
-	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
+	Enabled bool `yaml:"enabled"`
 }
 
 type TsdbSection struct {

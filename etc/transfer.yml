@@ -1,7 +1,3 @@
-http:
-  listen: 0.0.0.0:5810
-rpc:
-  listen: 0.0.0.0:5811
 tsdb:
   # in ms
   # connTimeout: 1000
