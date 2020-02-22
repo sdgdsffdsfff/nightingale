@@ -5,13 +5,13 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/transfer/cache"
-	"github.com/didi/nightingale/src/modules/transfer/config"
-	"github.com/didi/nightingale/src/toolkits/str"
-
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
+
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/transfer/cache"
+	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/str"
 )
 
 type StraResp struct {
@@ -29,7 +29,7 @@ func GetStrategy() {
 }
 
 func getStrategy() {
-	addrs := config.Config.API["monapi"]
+	addrs := address.GetHTTPAddresses("monapi")
 	if len(addrs) == 0 {
 		logger.Error("empty addr")
 		return
@@ -38,7 +38,7 @@ func getStrategy() {
 	var stras StraResp
 	perm := rand.Perm(len(addrs))
 	for i := range perm {
-		url := fmt.Sprintf("%s/api/portal/stras/effective?all=1", addrs[perm[i]])
+		url := fmt.Sprintf("http://%s/api/portal/stras/effective?all=1", addrs[perm[i]])
 		err := httplib.Get(url).SetTimeout(time.Duration(3000) * time.Millisecond).ToJSON(&stras)
 
 		if err != nil {

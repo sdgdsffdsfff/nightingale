@@ -10,15 +10,14 @@ import (
 )
 
 type ConfYaml struct {
-	Debug   bool                `yaml:"debug"`
-	MinStep int                 `yaml:"minStep"`
-	Logger  LoggerSection       `yaml:"logger"`
-	HTTP    HTTPSection         `yaml:"http"`
-	RPC     RPCSection          `yaml:"rpc"`
-	Tsdb    TsdbSection         `yaml:"tsdb"`
-	Judge   JudgeSection        `yaml:"judge"`
-	Index   IndexSection        `yaml:"index"`
-	API     map[string][]string `yaml:"api"`
+	Debug   bool          `yaml:"debug"`
+	MinStep int           `yaml:"minStep"`
+	Logger  LoggerSection `yaml:"logger"`
+	HTTP    HTTPSection   `yaml:"http"`
+	RPC     RPCSection    `yaml:"rpc"`
+	Tsdb    TsdbSection   `yaml:"tsdb"`
+	Judge   JudgeSection  `yaml:"judge"`
+	Index   IndexSection  `yaml:"index"`
 }
 
 type IndexSection struct {

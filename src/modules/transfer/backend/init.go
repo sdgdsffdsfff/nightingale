@@ -5,16 +5,17 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/transfer/cache"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
-
 	"github.com/toolkits/pkg/container/list"
 	"github.com/toolkits/pkg/container/set"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/net/httplib"
 	"github.com/toolkits/pkg/pool"
 	"github.com/toolkits/pkg/str"
+
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/transfer/cache"
+	. "github.com/didi/nightingale/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 var (
@@ -89,14 +90,16 @@ type judgeRes struct {
 }
 
 func GetJudges() []string {
-	addrs := Config.API["monapi"]
+	addrs := address.GetHTTPAddresses("monapi")
 	perm := rand.Perm(len(addrs))
-	judgeInstance := []string{}
 
-	var body judgeRes
+	var (
+		judgeInstance []string
+		body          judgeRes
+	)
 
 	for i := range perm {
-		url := fmt.Sprintf("%s/api/hbs/judges", addrs[perm[i]])
+		url := fmt.Sprintf("http://%s/api/hbs/judges", addrs[perm[i]])
 		err := httplib.Get(url).SetTimeout(3 * time.Second).ToJSON(&body)
 
 		if err != nil {
