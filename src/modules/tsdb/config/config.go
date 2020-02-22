@@ -15,18 +15,17 @@ type File struct {
 }
 
 type ConfYaml struct {
-	Http           *HttpSection        `yaml:"http"`
-	Rpc            *RpcSection         `yaml:"rpc"`
-	RRD            *RRDSection         `yaml:"rrd"`
-	Logger         *LoggerSection      `yaml:"logger"`
-	Migrate        *MigrateSection     `yaml:"migrate"`
-	Index          *IndexSection       `yaml:"index"`
-	Cache          *CacheSection       `yaml:"cache"`
-	Api            map[string][]string `yaml:"api"`
-	CallTimeout    int                 `yaml:"callTimeout"`
-	IOWorkerNum    int                 `yaml:"ioWorkerNum"`
-	FirstBytesSize int                 `yaml:"firstBytesSize"`
-	PushUrl        string              `yaml:"pushUrl"`
+	Http           *HttpSection    `yaml:"http"`
+	Rpc            *RpcSection     `yaml:"rpc"`
+	RRD            *RRDSection     `yaml:"rrd"`
+	Logger         *LoggerSection  `yaml:"logger"`
+	Migrate        *MigrateSection `yaml:"migrate"`
+	Index          *IndexSection   `yaml:"index"`
+	Cache          *CacheSection   `yaml:"cache"`
+	CallTimeout    int             `yaml:"callTimeout"`
+	IOWorkerNum    int             `yaml:"ioWorkerNum"`
+	FirstBytesSize int             `yaml:"firstBytesSize"`
+	PushUrl        string          `yaml:"pushUrl"`
 }
 
 type CacheSection struct {
@@ -61,13 +60,11 @@ type MigrateSection struct {
 }
 
 type HttpSection struct {
-	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
+	Enabled bool `yaml:"enabled"`
 }
 
 type RpcSection struct {
-	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
+	Enabled bool `yaml:"enabled"`
 }
 
 type RRDSection struct {

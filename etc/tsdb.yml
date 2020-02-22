@@ -1,13 +1,6 @@
-http:
-  listen: 0.0.0.0:5820
-rpc:
-  listen: 0.0.0.0:5821
-rrd: 
+rrd:
   storage: data/5821
 logger:
   dir: logs/tsdb
   level: WARNING
   keepHours: 2
-api:
-  monapi: 
-    - 127.0.0.1:5800

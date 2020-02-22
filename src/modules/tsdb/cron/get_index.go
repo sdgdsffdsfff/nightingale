@@ -5,12 +5,13 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/toolkits/pkg/logger"
+	"github.com/toolkits/pkg/net/httplib"
+
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
 	"github.com/didi/nightingale/src/modules/tsdb/config"
-
-	"github.com/toolkits/pkg/logger"
-	"github.com/toolkits/pkg/net/httplib"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 func GetIndexLoop() {
@@ -29,7 +30,7 @@ type indexRes struct {
 }
 
 func GetIndex() {
-	addrs := config.Config.Api["monapi"]
+	addrs := address.GetHTTPAddresses("monapi")
 	perm := rand.Perm(len(addrs))
 	var body indexRes
 	for i := range perm {

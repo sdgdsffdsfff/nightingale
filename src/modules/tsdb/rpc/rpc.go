@@ -10,10 +10,10 @@ import (
 	"reflect"
 	"time"
 
-	. "github.com/didi/nightingale/src/modules/tsdb/config"
-
 	"github.com/toolkits/pkg/logger"
 	"github.com/ugorji/go/codec"
+
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 var Close_chan, Close_done_chan chan int
@@ -24,7 +24,7 @@ func init() {
 }
 
 func Start() {
-	addr := Config.Rpc.Listen
+	addr := address.GetRPCListen("tsdb")
 	var closeFlag = false
 	server := rpc.NewServer()
 	server.Register(new(Tsdb))

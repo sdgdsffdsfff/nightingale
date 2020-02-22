@@ -7,14 +7,14 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/tsdb/config"
-	"github.com/didi/nightingale/src/modules/tsdb/http/middleware"
-	"github.com/didi/nightingale/src/modules/tsdb/http/render"
-	"github.com/didi/nightingale/src/modules/tsdb/http/router"
-
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/toolkits/pkg/logger"
+
+	"github.com/didi/nightingale/src/modules/tsdb/http/middleware"
+	"github.com/didi/nightingale/src/modules/tsdb/http/render"
+	"github.com/didi/nightingale/src/modules/tsdb/http/router"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 var Close_chan, Close_done_chan chan int
@@ -51,11 +51,9 @@ func Start() {
 	n := negroni.New()
 	n.Use(middleware.NewRecovery())
 
-	cfg := config.GetCfgYml()
-
 	n.UseHandler(r)
 
-	addr := cfg.Http.Listen
+	addr := address.GetHTTPListen("tsdb")
 	if addr == "" {
 		return
 	}
