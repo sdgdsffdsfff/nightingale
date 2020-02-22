@@ -10,14 +10,13 @@ import (
 )
 
 type ConfYaml struct {
-	Debug      bool     `yaml:"debug"`
-	Reportor   bool     `yaml:"reportor"`
-	NtpServers []string `yaml:"ntpServers"`
-	PortPath   string   `yaml:"portPath"`
-	ProcPath   string   `yaml:"procPath"`
-	LogPath    string   `yaml:"logPath"`
-	Plugin     string   `yaml:"plugin"`
-	//CollectAddr      string              `yaml:"collectAddr"`
+	Debug            bool                `yaml:"debug"`
+	Reportor         bool                `yaml:"reportor"`
+	NtpServers       []string            `yaml:"ntpServers"`
+	PortPath         string              `yaml:"portPath"`
+	ProcPath         string              `yaml:"procPath"`
+	LogPath          string              `yaml:"logPath"`
+	Plugin           string              `yaml:"plugin"`
 	MaxCPURate       float64             `yaml:"max_cpu_rate"`
 	MaxMemRate       float64             `yaml:"max_mem_rate"`
 	Endpoint         EndpointSection     `yaml:"endpoint"`
