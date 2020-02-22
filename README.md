@@ -19,7 +19,7 @@ cd nightingale && ./control build
 
 ## 团队
 
-参与项目的小伙伴包括：[laiwei](https://github.com/laiwei) [ulricqin](https://github.com/ulricqin) [710leo](https://github.com/710leo) [xiaqing]() [huchong]() [n4mine](https://github.com/n4mine) [zhangzhao]()，感谢大家的付出
+参与项目的小伙伴包括：[ulricqin](https://github.com/ulricqin) [710leo](https://github.com/710leo) [jsers](https://github.com/jsers) [hujter](https://github.com/hujter) [n4mine](https://github.com/n4mine) [heli567](https://github.com/heli567)，感谢大家的付出
 
 ## 协议
 
