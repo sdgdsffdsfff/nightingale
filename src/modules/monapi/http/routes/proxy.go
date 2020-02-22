@@ -1,17 +1,18 @@
 package routes
 
 import (
+	"fmt"
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/didi/nightingale/src/modules/monapi/config"
-
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
+
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 func transferReq(c *gin.Context) {
-	target, err := url.Parse(config.Get().Proxy.Transfer)
+	target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", address.GetHTTPPort("transfer")))
 	errors.Dangerous(err)
 
 	proxy := httputil.NewSingleHostReverseProxy(target)
@@ -21,7 +22,7 @@ func transferReq(c *gin.Context) {
 }
 
 func indexReq(c *gin.Context) {
-	target, err := url.Parse(config.Get().Proxy.Index)
+	target, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", address.GetHTTPPort("index")))
 	errors.Dangerous(err)
 
 	proxy := httputil.NewSingleHostReverseProxy(target)

@@ -16,7 +16,6 @@ type Config struct {
 	HTTP    httpSection         `yaml:"http"`
 	LDAP    ldapSection         `yaml:"ldap"`
 	Redis   redisSection        `yaml:"redis"`
-	Proxy   proxySection        `yaml:"proxy"`
 	Queue   queueSection        `yaml:"queue"`
 	Cleaner cleanerSection      `yaml:"cleaner"`
 	Link    linkSection         `yaml:"link"`
@@ -76,11 +75,6 @@ type ldapSection struct {
 	StartTLS   bool   `yaml:"startTLS"`
 }
 
-type proxySection struct {
-	Transfer string `yaml:"transfer"`
-	Index    string `yaml:"index"`
-}
-
 var (
 	yaml *Config
 	lock = new(sync.RWMutex)
@@ -122,11 +116,6 @@ func Parse(ymlfile string) error {
 	viper.SetDefault("cleaner", map[string]int{
 		"days":  366,
 		"batch": 100,
-	})
-
-	viper.SetDefault("proxy", map[string]string{
-		"transfer": "http://127.0.0.1:5810",
-		"index":    "http://127.0.0.1:5830",
 	})
 
 	var c Config
