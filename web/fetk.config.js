@@ -21,7 +21,7 @@ module.exports = {
   devServer: {
     inline: true,
     proxy: {
-      '/api/portal': 'http://10.86.92.17:8058',
+      '/api': 'http://10.86.92.17:8058',
     },
   },
 };

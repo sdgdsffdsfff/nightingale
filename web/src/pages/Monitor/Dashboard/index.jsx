@@ -118,12 +118,12 @@ class MonitorDashboard extends BaseComponent {
     return hosts;
   }
 
-  async fetchMetrics(selectedHosts) {
+  async fetchMetrics(selectedHosts, hosts = []) {
     let metrics = [];
     if (!_.isEmpty(selectedHosts)) {
       try {
         this.setState({ metricsLoading: true });
-        metrics = await services.fetchMetrics(selectedHosts);
+        metrics = await services.fetchMetrics(selectedHosts, hosts);
       } catch (e) {
         console.log(e);
       }
@@ -273,7 +273,7 @@ class MonitorDashboard extends BaseComponent {
                   hosts={hosts}
                   selectedHosts={selectedHosts}
                   onSelectedHostsChange={async (newHosts, newSelectedHosts) => {
-                    const newMetrics = await this.fetchMetrics(newSelectedHosts);
+                    const newMetrics = await this.fetchMetrics(newSelectedHosts, hosts);
                     this.setState({ hosts: newHosts, selectedHosts: newSelectedHosts, metrics: newMetrics });
                   }}
                   updateGraph={(newGraphs) => {
