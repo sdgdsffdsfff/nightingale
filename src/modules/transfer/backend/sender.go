@@ -8,7 +8,10 @@ import (
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/model"
+	"github.com/didi/nightingale/src/modules/transfer/cache"
 	. "github.com/didi/nightingale/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/toolkits/str"
 )
 
 // send
@@ -22,14 +25,15 @@ var (
 )
 
 func startSendTasks() {
-	judgeConcurrent := Config.Judge.WorkerNum
-	if judgeConcurrent < 1 {
-		judgeConcurrent = 1
-	}
 
 	tsdbConcurrent := Config.Tsdb.WorkerNum
 	if tsdbConcurrent < 1 {
 		tsdbConcurrent = 1
+	}
+
+	judgeConcurrent := Config.Judge.WorkerNum
+	if judgeConcurrent < 1 {
+		judgeConcurrent = 1
 	}
 
 	if Config.Tsdb.Enabled {
@@ -38,6 +42,13 @@ func startSendTasks() {
 				queue := TsdbQueues[node+addr]
 				go Send2TsdbTask(queue, node, addr, tsdbConcurrent)
 			}
+		}
+	}
+
+	if Config.Judge.Enabled {
+		judgeQueue := JudgeQueues.GetAll()
+		for instance, queue := range judgeQueue {
+			go Send2JudgeTask(queue, instance, judgeConcurrent)
 		}
 	}
 }
@@ -85,7 +96,7 @@ func Send2TsdbTask(Q *list.SafeListLimited, node string, addr string, concurrent
 			if !sendOk {
 				logger.Errorf("send %v to tsdb %s:%s fail: %v", tsdbItems, node, addr, err)
 			} else {
-				logger.Info("send to tsdb %s:%s ok", node, addr)
+				logger.Infof("send to tsdb %s:%s ok", node, addr)
 			}
 		}(addr, tsdbItems, count)
 	}
@@ -110,7 +121,6 @@ func Push2TsdbSendQueue(items []*dataobj.MetricValue) {
 		errCnt := 0
 		for _, addr := range cnode.Addrs {
 			Q := TsdbQueues[node+addr]
-			logger.Debug("->push queue: ", tsdbItem)
 			if !Q.PushFront(tsdbItem) {
 				errCnt += 1
 			}
@@ -120,6 +130,80 @@ func Push2TsdbSendQueue(items []*dataobj.MetricValue) {
 		if errCnt > 0 {
 			logger.Error("Push2TsdbSendQueue err num: ", errCnt)
 		}
+	}
+}
+
+func Send2JudgeTask(Q *list.SafeListLimited, addr string, concurrent int) {
+	batch := Config.Judge.Batch
+	sema := semaphore.NewSemaphore(concurrent)
+
+	for {
+		items := Q.PopBackBy(batch)
+		count := len(items)
+		if count == 0 {
+			time.Sleep(DefaultSendTaskSleepInterval)
+			continue
+		}
+
+		judgeItems := make([]*dataobj.JudgeItem, count)
+		for i := 0; i < count; i++ {
+			judgeItems[i] = items[i].(*dataobj.JudgeItem)
+			logger.Info("send to judge: ", judgeItems[i])
+		}
+
+		sema.Acquire()
+		go func(addr string, judgeItems []*dataobj.JudgeItem, count int) {
+			defer sema.Release()
+
+			resp := &dataobj.SimpleRpcResponse{}
+			var err error
+			sendOk := false
+			for i := 0; i < MAX_SEND_RETRY; i++ {
+				err = JudgeConnPools.Call(addr, "Judge.Send", judgeItems, resp)
+				if err == nil {
+					sendOk = true
+					break
+				}
+				logger.Warningf("send judge %s fail: %v", addr, err)
+				time.Sleep(time.Millisecond * 10)
+			}
+
+			if !sendOk {
+				logger.Errorf("send judge %s fail: %v", addr, err)
+			}
+
+		}(addr, judgeItems, count)
+	}
+}
+
+func Push2JudgeSendQueue(items []*dataobj.MetricValue) {
+	for _, item := range items {
+		key := str.PK(item.Metric, item.Endpoint)
+		stras := cache.StraMap.GetByKey(key)
+
+		for _, stra := range stras {
+
+			if !TagMatch(stra.Tags, item.TagsMap) {
+				continue
+			}
+			judgeItem := &dataobj.JudgeItem{
+				Endpoint:  item.Endpoint,
+				Metric:    item.Metric,
+				Value:     item.Value,
+				Timestamp: item.Timestamp,
+				DsType:    item.CounterType,
+				Tags:      item.Tags,
+				TagsMap:   item.TagsMap,
+				Step:      int(item.Step),
+				Sid:       stra.Id,
+			}
+
+			q, exists := JudgeQueues.Get(stra.JudgeInstance)
+			if exists {
+				q.PushFront(judgeItem)
+			}
+		}
+
 	}
 }
 
@@ -165,4 +249,35 @@ func convert2TsdbItem(d *dataobj.MetricValue) (*dataobj.TsdbItem, error) {
 
 func alignTs(ts int64, period int64) int64 {
 	return ts - ts%period
+}
+
+func TagMatch(straTags []model.Tag, tag map[string]string) bool {
+	for _, stag := range straTags {
+		if _, exists := tag[stag.Tkey]; !exists {
+			return false
+		}
+		var match bool
+		if stag.Topt == "=" { //当前策略tagkey对应的tagv
+			for _, v := range stag.Tval {
+				if tag[stag.Tkey] == v {
+					match = true
+					break
+				}
+			}
+		}
+		if !match {
+			return match
+		}
+
+		if stag.Topt == "!=" {
+			match = true
+			for _, v := range stag.Tval {
+				if tag[stag.Tkey] == v {
+					match = false
+					return match
+				}
+			}
+		}
+	}
+	return true
 }

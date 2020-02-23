@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/didi/nightingale/src/modules/index/config"
 	"github.com/didi/nightingale/src/modules/index/http/middleware"
 	"github.com/didi/nightingale/src/modules/index/http/routes"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 var srv = &http.Server{
@@ -29,6 +31,8 @@ func Start() {
 	if c.Logger.Level != "DEBUG" {
 		gin.SetMode(gin.ReleaseMode)
 		middleware.DisableConsoleColor()
+	} else {
+		srv.WriteTimeout = 120 * time.Second
 	}
 
 	r := gin.New()
@@ -36,7 +40,7 @@ func Start() {
 
 	routes.Config(r)
 
-	srv.Addr = c.HTTP.Listen
+	srv.Addr = address.GetHTTPListen("index")
 	srv.Handler = r
 
 	go func() {

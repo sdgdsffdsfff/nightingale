@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,4 +23,6 @@ func Config(r *gin.Engine) {
 	{
 		v2.POST("/data", QueryData)
 	}
+
+	pprof.Register(r, "/api/transfer/debug/pprof")
 }

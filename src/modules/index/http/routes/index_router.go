@@ -1,8 +1,9 @@
 package routes
 
 import (
+	"fmt"
+
 	"github.com/didi/nightingale/src/modules/index/cache"
-	"github.com/didi/nightingale/src/modules/index/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
@@ -33,9 +34,6 @@ func GetMetricsByEndpoint(c *gin.Context) {
 			resp.Metrics = append(resp.Metrics, metric)
 		}
 	}
-	for metric, _ := range config.DEFAULT_METRIC {
-		resp.Metrics = append(resp.Metrics, metric)
-	}
 
 	renderData(c, resp, nil)
 }
@@ -51,6 +49,30 @@ func DeleteMetrics(c *gin.Context) {
 		}
 		for _, metric := range recv.Metrics {
 			metricsItem.CleanMetric(metric)
+		}
+	}
+
+	renderData(c, "ok", nil)
+}
+
+func DeleteCounter(c *gin.Context) {
+	recv := EndpointTagkvResp{}
+	errors.Dangerous(c.ShouldBindJSON(&recv))
+
+	for _, endpoint := range recv.Endpoints {
+		metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+		if !exists {
+			continue
+		}
+
+		tagkv, exists := metricsItem.GetTagksStruct(recv.Metric)
+		if !exists {
+			continue
+		}
+		for _, kv := range recv.Tagkv {
+			for _, v := range kv.TagV {
+				tagkv.CleanTagkv(kv.TagK, v)
+			}
 		}
 	}
 
@@ -75,17 +97,6 @@ func GetTagkvByEndpoint(c *gin.Context) {
 	tagkvFilter := make(map[string]map[string]struct{})
 	for _, metric := range recv.Metrics {
 		tagkvs := []*cache.TagkvStruct{}
-
-		//metric 在默认metric列表
-		if _, exists := config.DEFAULT_METRIC[metric]; exists {
-			TagkvResp := &EndpointTagkvResp{
-				Endpoints: recv.Endpoints,
-				Metric:    metric,
-				Tagkv:     tagkvs,
-			}
-			resp = append(resp, TagkvResp)
-			continue
-		}
 
 		for _, endpoint := range recv.Endpoints {
 			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
@@ -152,6 +163,14 @@ type FullmatchByEndpointResp struct {
 	DsType    string   `json:"dstype"`
 }
 
+type XcludeResp struct {
+	Endpoint string   `json:"endpoint"`
+	Metric   string   `json:"metric"`
+	Tags     []string `json:"tags"`
+	Step     int      `json:"step"`
+	DsType   string   `json:"dstype"`
+}
+
 func FullmatchByEndpoint(c *gin.Context) {
 	recv := []FullmatchByEndpointRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
@@ -166,17 +185,6 @@ func FullmatchByEndpoint(c *gin.Context) {
 		tagkv := r.Tagkv
 		step := 0
 		dsType := ""
-		if _, exists := config.DEFAULT_METRIC[metric]; exists {
-			resp = append(resp, FullmatchByEndpointResp{
-				Endpoints: r.Endpoints,
-				Metric:    r.Metric,
-				Tags:      []string{},
-				Step:      config.DEFAULT_STEP,
-				DsType:    config.DEFAULT_DSTYPE,
-			})
-
-			continue
-		}
 
 		for _, endpoint := range r.Endpoints {
 
@@ -201,6 +209,18 @@ func FullmatchByEndpoint(c *gin.Context) {
 				}
 			}
 
+			countersItem, exists := metricsItem.GetMetricStructCounters(metric)
+			if !exists {
+				logger.Warningf("not found counters by endpoint:%s metric:%v\n", endpoint, metric)
+				continue
+			}
+
+			counters := countersItem.GetCounters()
+			countersMap := make(map[string]struct{})
+			for _, counter := range counters {
+				countersMap[counter] = struct{}{}
+			}
+
 			tags, err := cache.EndpointDBObj.QueryCountersFullMatchByTags(endpoint, metric, tagkv)
 			if err != nil {
 				logger.Warning(err)
@@ -208,6 +228,12 @@ func FullmatchByEndpoint(c *gin.Context) {
 			}
 
 			for _, tag := range tags {
+				//校验和tag有关的counter是否存在，如果一个指标，比如port.listen有name=uic,port=8056和name=hsp,port=8002。避免产生4个曲线
+				if _, exists := countersMap[tag]; !exists {
+					logger.Warningf("not found counters byendpoint:%s metric:%v tags:%v\n", endpoint, metric, tag)
+					continue
+				}
+
 				if _, exists := tagFilter[tag]; !exists {
 					tagsList = append(tagsList, tag)
 					tagFilter[tag] = struct{}{}
@@ -240,7 +266,7 @@ func CludeByEndpoint(c *gin.Context) {
 
 	tagFilter := make(map[string]struct{})
 	tagList := []string{}
-	var resp []FullmatchByEndpointResp
+	var resp []XcludeResp
 
 	for _, r := range recv {
 		metric := r.Metric
@@ -248,18 +274,6 @@ func CludeByEndpoint(c *gin.Context) {
 		excludeList := r.Exclude
 		step := 0
 		dsType := ""
-
-		if _, exists := config.DEFAULT_METRIC[metric]; exists {
-			resp = append(resp, FullmatchByEndpointResp{
-				Endpoints: r.Endpoints,
-				Metric:    r.Metric,
-				Tags:      []string{},
-				Step:      config.DEFAULT_STEP,
-				DsType:    config.DEFAULT_DSTYPE,
-			})
-
-			continue
-		}
 
 		for _, endpoint := range r.Endpoints {
 			if endpoint == "" {
@@ -273,6 +287,13 @@ func CludeByEndpoint(c *gin.Context) {
 
 			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
 			if !exists {
+				resp = append(resp, XcludeResp{
+					Endpoint: endpoint,
+					Metric:   metric,
+					Tags:     tagList,
+					Step:     step,
+					DsType:   dsType,
+				})
 				logger.Warningf("not found metrics by endpoint:%s", endpoint)
 				continue
 			}
@@ -280,6 +301,14 @@ func CludeByEndpoint(c *gin.Context) {
 			if step == 0 || dsType == "" {
 				step, dsType, exists = metricsItem.GetMetricStepAndDstype(metric)
 				if !exists {
+					resp = append(resp, XcludeResp{
+						Endpoint: endpoint,
+						Metric:   metric,
+						Tags:     tagList,
+						Step:     step,
+						DsType:   dsType,
+					})
+
 					logger.Warningf("not found step by endpoint:%s metric:%v\n", endpoint, metric)
 					continue
 				}
@@ -290,7 +319,6 @@ func CludeByEndpoint(c *gin.Context) {
 				logger.Warning(err)
 				continue
 			}
-			//logger.Debug(endpoint, metric, includeList, excludeList)
 
 			for _, tag := range tags {
 				if tag == "" { //过滤掉空字符串
@@ -302,15 +330,14 @@ func CludeByEndpoint(c *gin.Context) {
 					tagFilter[tag] = struct{}{}
 				}
 			}
+			resp = append(resp, XcludeResp{
+				Endpoint: endpoint,
+				Metric:   metric,
+				Tags:     tagList,
+				Step:     step,
+				DsType:   dsType,
+			})
 		}
-		resp = append(resp, FullmatchByEndpointResp{
-			Endpoints: r.Endpoints,
-			Metric:    r.Metric,
-			Tags:      tagList,
-			Step:      step,
-			DsType:    dsType,
-		})
-
 	}
 
 	renderData(c, resp, nil)
@@ -321,4 +348,12 @@ func DumpIndex(c *gin.Context) {
 	errors.Dangerous(err)
 
 	renderData(c, "ok", nil)
+}
+
+func DumpFile(c *gin.Context) {
+	err := cache.EndpointDBObj.Persist("download")
+	errors.Dangerous(err)
+
+	traGz := fmt.Sprintf("%s%s", cache.PERMANENCE_DIR, "db.tar.gz")
+	c.File(traGz)
 }

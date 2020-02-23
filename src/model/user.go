@@ -129,11 +129,11 @@ func InitRoot() {
 		return
 	}
 
-	gen := str.RandLetters(32)
+	// gen := str.RandLetters(32)
 
 	u = User{
 		Username: "root",
-		Password: config.CryptoPass(gen),
+		Password: config.CryptoPass("root"),
 		Dispname: "超管",
 		IsRoot:   1,
 	}
@@ -141,9 +141,6 @@ func InitRoot() {
 	_, err = DB["uic"].Insert(&u)
 	if err != nil {
 		log.Fatalln("cannot insert user[root]")
-	} else {
-		log.Println("auto generate root.password:", gen)
-		logger.Info("auto generate root.password: ", gen)
 	}
 
 	logger.Info("user root init done")

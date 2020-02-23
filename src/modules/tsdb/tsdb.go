@@ -3,7 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
+	"os/signal"
+	"syscall"
+
+	brpc "github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
+	"github.com/didi/nightingale/src/modules/tsdb/cache"
+	"github.com/didi/nightingale/src/modules/tsdb/chunk"
+	"github.com/didi/nightingale/src/modules/tsdb/config"
+	"github.com/didi/nightingale/src/modules/tsdb/cron"
+	"github.com/didi/nightingale/src/modules/tsdb/http"
+	"github.com/didi/nightingale/src/modules/tsdb/index"
+	"github.com/didi/nightingale/src/modules/tsdb/migrate"
+	"github.com/didi/nightingale/src/modules/tsdb/rpc"
+	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/runner"
@@ -34,6 +48,35 @@ func init() {
 	}
 }
 
+func main() {
+	aconf()
+	pconf()
+	start()
+
+	config.InitLogger()
+
+	cron.GetIndex()
+	// INIT
+	cache.Init()
+	index.Init()
+	brpc.Init()
+
+	cache.InitChunkSlot()
+	rrdtool.Init()
+
+	if config.Config.Migrate.Enabled {
+		migrate.Init() //读数据加队列
+	}
+
+	go http.Start()
+	go rpc.Start()
+
+	go cron.Statstic()
+	go cron.GetIndexLoop()
+
+	startSignal(os.Getpid())
+}
+
 // auto detect configuration file
 func aconf() {
 	if *conf != "" && file.IsExist(*conf) {
@@ -54,9 +97,12 @@ func aconf() {
 	os.Exit(1)
 }
 
-func main() {
-	aconf()
-	start()
+// parse configuration file
+func pconf() {
+	if err := config.Parse(*conf); err != nil {
+		fmt.Println("cannot parse configuration file:", err)
+		os.Exit(1)
+	}
 }
 
 func start() {
@@ -64,4 +110,39 @@ func start() {
 	fmt.Println("tsdb start, use configuration file:", *conf)
 	fmt.Println("runner.Cwd:", runner.Cwd)
 	fmt.Println("runner.Hostname:", runner.Hostname)
+}
+
+func startSignal(pid int) {
+	cfg := config.Config
+	sigs := make(chan os.Signal, 1)
+	log.Printf("%d register signal notify", pid)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	for {
+		s := <-sigs
+		log.Println("recv", s)
+
+		switch s {
+		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
+			log.Println("graceful shut down")
+
+			if cfg.Http.Enabled {
+				http.Close_chan <- 1
+				<-http.Close_done_chan
+			}
+			log.Println("http stop ok")
+
+			if cfg.Rpc.Enabled {
+				rpc.Close_chan <- 1
+				<-rpc.Close_done_chan
+			}
+			log.Println("rpc stop ok")
+
+			chunk.FlushDoneChan <- 1
+			rrdtool.Persist()
+			log.Println("====================== tsdb stop ok ======================")
+			log.Println(pid, "exit")
+			os.Exit(0)
+		}
+	}
 }

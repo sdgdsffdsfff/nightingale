@@ -4,35 +4,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/toolkits/pkg/logger"
-
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/backend"
 	. "github.com/didi/nightingale/src/modules/transfer/config"
+
+	"github.com/toolkits/pkg/logger"
 )
 
-type TransferResp struct {
-	Msg     string
-	Total   int
-	Invalid int
-	Latency int64
-}
-
-func (t *TransferResp) String() string {
-	s := fmt.Sprintf("TransferResp total=%d, err_invalid=%d, latency=%dms",
-		t.Total, t.Invalid, t.Latency)
-	if t.Msg != "" {
-		s = fmt.Sprintf("%s, msg=%s", s, t.Msg)
-	}
-	return s
-}
-
-func (this *Transfer) Ping(args string, reply *string) error {
+func (t *Transfer) Ping(args string, reply *string) error {
 	*reply = args
 	return nil
 }
 
-func (this *Transfer) Push(args []*dataobj.MetricValue, reply *TransferResp) error {
+func (t *Transfer) Push(args []*dataobj.MetricValue, reply *dataobj.TransferResp) error {
 	start := time.Now()
 	reply.Invalid = 0
 
@@ -46,13 +30,16 @@ func (this *Transfer) Push(args []*dataobj.MetricValue, reply *TransferResp) err
 			reply.Msg += fmt.Sprintf("%v\n", err)
 			continue
 		}
-		logger.Debug("->check ok: ", v)
 
 		items = append(items, v)
 	}
 
 	if Config.Tsdb.Enabled {
 		backend.Push2TsdbSendQueue(items)
+	}
+
+	if Config.Judge.Enabled {
+		backend.Push2JudgeSendQueue(items)
 	}
 	if reply.Invalid == 0 {
 		reply.Msg = "ok"

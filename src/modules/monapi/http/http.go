@@ -13,6 +13,7 @@ import (
 	"github.com/didi/nightingale/src/modules/monapi/config"
 	"github.com/didi/nightingale/src/modules/monapi/http/middleware"
 	"github.com/didi/nightingale/src/modules/monapi/http/routes"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 var srv = &http.Server{
@@ -46,7 +47,7 @@ func Start() {
 
 	routes.Config(r)
 
-	srv.Addr = c.HTTP.Listen
+	srv.Addr = address.GetHTTPListen("monapi")
 	srv.Handler = r
 
 	go func() {

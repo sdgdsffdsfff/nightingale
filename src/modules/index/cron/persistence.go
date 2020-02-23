@@ -3,10 +3,10 @@ package cron
 import (
 	"time"
 
-	"github.com/toolkits/pkg/logger"
-
 	"github.com/didi/nightingale/src/modules/index/cache"
 	. "github.com/didi/nightingale/src/modules/index/config"
+
+	"github.com/toolkits/pkg/logger"
 )
 
 func StartPersist() {
@@ -14,7 +14,6 @@ func StartPersist() {
 	for {
 		<-t1.C
 
-		//start := time.Now()
 		err := cache.EndpointDBObj.Persist("normal")
 		if err != nil {
 			logger.Error("Persist err:", err)

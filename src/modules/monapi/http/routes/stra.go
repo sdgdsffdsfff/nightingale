@@ -2,10 +2,10 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/toolkits/pkg/errors"
 
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/monapi/scache"
-	"github.com/toolkits/pkg/errors"
 )
 
 func straPost(c *gin.Context) {
@@ -100,10 +100,16 @@ func strasAll(c *gin.Context) {
 }
 
 func effectiveStrasGet(c *gin.Context) {
-	instance := mustQueryStr(c, "instance")
-	node, err := scache.JudgeActiveNode.GetNodeBy(instance)
-	errors.Dangerous(err)
+	stras := []*model.Stra{}
+	instance := queryStr(c, "instance", "")
 
-	stras := scache.StraCache.GetByNode(node)
+	if queryInt(c, "all", 0) == 1 {
+		stras = scache.StraCache.GetAll()
+	} else if instance != "" {
+		node, err := scache.JudgeActiveNode.GetNodeBy(instance)
+		errors.Dangerous(err)
+
+		stras = scache.StraCache.GetByNode(node)
+	}
 	renderData(c, stras, nil)
 }

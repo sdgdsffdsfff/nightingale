@@ -8,10 +8,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/cespare/xxhash"
-
-	"github.com/toolkits/pkg/logger"
 )
 
 const (
@@ -37,8 +33,8 @@ const SPLIT = "/"
 var bufferPool = sync.Pool{New: func() interface{} { return new(bytes.Buffer) }}
 
 func (m *MetricValue) String() string {
-	return fmt.Sprintf("<MetaData Endpoint:%s, Metric:%s, Timestamp:%d, Step:%d, Value:%v, Tags:%v>",
-		m.Endpoint, m.Metric, m.Timestamp, m.Step, m.ValueUntyped, m.Tags)
+	return fmt.Sprintf("<MetaData Endpoint:%s, Metric:%s, Timestamp:%d, Step:%d, Value:%v, Tags:%v(%v)>",
+		m.Endpoint, m.Metric, m.Timestamp, m.Step, m.ValueUntyped, m.Tags, m.TagsMap)
 }
 
 func (m *MetricValue) PK() string {
@@ -71,17 +67,23 @@ func (m *MetricValue) CheckValidity() (err error) {
 	var illegal bool
 	m.Metric, illegal = ReplaceReservedWords(m.Metric)
 	if illegal {
-		logger.Warning("Metric contains reserved word")
+		err = fmt.Errorf("Metric contains reserved word")
+		return
 	}
 
 	m.Endpoint, illegal = ReplaceReservedWords(m.Endpoint)
 	if illegal {
-		logger.Warning("Endpoint contains reserved word")
+		err = fmt.Errorf("Endpoint contains reserved word:%s", m.Endpoint)
+		return
 	}
 
 	if m.Metric == "" || m.Endpoint == "" {
 		err = fmt.Errorf("Metric|Endpoint is nil")
 		return
+	}
+
+	if m.CounterType == "" {
+		m.CounterType = GAUGE
 	}
 
 	if m.CounterType != COUNTER && m.CounterType != GAUGE && m.CounterType != DERIVE {
@@ -100,7 +102,10 @@ func (m *MetricValue) CheckValidity() (err error) {
 	}
 
 	if len(m.TagsMap) == 0 {
-		m.TagsMap, _ = SplitTagsString(m.Tags)
+		m.TagsMap, err = SplitTagsString(m.Tags)
+		if err != nil {
+			return
+		}
 	}
 
 	m.Tags = SortedTags(m.TagsMap)
@@ -123,11 +128,12 @@ func (m *MetricValue) CheckValidity() (err error) {
 	case string:
 		vv, err = strconv.ParseFloat(cv, 64)
 		if err != nil {
-			logger.Error(err)
 			valid = false
 		}
 	case float64:
 		vv = cv
+	case uint64:
+		vv = float64(cv)
 	case int64:
 		vv = float64(cv)
 	case int:
@@ -306,40 +312,6 @@ func PKWhitEndpointAndTags(endpoint, metric, tags string) string {
 	ret.WriteString("/")
 	ret.WriteString(tags)
 	return ret.String()
-}
-
-func XXhash(endpoint, metric string, tags map[string]string) uint64 {
-	ret := bufferPool.Get().(*bytes.Buffer)
-	ret.Reset()
-	defer bufferPool.Put(ret)
-
-	if tags == nil || len(tags) == 0 {
-		ret.WriteString(endpoint)
-		ret.WriteString(SPLIT)
-		ret.WriteString(metric)
-
-		return xxhash.Sum64(ret.Bytes())
-	}
-	ret.WriteString(endpoint)
-	ret.WriteString(SPLIT)
-	ret.WriteString(metric)
-	ret.WriteString(SPLIT)
-	ret.WriteString(SortedTags(tags))
-
-	return xxhash.Sum64(ret.Bytes())
-}
-
-//endpoint, counter
-func XXhashWithCounter(endpoint, counter string) uint64 {
-	ret := bufferPool.Get().(*bytes.Buffer)
-	ret.Reset()
-	defer bufferPool.Put(ret)
-
-	ret.WriteString(endpoint)
-	ret.WriteString(SPLIT)
-	ret.WriteString(counter)
-
-	return xxhash.Sum64(ret.Bytes())
 }
 
 // e.g. tcp.port.listen or proc.num

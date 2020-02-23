@@ -3,13 +3,13 @@ package routes
 import (
 	"fmt"
 
-	"github.com/toolkits/pkg/errors"
-	"github.com/toolkits/pkg/logger"
-
-	"github.com/gin-gonic/gin"
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/backend"
 	. "github.com/didi/nightingale/src/modules/transfer/config"
+
+	"github.com/gin-gonic/gin"
+	"github.com/toolkits/pkg/errors"
+	"github.com/toolkits/pkg/logger"
 )
 
 func PushData(c *gin.Context) {
@@ -38,8 +38,13 @@ func PushData(c *gin.Context) {
 		backend.Push2TsdbSendQueue(metricValues)
 	}
 
+	if Config.Judge.Enabled {
+		backend.Push2JudgeSendQueue(metricValues)
+	}
+
 	if msg != "" {
-		renderMessage(c, "blank body")
+		renderMessage(c, msg)
+		return
 	}
 
 	renderData(c, "ok", nil)

@@ -1,0 +1,6 @@
+rrd:
+  storage: data/5821
+logger:
+  dir: logs/tsdb
+  level: WARNING
+  keepHours: 2

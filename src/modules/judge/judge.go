@@ -3,15 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/didi/nightingale/src/modules/judge/logger"
-	"github.com/didi/nightingale/src/modules/judge/worker"
-
 	"github.com/toolkits/pkg/file"
+	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
+
+	"github.com/didi/nightingale/src/modules/judge/backend/query"
+	"github.com/didi/nightingale/src/modules/judge/backend/redi"
+	"github.com/didi/nightingale/src/modules/judge/cache"
+	"github.com/didi/nightingale/src/modules/judge/config"
+	"github.com/didi/nightingale/src/modules/judge/cron"
+	"github.com/didi/nightingale/src/modules/judge/http"
+	"github.com/didi/nightingale/src/modules/judge/rpc"
+	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 const version = 1
@@ -39,6 +47,44 @@ func init() {
 	}
 }
 
+func main() {
+	aconf()
+	pconf()
+	start()
+
+	config.InitLogger()
+
+	cfg := config.Config
+	ident, err := config.GetIdentity(cfg.Identity)
+	if err != nil {
+		log.Fatalln("[F] cannot get identity:", err)
+	}
+
+	port, err := config.GetPort(address.GetRPCListen("judge"))
+	if err != nil {
+		log.Fatalln("[F] cannot get identity:", err)
+	}
+
+	config.Identity = ident + ":" + port
+	log.Printf("[I] identity -> %s", config.Identity)
+
+	query.InitConnPools()
+	cache.InitHistoryBigMap()
+	cache.Strategy = cache.NewStrategyMap()
+	cache.NodataStra = cache.NewStrategyMap()
+	cache.SeriesMap = cache.NewIndexMap()
+	redi.InitRedis()
+
+	go http.Start(address.GetHTTPListen("judge"), cfg.Logger.Level)
+	go rpc.Start()
+	go cron.Report(ident, port, address.GetHTTPAddresses("monapi"), cfg.Report.Interval)
+	go cron.Statstic()
+	go cron.GetStrategy()
+	go cron.NodataJudge()
+
+	ending()
+}
+
 // auto detect configuration file
 func aconf() {
 	if *conf != "" && file.IsExist(*conf) {
@@ -59,26 +105,31 @@ func aconf() {
 	os.Exit(1)
 }
 
-func main() {
-	aconf()
-	start()
-
-	worker.Start(*conf)
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	select {
-	case <-c:
-		logger.Info(0, "stop signal caught, try to stop judge server")
-		worker.Stop()
+// parse configuration file
+func pconf() {
+	if err := config.Parse(*conf); err != nil {
+		fmt.Println("cannot parse configuration file:", err)
+		os.Exit(1)
 	}
-	logger.Info(0, "judge server stopped succefully")
-	logger.Close()
 }
 
 func start() {
 	runner.Init()
-	fmt.Println("judge start, use configuration file:", *conf)
+	fmt.Println("transfer start, use configuration file:", *conf)
 	fmt.Println("runner.Cwd:", runner.Cwd)
 	fmt.Println("runner.Hostname:", runner.Hostname)
+}
+
+func ending() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	select {
+	case <-c:
+		fmt.Printf("stop signal caught, stopping... pid=%d\n", os.Getpid())
+	}
+
+	logger.Close()
+	http.Shutdown()
+	redi.CloseRedis()
+	fmt.Println("alarm stopped successfully")
 }

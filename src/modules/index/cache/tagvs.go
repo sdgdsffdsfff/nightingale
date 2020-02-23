@@ -2,6 +2,8 @@ package cache
 
 import (
 	"sync"
+
+	"github.com/toolkits/pkg/logger"
 )
 
 //TagKTagvStruct
@@ -27,6 +29,8 @@ func (t *TagkTagvsStruct) Clean(now, timeDuration int64) {
 	for k, v := range t.Tagvs {
 		if now-v > timeDuration {
 			delete(t.Tagvs, k)
+			logger.Errorf("[clean index tagv] tagv:%s now:%d time duration:%d updated:%d",
+				k, now, timeDuration, v)
 		}
 	}
 }
@@ -36,6 +40,12 @@ func (t *TagkTagvsStruct) CleanEndpoint(endpoint string) {
 	defer t.Unlock()
 	delete(t.Tagvs, endpoint)
 
+}
+
+func (t *TagkTagvsStruct) CleanTagv(tagv string) {
+	t.Lock()
+	defer t.Unlock()
+	delete(t.Tagvs, tagv)
 }
 
 func (t *TagkTagvsStruct) GetTagvs() []string {

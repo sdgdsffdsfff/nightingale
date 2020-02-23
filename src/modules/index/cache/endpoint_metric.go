@@ -6,10 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/compress"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -20,13 +22,15 @@ type EndpointMetricsStruct struct { // ns -> metrics
 }
 
 //push 索引数据
-func (e *EndpointMetricsStruct) Push(item dataobj.IndexModel) error {
-	now := time.Now().Unix()
+func (e *EndpointMetricsStruct) Push(item dataobj.IndexModel, now int64) error {
 	counter := dataobj.SortedTags(item.Tags)
 	metric := item.Metric
 
 	metricsItem := e.MustGetMetrics(item.Endpoint)
 	metricItem := metricsItem.MustGetMetricStruct(metric, now)
+	if metricItem.Updated < now {
+		logger.Errorf("metricItem.Updated:%d now:%d", metricItem.Updated, now)
+	}
 
 	metricItem.Updated = now
 	metricItem.Step = item.Step
@@ -53,9 +57,12 @@ func (e *EndpointMetricsStruct) Clean(timeDuration int64) {
 			e.Lock()
 			delete(e.Metrics, endpoint)
 			e.Unlock()
+
+			logger.Debug("clean index endpoint: ", endpoint)
+			atomic.AddInt64(&config.IndexClean, 1)
 		}
 
-		metricsItem.Clean(now, timeDuration)
+		metricsItem.Clean(now, timeDuration, endpoint)
 	}
 }
 
@@ -77,8 +84,8 @@ func (e *EndpointMetricsStruct) MustGetMetrics(endpoint string) *MetricsStruct {
 		metricsStruct = e.Metrics[endpoint]
 		e.Unlock()
 	} else {
-		e.RUnlock()
 		metricsStruct = e.Metrics[endpoint]
+		e.RUnlock()
 	}
 	return metricsStruct
 }
@@ -258,7 +265,7 @@ func (e *EndpointMetricsStruct) GetEndpoints() []string {
 }
 
 func (e *EndpointMetricsStruct) Persist(mode string) error {
-	if mode == "normal" {
+	if mode == "normal" || mode == "download" {
 		if !semaPermanence.TryAcquire() {
 			return fmt.Errorf("Permanence operate is Already running...")
 		}
@@ -267,10 +274,14 @@ func (e *EndpointMetricsStruct) Persist(mode string) error {
 	} else {
 		return fmt.Errorf("Your mode is Wrong![normal,end]")
 	}
-
+	var tmpDir string
 	defer semaPermanence.Release()
+	if mode == "download" {
+		tmpDir = fmt.Sprintf("%s%s", PERMANENCE_DIR, "download")
+	} else {
+		tmpDir = fmt.Sprintf("%s%s", PERMANENCE_DIR, "tmp")
+	}
 
-	tmpDir := fmt.Sprintf("%s%s", PERMANENCE_DIR, "tmp")
 	finalDir := fmt.Sprintf("%s%s", PERMANENCE_DIR, "db")
 
 	var err error
@@ -311,6 +322,10 @@ func (e *EndpointMetricsStruct) Persist(mode string) error {
 		}
 	}
 	logger.Infof("sync to disk , [%d%%] complete\n", 100)
+
+	if mode == "download" {
+		compress.TarGz(fmt.Sprintf("%s%s", PERMANENCE_DIR, "db.tar.gz"), tmpDir)
+	}
 
 	//清空db目录
 	if err = os.RemoveAll(finalDir); err != nil {

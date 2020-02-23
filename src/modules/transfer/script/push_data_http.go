@@ -23,14 +23,16 @@ type MetricValue struct {
 }
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+
 	t1 := time.NewTicker(10 * time.Second)
 	for {
-		url := "http://127.0.0.1:8043/api/v1/push"
+		url := "http://127.0.0.1:7900/api/transfer/push"
 		resp, err := push(url, getMetricValues())
 		if err != nil {
 			log.Println(err)
 		}
-		log.Println(resp)
+		log.Println(string(resp))
 		<-t1.C
 	}
 }
@@ -40,15 +42,28 @@ func getMetricValues() []*MetricValue {
 	now := time.Now().Unix()
 	ts := now - now%10 // 对齐时间戳
 	r1 := rand.Intn(20)
+	tagsMap := make(map[string]string)
+
 	ret = append(ret, &MetricValue{
-		Endpoint:     "falcon-ng",
-		Metric:       "falcon-ng.test",
-		ValueUntyped: float64(r1),
+		Endpoint:     "10.86.76.13",
+		Metric:       "log.gateway.errMsg0",
+		ValueUntyped: float64(1),
 		Timestamp:    ts,
 		CounterType:  "GAUGE",
 		Step:         10,
+		TagsMap:      tagsMap,
 	})
-	log.Println("--->", ret[0])
+
+	ret = append(ret, &MetricValue{
+		Endpoint:     "10.86.76.13",
+		Metric:       "qps",
+		ValueUntyped: 9500 + rand.Intn(500),
+		Timestamp:    ts,
+		CounterType:  "GAUGE",
+		Step:         10,
+		TagsMap:      tagsMap,
+	})
+	log.Println("--->", ts, ret[0])
 	return ret
 }
 

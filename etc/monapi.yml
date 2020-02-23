@@ -2,12 +2,11 @@
 salt: "PLACE_SALT"
 
 logger:
-  dir: "logs/portal"
+  dir: "logs/monapi"
   level: "INFO"
   keepHours: 24
 
 http:
-  listen: "0.0.0.0:5800"
   secret: "PLACE_SECRET"
 
 # for ldap authorization
@@ -22,11 +21,6 @@ ldap:
   authFilter: "(&(uid=%s))"
   tls: false
   startTLS: false
-
-# just for single host test, use nginx in production
-proxy:
-  transfer: http://127.0.0.1:5810
-  index: http://127.0.0.1:5830
 
 # notify support: voice, sms, mail, im
 # if we have all of notice channel
@@ -50,4 +44,4 @@ link:
 # for alarm event and message queue
 redis:
   addr: "127.0.0.1:6379"
-  pass: "1234"
+  pass: ""

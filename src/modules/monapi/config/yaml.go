@@ -16,7 +16,6 @@ type Config struct {
 	HTTP    httpSection         `yaml:"http"`
 	LDAP    ldapSection         `yaml:"ldap"`
 	Redis   redisSection        `yaml:"redis"`
-	Proxy   proxySection        `yaml:"proxy"`
 	Queue   queueSection        `yaml:"queue"`
 	Cleaner cleanerSection      `yaml:"cleaner"`
 	Link    linkSection         `yaml:"link"`
@@ -61,7 +60,6 @@ type loggerSection struct {
 }
 
 type httpSection struct {
-	Listen string `yaml:"listen"`
 	Secret string `yaml:"secret"`
 }
 
@@ -74,11 +72,6 @@ type ldapSection struct {
 	AuthFilter string `yaml:"authFilter"`
 	TLS        bool   `yaml:"tls"`
 	StartTLS   bool   `yaml:"startTLS"`
-}
-
-type proxySection struct {
-	Transfer string `yaml:"transfer"`
-	Index    string `yaml:"index"`
 }
 
 var (
@@ -113,13 +106,13 @@ func Parse(ymlfile string) error {
 		"write": 3000,
 	})
 
-	viper.SetDefault("queue", map[string]interface{}{
+	viper.SetDefault("queue", map[string]string{
 		"eventPrefix":  "/n9e/event/",
 		"callback":     "/n9e/event/callback",
 		"senderPrefix": "/n9e/sender/",
 	})
 
-	viper.SetDefault("cleaner", map[string]interface{}{
+	viper.SetDefault("cleaner", map[string]int{
 		"days":  366,
 		"batch": 100,
 	})

@@ -3,6 +3,11 @@ package cache
 import (
 	"strings"
 	"sync"
+	"sync/atomic"
+
+	"github.com/didi/nightingale/src/modules/index/config"
+
+	"github.com/toolkits/pkg/logger"
 )
 
 type CountersStruct struct { // ns/metric -> counter
@@ -25,12 +30,14 @@ func (c *CountersStruct) Update(counter string, ts int64, step int64, dsType str
 	c.Unlock()
 }
 
-func (c *CountersStruct) Clean(now, timeDuration int64) {
+func (c *CountersStruct) Clean(now, timeDuration int64, endpoint, metric string) {
 	c.Lock()
 	defer c.Unlock()
 	for k, counter := range c.Counters {
 		if now-counter.GetUpdate() > timeDuration {
 			delete(c.Counters, k)
+			atomic.AddInt64(&config.IndexClean, 1)
+			logger.Debugf("clean index endpoint:%s metric:%s counter:%s", endpoint, metric, k)
 		}
 	}
 }

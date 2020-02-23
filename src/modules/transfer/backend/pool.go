@@ -10,8 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/toolkits/pkg/pool"
+	"github.com/didi/nightingale/src/modules/transfer/config"
 
+	"github.com/toolkits/pkg/pool"
 	"github.com/ugorji/go/codec"
 )
 
@@ -66,6 +67,29 @@ func createOnePool(name string, address string, connTimeout time.Duration, maxCo
 		return RpcClient{cli: rpc.NewClientWithCodec(rpcCodec), name: connName}, nil
 	}
 	return p
+}
+
+func (cp *ConnPools) Update(cluster []string) {
+	cp.Lock()
+	defer cp.Unlock()
+
+	maxConns := config.Config.Judge.MaxConns
+	maxIdle := config.Config.Judge.MaxIdle
+	ct := time.Duration(cp.ConnTimeout) * time.Millisecond
+	newCluster := make(map[string]struct{})
+	for _, address := range cluster {
+		newCluster[address] = struct{}{}
+		if _, exist := cp.M[address]; exist {
+			continue
+		}
+		cp.M[address] = createOnePool(address, address, ct, maxConns, maxIdle)
+	}
+
+	for address, _ := range cp.M {
+		if _, exists := newCluster[address]; !exists {
+			delete(cp.M, address)
+		}
+	}
 }
 
 // 同步发送, 完成发送或超时后 才能返回

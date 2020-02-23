@@ -3,7 +3,8 @@ package model
 import (
 	"strings"
 
-	"github.com/go-xorm/xorm"
+	"xorm.io/xorm"
+
 	"github.com/toolkits/pkg/str"
 )
 
