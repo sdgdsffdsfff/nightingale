@@ -411,12 +411,12 @@ export default class GraphConfigForm extends BaseComponent {
     }));
   }
 
-  handleConsolFucChange = (currentMetric, value) => {
+  handleconsolFuncChange = (currentMetric, value) => {
     const { metrics } = this.state.graphConfig;
     const currentMetricObj = _.cloneDeep(_.find(metrics, { selectedMetric: currentMetric }));
     const currentMetricObjIndex = _.findIndex(metrics, { selectedMetric: currentMetric });
 
-    currentMetricObj.consolFuc = value;
+    currentMetricObj.consolFunc = value;
     this.setState(update(this.state, {
       graphConfig: {
         metrics: {
@@ -662,8 +662,8 @@ export default class GraphConfigForm extends BaseComponent {
             size="default"
             style={{ width: '100%' }}
             placeholder="无"
-            value={metricObj.consolFuc}
-            onChange={val => this.handleConsolFucChange(currentMetric, val)}
+            value={metricObj.consolFunc}
+            onChange={val => this.handleconsolFuncChange(currentMetric, val)}
           >
             <Option value="AVERAGE">均值</Option>
             <Option value="MAX">最大值</Option>

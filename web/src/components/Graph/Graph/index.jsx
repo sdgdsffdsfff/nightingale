@@ -75,7 +75,7 @@ export default class Graph extends Component {
     const selectedMetricChanged = !util.isEqualBy(nextData.metrics, thisData.metrics, 'selectedMetric');
     const selectedTagkvChanged = !util.isEqualBy(nextData.metrics, thisData.metrics, 'selectedTagkv');
     const aggrFuncChanged = !util.isEqualBy(nextData.metrics, thisData.metrics, 'aggrFunc');
-    const consolFucChanged = !util.isEqualBy(nextData.metrics, thisData.metrics, 'consolFuc');
+    const consolFuncChanged = !util.isEqualBy(nextData.metrics, thisData.metrics, 'consolFunc');
     const aggrGroupChanged = !util.isEqualBy(nextData.metrics, thisData.metrics, 'aggrGroup');
     const timeChanged = nextData.start !== thisData.start || nextData.end !== thisData.end;
 
@@ -88,7 +88,7 @@ export default class Graph extends Component {
       || selectedTagkvChanged
       || aggrFuncChanged
       || aggrGroupChanged
-      || consolFucChanged
+      || consolFuncChanged
     ) {
       const isFetchCounter = selectedNsChanged || selectedMetricChanged || selectedTagkvChanged;
       this.fetchData(nextProps.data, isFetchCounter, (series) => {

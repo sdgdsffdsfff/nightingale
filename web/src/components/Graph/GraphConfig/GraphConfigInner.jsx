@@ -82,12 +82,12 @@ export default class GraphConfigInner extends Component {
     });
   }
 
-  handleConsolFucChange = (val) => {
+  handleconsolFuncChange = (val) => {
     const { data, onChange } = this.props;
     onChange('update', data.id, {
       metrics: [{
         ...data.metrics[0],
-        consolFuc: val,
+        consolFunc: val,
       }],
     });
   }
@@ -297,8 +297,8 @@ export default class GraphConfigInner extends Component {
             size="small"
             style={{ width: 85 }}
             placeholder="无"
-            value={_.get(data.metrics, '[0].consolFuc')}
-            onChange={this.handleConsolFucChange}
+            value={_.get(data.metrics, '[0].consolFunc')}
+            onChange={this.handleconsolFuncChange}
           >
             <Option value="AVERAGE">均值</Option>
             <Option value="MAX">最大值</Option>

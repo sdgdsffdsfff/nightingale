@@ -126,7 +126,7 @@ export default class MetricSelect extends Component {
         selectedTagkv,
         tagkv,
         aggrFunc: undefined,
-        consolFuc: 'AVERAGE',
+        consolFunc: 'AVERAGE',
         counterList: [],
       }],
     };

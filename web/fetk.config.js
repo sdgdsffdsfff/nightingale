@@ -22,8 +22,6 @@ module.exports = {
     inline: true,
     proxy: {
       '/api/portal': 'http://10.86.92.17:8058',
-      '/api/transfer': 'http://10.86.92.17:8057',
-      '/api/index': 'http://10.86.92.17:8059',
     },
   },
 };

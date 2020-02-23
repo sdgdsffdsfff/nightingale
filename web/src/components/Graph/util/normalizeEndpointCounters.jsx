@@ -14,7 +14,7 @@ export function processComparison(comparison) {
 
 export default function normalizeEndpointCounters(graphConfig, counterList) {
   const firstMetric = _.get(graphConfig, 'metrics[0]', {});
-  const { aggrFunc, aggrGroup: groupKey, consolFuc } = firstMetric;
+  const { aggrFunc, aggrGroup: groupKey, consolFunc } = firstMetric;
   const start = transformMsToS(_.toString(graphConfig.start));
   const end = transformMsToS(_.toString(graphConfig.end));
 
@@ -25,7 +25,7 @@ export default function normalizeEndpointCounters(graphConfig, counterList) {
       end,
       aggrFunc,
       groupKey,
-      consolFuc,
+      consolFunc,
     };
   });
 

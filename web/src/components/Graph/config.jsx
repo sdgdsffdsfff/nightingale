@@ -84,7 +84,7 @@ export const graphDefaultConfig = {
       aggrFunc: undefined,
       aggrGroup: [],
       selectedTagkv: [],
-      consolFuc: 'AVERAGE',
+      consolFunc: 'AVERAGE',
     },
   ],
 };
