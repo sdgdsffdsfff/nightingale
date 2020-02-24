@@ -1,5 +1,6 @@
 package cache
 
+/*
 import (
 	"sync"
 
@@ -57,3 +58,4 @@ func (t *TagkTagvsStruct) GetTagvs() []string {
 	}
 	return tagvs
 }
+*/

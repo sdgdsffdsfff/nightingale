@@ -14,7 +14,7 @@ func StartPersist() {
 	for {
 		<-t1.C
 
-		err := cache.EndpointDBObj.Persist("normal")
+		err := cache.IndexDB.Persist("normal")
 		if err != nil {
 			logger.Error("Persist err:", err)
 		}

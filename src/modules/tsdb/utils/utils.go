@@ -11,7 +11,7 @@ import (
 
 const RRDDIRS uint64 = 1000
 
-func QeuryRrdFile(seriesID interface{}, dsType string, step int) string {
+func QueryRrdFile(seriesID interface{}, dsType string, step int) string {
 	switch seriesID.(type) {
 	case uint64:
 		return strconv.FormatUint(seriesID.(uint64)%RRDDIRS, 10) + "/" +
@@ -31,10 +31,6 @@ func RrdFileName(baseDir string, seriesID interface{}, dsType string, step int) 
 		return baseDir + "/" + seriesID.(string)[0:2] + "/" + seriesID.(string) + "_" + dsType + "_" + strconv.Itoa(step) + ".rrd"
 	}
 	return ""
-}
-
-func GetStepDsType(seriesID interface{}) (int, string, error) {
-	return 10, "GAUGE", nil
 }
 
 // WriteFile writes data to a file named by filename.

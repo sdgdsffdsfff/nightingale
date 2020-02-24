@@ -104,7 +104,7 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 			if err != nil {
 				logger.Error("E:", err)
 			} else {
-				filename := utils.QeuryRrdFile(seriesID, dsType, step)
+				filename := utils.QueryRrdFile(seriesID, dsType, step)
 				Q := migrate.RRDFileQueues[node]
 				body := dataobj.RRDFile{
 					Key:      seriesID,
@@ -112,9 +112,7 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 				}
 				Q.PushFront(body)
 			}
-
 		}
-
 	} else {
 		// read data from rrd file
 		// 从RRD中获取数据不包含起始时间点
@@ -363,9 +361,6 @@ _RETURN_OK:
 	}
 
 	// statistics
-	//proc.TsdbQueryItemCnt.IncrBy(int64(len(resp.Values)))
-
-	//metricQueryData(time.Now().Sub(start), "ok")
 	return nil
 }
 

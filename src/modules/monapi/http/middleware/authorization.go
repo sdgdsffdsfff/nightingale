@@ -4,11 +4,11 @@ import (
 	"encoding/base64"
 	"strings"
 
+	"github.com/didi/nightingale/src/model"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
-
-	"github.com/didi/nightingale/src/model"
 )
 
 func Logined() gin.HandlerFunc {
@@ -66,4 +66,17 @@ func headerUser(c *gin.Context) string {
 	}
 
 	return pair[0]
+}
+
+const internalToken = "monapi-builtin-token"
+
+// CheckHeaderToken check thirdparty x-srv-token
+func CheckHeaderToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.GetHeader("x-srv-token")
+		if token != internalToken {
+			errors.Bomb("token[%s] invalid", token)
+		}
+		c.Next()
+	}
 }

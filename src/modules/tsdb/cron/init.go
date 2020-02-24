@@ -29,12 +29,6 @@ func Statstic() {
 		pushIncrIndex := atomic.SwapInt64(&config.PushIncrIndex, 0)
 		oldIndex := atomic.SwapInt64(&config.OldIndex, 0)
 
-		logger.Infof("stats pointIn:%d", pointIn)
-		logger.Infof("stats pointInErr:%d", pointInErr)
-		logger.Infof("stats QueryCount:%d", queryCount)
-		logger.Infof("stats FlushRRDCount:%d", flushRRDCount)
-		logger.Infof("stats FlushRRDErrCount:%d", flushRRDErrCount)
-
 		var items []dataobj.MetricValue
 		items = append(items, NewMetricValue("n9e.tsdb.point_in", pointIn))
 		items = append(items, NewMetricValue("n9e.tsdb.point_in_err", pointInErr))

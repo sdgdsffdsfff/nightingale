@@ -7,61 +7,41 @@ import (
 )
 
 //TagKeys
-type TagksStruct struct { // ns/metric -> tagk
+type TagkvIndex struct {
 	sync.RWMutex
-	Tagks map[string]*TagkStruct `json:"tagks"`
+	Tagkv map[string]map[string]int64 //map[tagk]map[tagv]ts
 }
 
-func (t TagksStruct) New() *TagksStruct {
-	return &TagksStruct{
-		Tagks: make(map[string]*TagkStruct, 0),
+func NewTagkvIndex() *TagkvIndex {
+	//tagvm := make(map[string]int64)
+	//tagvm[tagv] = now
+	//tagkm := make(map[string]map[string]int64)
+	//tagkm[tagk] = tagvm
+
+	return &TagkvIndex{
+		Tagkv: make(map[string]map[string]int64),
 	}
 }
 
-func (t *TagksStruct) Clean(now, timeDuration int64) {
+func (t *TagkvIndex) Set(tagk, tagv string, now int64) {
 	t.Lock()
 	defer t.Unlock()
 
-	for tagk, tagkStruct := range t.Tagks {
-		if now-tagkStruct.Updated > timeDuration {
-			delete(t.Tagks, tagk)
-			logger.Errorf("[clean index tagk] tagk:%s now:%d time duration:%d updated:%d",
-				tagk, now, timeDuration, tagkStruct.Updated)
-
-		} else {
-			//清理tagvs
-			tagkStruct.Tagvs.Clean(now, timeDuration)
-		}
+	if _, exists := t.Tagkv[tagk]; !exists {
+		t.Tagkv[tagk] = make(map[string]int64)
 	}
+	t.Tagkv[tagk][tagv] = now
 }
 
-func (t *TagksStruct) CleanTagkv(tagk, tagv string) {
-	for k, vStruct := range t.Tagks {
-		if k == tagk {
-			vStruct.Tagvs.CleanTagv(tagv)
-			return
-		}
-	}
-}
-
-func (t *TagksStruct) CleanEndpoint(endpoint string) {
-	t.Lock()
-	defer t.Unlock()
-	for tagk, tagkStruct := range t.Tagks {
-		if tagk == "endpoint" {
-			tagkStruct.Tagvs.CleanEndpoint(endpoint)
-
-			return
-		}
-	}
-}
-
-func (t *TagksStruct) GetTagkv() []*TagkvStruct {
+func (t *TagkvIndex) GetTagkv() []*TagkvStruct {
 	t.RLock()
 	defer t.RUnlock()
 	tagkvs := []*TagkvStruct{}
-	for k, tagvs := range t.Tagks {
-		vs := tagvs.Tagvs.GetTagvs()
+	var vs []string
+	for k, vm := range t.Tagkv {
+		for v, _ := range vm {
+			vs = append(vs, v)
+		}
 		tagkv := TagkvStruct{
 			TagK: k,
 			TagV: vs,
@@ -72,37 +52,50 @@ func (t *TagksStruct) GetTagkv() []*TagkvStruct {
 	return tagkvs
 }
 
-func (t *TagksStruct) GetTagkvMap() map[string][]string {
+func (t *TagkvIndex) GetTagkvMap() map[string][]string {
 	t.RLock()
 	defer t.RUnlock()
 	tagkvs := make(map[string][]string)
 
-	for k, tagvs := range t.Tagks {
-		vs := tagvs.Tagvs.GetTagvs()
+	var vs []string
+	for k, vm := range t.Tagkv {
+		for v, _ := range vm {
+			vs = append(vs, v)
+		}
+
 		tagkvs[k] = vs
 	}
 
 	return tagkvs
 }
 
-func (t *TagksStruct) MustGetTagkStruct(k string, now int64) *TagkStruct {
+func (t *TagkvIndex) Clean(now, timeDuration int64) {
 	t.Lock()
 	defer t.Unlock()
-	if _, exists := t.Tagks[k]; !exists {
-		t.Tagks[k] = NewTagkStruct(now)
-	} else {
-		t.Tagks[k].Updated = now
+
+	for k, vm := range t.Tagkv {
+		for v, ts := range vm {
+			if now-ts > timeDuration {
+				delete(t.Tagkv[k], v)
+				logger.Errorf("[clean index tagkv] tagk:%s %s now:%d time duration:%d updated:%d",
+					k, v, now, timeDuration, ts)
+			}
+		}
+		if len(t.Tagkv[k]) == 0 {
+			delete(t.Tagkv, k)
+		}
 	}
-	return t.Tagks[k]
 }
 
-//TagKey
-type TagkStruct struct {
-	Updated int64
+func (t *TagkvIndex) DelTagkv(tagk, tagv string) {
+	t.Lock()
+	defer t.Unlock()
 
-	Tagvs *TagkTagvsStruct
-}
+	if _, exists := t.Tagkv[tagk]; exists {
+		delete(t.Tagkv[tagk], tagv)
+	}
 
-func NewTagkStruct(ts int64) *TagkStruct {
-	return &TagkStruct{Updated: ts, Tagvs: NewTagkTagvsStruct()}
+	if len(t.Tagkv[tagk]) == 0 {
+		delete(t.Tagkv, tagk)
+	}
 }

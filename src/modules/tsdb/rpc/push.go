@@ -78,7 +78,7 @@ func handleItems(items []*dataobj.TsdbItem) {
 						logger.Error("E:", err)
 						continue
 					}
-					filename := utils.QeuryRrdFile(item.Key, items[i].DsType, items[i].Step)
+					filename := utils.QueryRrdFile(item.Key, items[i].DsType, items[i].Step)
 					if filename == "" {
 						continue
 					}

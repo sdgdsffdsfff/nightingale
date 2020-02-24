@@ -21,14 +21,14 @@ import (
 	"github.com/didi/nightingale/src/toolkits/compress"
 )
 
-var EndpointDBObj *EndpointMetricsStruct
+var IndexDB *EndpointIndexMap
 
 const PERMANENCE_DIR = "./.data/"
 
 var semaPermanence = semaphore.NewSemaphore(1)
 
 func InitDB() {
-	EndpointDBObj = &EndpointMetricsStruct{Metrics: make(map[string]*MetricsStruct, 0)}
+	IndexDB = &EndpointIndexMap{M: make(map[string]*MetricIndexMap, 0)}
 }
 
 func Rebuild() {
@@ -87,17 +87,17 @@ func RebuildFromDisk(permanDir string) error {
 				return
 			}
 
-			metrics := new(MetricsStruct)
+			metricIndexMap := new(MetricIndexMap)
 
-			err = json.Unmarshal(body, metrics)
+			err = json.Unmarshal(body, metricIndexMap)
 			if err != nil {
 				logger.Errorf("json unmarshal failed, [endpoint:%s][reason:%v]", endpoint, err)
 				return
 			}
 
-			EndpointDBObj.Lock()
-			EndpointDBObj.Metrics[endpoint] = metrics
-			EndpointDBObj.Unlock()
+			IndexDB.Lock()
+			IndexDB.M[endpoint] = metricIndexMap
+			IndexDB.Unlock()
 		}(endpoint)
 
 	}

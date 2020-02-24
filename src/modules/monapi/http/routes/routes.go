@@ -126,6 +126,11 @@ func Config(r *gin.Engine) {
 		login.GET("/stra/:sid", straGet)
 	}
 
+	v1 := r.Group("/v1/portal").Use(middleware.CheckHeaderToken())
+	{
+		v1.POST("/endpoint", endpointImport)
+	}
+
 	transferProxy := r.Group("/api/transfer")
 	{
 		transferProxy.GET("/req", transferReq)

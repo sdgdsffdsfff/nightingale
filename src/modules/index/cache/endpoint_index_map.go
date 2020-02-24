@@ -16,90 +16,82 @@ import (
 	"github.com/toolkits/pkg/logger"
 )
 
-type EndpointMetricsStruct struct { // ns -> metrics
+type EndpointIndexMap struct { // ns -> metrics
 	sync.RWMutex
-	Metrics map[string]*MetricsStruct `json:"ns_metric"`
+	M map[string]*MetricIndexMap //map[endpoint]metricMap{map[metric]Index}
 }
 
 //push 索引数据
-func (e *EndpointMetricsStruct) Push(item dataobj.IndexModel, now int64) error {
+func (e *EndpointIndexMap) Push(item dataobj.IndexModel, now int64) {
 	counter := dataobj.SortedTags(item.Tags)
 	metric := item.Metric
 
-	metricsItem := e.MustGetMetrics(item.Endpoint)
-	metricItem := metricsItem.MustGetMetricStruct(metric, now)
-	if metricItem.Updated < now {
-		logger.Errorf("metricItem.Updated:%d now:%d", metricItem.Updated, now)
+	metricIndexMap, exists := e.GetMetricIndexMap(item.Endpoint)
+	if !exists {
+		metricIndexMap = &MetricIndexMap{Data: make(map[string]*MetricIndex)}
+		metricIndexMap.SetMetricIndex(metric, NewMetricIndex(item, counter, now))
+		e.SetMetricIndexMap(item.Endpoint, metricIndexMap)
+		return
 	}
 
-	metricItem.Updated = now
-	metricItem.Step = item.Step
-	metricItem.DsType = item.DsType
-	metricItem.Counters.Update(counter, now, int64(item.Step), item.DsType)
+	metricIndex, exists := metricIndexMap.GetMetricIndex(metric)
+	if !exists {
+		metricIndexMap.SetMetricIndex(metric, NewMetricIndex(item, counter, now))
+		return
+	}
 
-	tagks := metricItem.Tagks
 	for k, v := range item.Tags {
-		tagk := tagks.MustGetTagkStruct(k, now)
-		tagk.Tagvs.Set(v, now)
+		metricIndex.TagkvMap.Set(k, v, now)
 	}
-	return nil
+	metricIndex.CounterMap.Set(counter, now)
+
+	return
 }
 
-func (e *EndpointMetricsStruct) Clean(timeDuration int64) {
+func (e *EndpointIndexMap) Clean(timeDuration int64) {
 	endpoints := e.GetEndpoints()
 	now := time.Now().Unix()
 	for _, endpoint := range endpoints {
-		metricsItem, exists := e.GetMetrics(endpoint)
+		metricIndexMap, exists := e.GetMetricIndexMap(endpoint)
 		if !exists {
 			continue
 		}
-		if metricsItem.Len() < 1 {
-			e.Lock()
-			delete(e.Metrics, endpoint)
-			e.Unlock()
 
+		metricIndexMap.Clean(now, timeDuration, endpoint)
+
+		if metricIndexMap.Len() < 1 {
+			e.Lock()
+			delete(e.M, endpoint)
+			e.Unlock()
 			logger.Debug("clean index endpoint: ", endpoint)
 			atomic.AddInt64(&config.IndexClean, 1)
 		}
-
-		metricsItem.Clean(now, timeDuration, endpoint)
 	}
 }
 
-func (e *EndpointMetricsStruct) GetMetrics(endpoint string) (*MetricsStruct, bool) {
+func (e *EndpointIndexMap) GetMetricIndexMap(endpoint string) (*MetricIndexMap, bool) {
 	e.RLock()
 	defer e.RUnlock()
-	metricsStruct, exists := e.Metrics[endpoint]
+	metricsStruct, exists := e.M[endpoint]
 	return metricsStruct, exists
 }
 
-func (e *EndpointMetricsStruct) MustGetMetrics(endpoint string) *MetricsStruct {
-	e.RLock()
-	var metricsStruct *MetricsStruct
-	if _, exists := e.Metrics[endpoint]; !exists {
-		e.RUnlock()
-
-		e.Lock()
-		e.Metrics[endpoint] = &MetricsStruct{MetricMap: make(map[string]*MetricStruct)} //MetricStruct{}.New(metric, now)
-		metricsStruct = e.Metrics[endpoint]
-		e.Unlock()
-	} else {
-		metricsStruct = e.Metrics[endpoint]
-		e.RUnlock()
-	}
-	return metricsStruct
+func (e *EndpointIndexMap) SetMetricIndexMap(endpoint string, metricIndex *MetricIndexMap) {
+	e.Lock()
+	defer e.Unlock()
+	e.M[endpoint] = metricIndex
 }
 
-func (e *EndpointMetricsStruct) GetMetricsBy(endpoint string) []string {
+func (e *EndpointIndexMap) GetMetricsBy(endpoint string) []string {
 	e.RLock()
 	defer e.RUnlock()
-	if _, exists := e.Metrics[endpoint]; !exists {
+	if _, exists := e.M[endpoint]; !exists {
 		return []string{}
 	}
-	return e.Metrics[endpoint].GetMetrics()
+	return e.M[endpoint].GetMetrics()
 }
 
-func (e *EndpointMetricsStruct) QueryCountersFullMatchByTags(endpoint, metric string, tags XCludeList) ([]string, error) {
+func (e *EndpointIndexMap) QueryCountersFullMatchByTags(endpoint, metric string, tags XCludeList) ([]string, error) {
 	//check if over limit range
 	err := tags.CheckFullMatch(int64(config.Config.Limit.UI)) //todo 改为int
 	if err != nil {
@@ -118,25 +110,25 @@ func (e *EndpointMetricsStruct) QueryCountersFullMatchByTags(endpoint, metric st
 	return allCombination, nil
 }
 
-func (e *EndpointMetricsStruct) QueryCountersByNsMetricXclude(endpoint, metric string, include, exclude XCludeList) ([]string, error) {
+func (e *EndpointIndexMap) QueryCountersByXclude(endpoint, metric string, include, exclude XCludeList) ([]string, error) {
 	if len(include) == 0 && len(exclude) == 0 {
-		metricsItem, exists := e.GetMetrics(endpoint)
+		metricIndexMap, exists := e.GetMetricIndexMap(endpoint)
 		if !exists {
 			logger.Warningf("not found metric by endpoint:%s metric:%v\n", endpoint, metric)
 			return []string{}, nil
 		}
 
-		countersItem, exists := metricsItem.GetMetricStructCounters(metric)
+		metricIndex, exists := metricIndexMap.GetMetricIndex(metric)
 		if !exists {
 			logger.Warningf("not found step by endpoint:%s metric:%v\n", endpoint, metric)
 			return []string{}, nil
 		}
 
-		counterList := countersItem.GetCounters()
+		counterList := metricIndex.CounterMap.GetCounters()
 		return counterList, nil
 	}
 
-	tagkvs, err := e.QueryTagkvMapByNsMetric(endpoint, metric)
+	tagkvs, err := e.QueryTagkvMapBy(endpoint, metric)
 	if err != nil {
 		return []string{}, err
 	}
@@ -234,37 +226,37 @@ func (e *EndpointMetricsStruct) QueryCountersByNsMetricXclude(endpoint, metric s
 	return retList, err
 }
 
-func (e *EndpointMetricsStruct) QueryTagkvMapByNsMetric(endpoint, metric string) (map[string][]string, error) {
+func (e *EndpointIndexMap) QueryTagkvMapBy(endpoint, metric string) (map[string][]string, error) {
 	tagkvs := make(map[string][]string)
-	metricsItem, exists := e.GetMetrics(endpoint)
+	metricIndexMap, exists := e.GetMetricIndexMap(endpoint)
 	if !exists {
 		return tagkvs, nil
 	}
 
-	tagk, exists := metricsItem.GetTagksStruct(metric)
+	metricIndex, exists := metricIndexMap.GetMetricIndex(metric)
 	if !exists {
 		return tagkvs, nil
 	}
 
-	tagkvs = tagk.GetTagkvMap()
+	tagkvs = metricIndex.TagkvMap.GetTagkvMap()
 	return tagkvs, nil
 }
 
-func (e *EndpointMetricsStruct) GetEndpoints() []string {
+func (e *EndpointIndexMap) GetEndpoints() []string {
 	e.RLock()
 	defer e.RUnlock()
 
-	length := len(e.Metrics)
+	length := len(e.M)
 	ret := make([]string, length)
 	i := 0
-	for endpoint, _ := range e.Metrics {
+	for endpoint, _ := range e.M {
 		ret[i] = endpoint
 		i++
 	}
 	return ret
 }
 
-func (e *EndpointMetricsStruct) Persist(mode string) error {
+func (e *EndpointIndexMap) Persist(mode string) error {
 	if mode == "normal" || mode == "download" {
 		if !semaPermanence.TryAcquire() {
 			return fmt.Errorf("Permanence operate is Already running...")
@@ -302,14 +294,14 @@ func (e *EndpointMetricsStruct) Persist(mode string) error {
 	for i, endpoint := range endpoints {
 
 		logger.Infof("sync [%s] to disk, [%d%%] complete\n", endpoint, int((float64(i)/float64(len(endpoints)))*100))
-		metricsStruct, exists := e.GetMetrics(endpoint)
-		if !exists || metricsStruct == nil {
+		metricIndexMap, exists := e.GetMetricIndexMap(endpoint)
+		if !exists || metricIndexMap == nil {
 			continue
 		}
 
-		metricsStruct.Lock()
-		body, err_m := json.Marshal(metricsStruct)
-		metricsStruct.Unlock()
+		metricIndexMap.Lock()
+		body, err_m := json.Marshal(metricIndexMap)
+		metricIndexMap.Unlock()
 
 		if err_m != nil {
 			logger.Errorf("marshal struct to json failed : [endpoint:%s][msg:%s]\n", endpoint, err_m.Error())

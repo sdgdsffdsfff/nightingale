@@ -25,7 +25,7 @@ func GetMetricsByEndpoint(c *gin.Context) {
 	m := make(map[string]struct{})
 	resp := EndpointMetricList{}
 	for _, endpoint := range recv.Endpoints {
-		metrics := cache.EndpointDBObj.GetMetricsBy(endpoint)
+		metrics := cache.IndexDB.GetMetricsBy(endpoint)
 		for _, metric := range metrics {
 			if _, exists := m[metric]; exists {
 				continue
@@ -43,12 +43,12 @@ func DeleteMetrics(c *gin.Context) {
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
 	for _, endpoint := range recv.Endpoints {
-		metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+		metricIndexMap, exists := cache.IndexDB.GetMetricIndexMap(endpoint)
 		if !exists {
 			continue
 		}
 		for _, metric := range recv.Metrics {
-			metricsItem.CleanMetric(metric)
+			metricIndexMap.CleanMetric(metric)
 		}
 	}
 
@@ -60,18 +60,19 @@ func DeleteCounter(c *gin.Context) {
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
 	for _, endpoint := range recv.Endpoints {
-		metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+		metricIndexMap, exists := cache.IndexDB.GetMetricIndexMap(endpoint)
 		if !exists {
 			continue
 		}
 
-		tagkv, exists := metricsItem.GetTagksStruct(recv.Metric)
+		metricIndex, exists := metricIndexMap.GetMetricIndex(recv.Metric)
 		if !exists {
 			continue
 		}
+
 		for _, kv := range recv.Tagkv {
 			for _, v := range kv.TagV {
-				tagkv.CleanTagkv(kv.TagK, v)
+				metricIndex.TagkvMap.DelTagkv(kv.TagK, v)
 			}
 		}
 	}
@@ -99,18 +100,18 @@ func GetTagkvByEndpoint(c *gin.Context) {
 		tagkvs := []*cache.TagkvStruct{}
 
 		for _, endpoint := range recv.Endpoints {
-			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+			metricIndexMap, exists := cache.IndexDB.GetMetricIndexMap(endpoint)
 			if !exists {
 				logger.Warningf("metrics not found by %s", endpoint)
 				continue
 			}
 
-			tagks, exists := metricsItem.GetTagksStruct(metric)
+			tagkvMap, exists := metricIndexMap.GetMetricIndexTagkvMap(metric)
 			if !exists {
 				logger.Warningf("tagkStruct not found by %s %s", endpoint, metric)
 				continue
 			}
-			tagvs := tagks.GetTagkv()
+			tagvs := tagkvMap.GetTagkv()
 			for _, kv := range tagvs {
 				tagvFilter, exists := tagkvFilter[kv.TagK]
 				if !exists {
@@ -196,20 +197,20 @@ func FullmatchByEndpoint(c *gin.Context) {
 				logger.Warningf("非法请求: metric字段缺失:%v", r)
 				continue
 			}
-			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+			metricIndexMap, exists := cache.IndexDB.GetMetricIndexMap(endpoint)
 			if !exists {
 				logger.Warningf("not found metrics by endpoint:%s", endpoint)
 				continue
 			}
 			if step == 0 || dsType == "" {
-				step, dsType, exists = metricsItem.GetMetricStepAndDstype(metric)
+				step, dsType, exists = metricIndexMap.GetStepAndDstype(metric)
 				if !exists {
 					logger.Warningf("not found step by endpoint:%s metric:%v\n", endpoint, metric)
 					continue
 				}
 			}
 
-			countersItem, exists := metricsItem.GetMetricStructCounters(metric)
+			countersItem, exists := metricIndexMap.GetMetricIndexCounters(metric)
 			if !exists {
 				logger.Warningf("not found counters by endpoint:%s metric:%v\n", endpoint, metric)
 				continue
@@ -221,7 +222,7 @@ func FullmatchByEndpoint(c *gin.Context) {
 				countersMap[counter] = struct{}{}
 			}
 
-			tags, err := cache.EndpointDBObj.QueryCountersFullMatchByTags(endpoint, metric, tagkv)
+			tags, err := cache.IndexDB.QueryCountersFullMatchByTags(endpoint, metric, tagkv)
 			if err != nil {
 				logger.Warning(err)
 				continue
@@ -285,7 +286,7 @@ func CludeByEndpoint(c *gin.Context) {
 				continue
 			}
 
-			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+			metricIndexMap, exists := cache.IndexDB.GetMetricIndexMap(endpoint)
 			if !exists {
 				resp = append(resp, XcludeResp{
 					Endpoint: endpoint,
@@ -299,7 +300,7 @@ func CludeByEndpoint(c *gin.Context) {
 			}
 
 			if step == 0 || dsType == "" {
-				step, dsType, exists = metricsItem.GetMetricStepAndDstype(metric)
+				step, dsType, exists = metricIndexMap.GetStepAndDstype(metric)
 				if !exists {
 					resp = append(resp, XcludeResp{
 						Endpoint: endpoint,
@@ -314,7 +315,7 @@ func CludeByEndpoint(c *gin.Context) {
 				}
 			}
 
-			tags, err := cache.EndpointDBObj.QueryCountersByNsMetricXclude(endpoint, metric, includeList, excludeList)
+			tags, err := cache.IndexDB.QueryCountersByXclude(endpoint, metric, includeList, excludeList)
 			if err != nil {
 				logger.Warning(err)
 				continue
@@ -344,14 +345,14 @@ func CludeByEndpoint(c *gin.Context) {
 }
 
 func DumpIndex(c *gin.Context) {
-	err := cache.EndpointDBObj.Persist("normal")
+	err := cache.IndexDB.Persist("normal")
 	errors.Dangerous(err)
 
 	renderData(c, "ok", nil)
 }
 
 func DumpFile(c *gin.Context) {
-	err := cache.EndpointDBObj.Persist("download")
+	err := cache.IndexDB.Persist("download")
 	errors.Dangerous(err)
 
 	traGz := fmt.Sprintf("%s%s", cache.PERMANENCE_DIR, "db.tar.gz")

@@ -15,7 +15,7 @@ func StartCleaner() {
 		<-t1.C
 
 		start := time.Now()
-		cache.EndpointDBObj.Clean(int64(Config.CacheDuration))
+		cache.IndexDB.Clean(int64(Config.CacheDuration))
 		logger.Infof("clean took %.2f ms\n", float64(time.Since(start).Nanoseconds())*1e-6)
 	}
 }
