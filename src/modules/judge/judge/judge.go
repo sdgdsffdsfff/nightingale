@@ -95,7 +95,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 				Info:      info,
 				Detail:    string(bytes),
 				Value:     fmt.Sprintf("%s:%v", exp.Metric, leftValue),
-				Partition: "/mon/event/p" + strconv.Itoa(stra.Priority),
+				Partition: "/n9e/event/p" + strconv.Itoa(stra.Priority),
 				Sid:       stra.Id,
 				Hashid:    getHashId(stra.Id, firstItem),
 			}
