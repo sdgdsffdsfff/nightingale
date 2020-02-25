@@ -13,11 +13,6 @@ type TagkvIndex struct {
 }
 
 func NewTagkvIndex() *TagkvIndex {
-	//tagvm := make(map[string]int64)
-	//tagvm[tagv] = now
-	//tagkm := make(map[string]map[string]int64)
-	//tagkm[tagk] = tagvm
-
 	return &TagkvIndex{
 		Tagkv: make(map[string]map[string]int64),
 	}
@@ -33,18 +28,18 @@ func (t *TagkvIndex) Set(tagk, tagv string, now int64) {
 	t.Tagkv[tagk][tagv] = now
 }
 
-func (t *TagkvIndex) GetTagkv() []*TagkvStruct {
+func (t *TagkvIndex) GetTagkv() []*TagPair {
 	t.RLock()
 	defer t.RUnlock()
-	tagkvs := []*TagkvStruct{}
+	tagkvs := []*TagPair{}
 	var vs []string
 	for k, vm := range t.Tagkv {
 		for v, _ := range vm {
 			vs = append(vs, v)
 		}
-		tagkv := TagkvStruct{
-			TagK: k,
-			TagV: vs,
+		tagkv := TagPair{
+			Key:    k,
+			Values: vs,
 		}
 		tagkvs = append(tagkvs, &tagkv)
 	}
@@ -98,4 +93,11 @@ func (t *TagkvIndex) DelTagkv(tagk, tagv string) {
 	if len(t.Tagkv[tagk]) == 0 {
 		delete(t.Tagkv, tagk)
 	}
+}
+
+func (t *TagkvIndex) Len() int {
+	t.RLock()
+	defer t.RUnlock()
+
+	return len(t.Tagkv)
 }

@@ -4,11 +4,9 @@ import "github.com/didi/nightingale/src/dataobj"
 
 //Metric
 type MetricIndex struct {
-	Metric  string `json:"metric"`
-	Updated int64  `json:"updated"`
-	Step    int    `json:"step"`
-	DsType  string `json:"dstype"`
-
+	Metric     string        `json:"metric"`
+	Step       int           `json:"step"`
+	DsType     string        `json:"dstype"`
 	TagkvMap   *TagkvIndex   `json:"ns_metric_tagks"`
 	CounterMap *CounterTsMap `json:"ns_metric_counters"`
 }
@@ -16,7 +14,6 @@ type MetricIndex struct {
 func NewMetricIndex(item dataobj.IndexModel, counter string, now int64) *MetricIndex {
 	metricIndex := &MetricIndex{
 		Metric:     item.Metric,
-		Updated:    now,
 		Step:       item.Step,
 		DsType:     item.DsType,
 		TagkvMap:   NewTagkvIndex(),

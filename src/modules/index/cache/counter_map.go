@@ -36,12 +36,8 @@ func (c *CounterTsMap) Clean(now, timeDuration int64, endpoint, metric string) {
 	}
 }
 
-func (c *CounterTsMap) GetCounters() []string {
+func (c *CounterTsMap) GetCounters() map[string]int64 {
 	c.RLock()
 	defer c.RUnlock()
-	counters := []string{}
-	for counter, _ := range c.M {
-		counters = append(counters, counter)
-	}
-	return counters
+	return c.M
 }

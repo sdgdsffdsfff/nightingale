@@ -15,16 +15,15 @@ func (m *MetricIndexMap) Clean(now, timeDuration int64, endpoint string) {
 	m.Lock()
 	defer m.Unlock()
 	for metric, metricIndex := range m.Data {
-		if now-metricIndex.Updated > timeDuration {
-			//清理metric
-			delete(m.Data, metric)
-			logger.Errorf("[clean index metric] endpoint:%s metric:%s now:%d time duration:%d updated:%d", endpoint, metric, now, timeDuration, metricIndex.Updated)
-		} else {
-			//清理tagkv
-			metricIndex.TagkvMap.Clean(now, timeDuration)
+		//清理tagkv
+		metricIndex.TagkvMap.Clean(now, timeDuration)
 
-			//清理counter
-			metricIndex.CounterMap.Clean(now, timeDuration, endpoint, metric)
+		//清理counter
+		metricIndex.CounterMap.Clean(now, timeDuration, endpoint, metric)
+
+		if metricIndex.TagkvMap.Len() == 0 {
+			delete(m.Data, metric)
+			logger.Errorf("[clean index metric] endpoint:%s metric:%s now:%d time duration:%d", endpoint, metric, now, timeDuration)
 		}
 	}
 }

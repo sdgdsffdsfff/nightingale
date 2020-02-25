@@ -111,33 +111,16 @@ func (e *EndpointIndexMap) QueryCountersFullMatchByTags(endpoint, metric string,
 }
 
 func (e *EndpointIndexMap) QueryCountersByXclude(endpoint, metric string, include, exclude XCludeList) ([]string, error) {
-	if len(include) == 0 && len(exclude) == 0 {
-		metricIndexMap, exists := e.GetMetricIndexMap(endpoint)
-		if !exists {
-			logger.Warningf("not found metric by endpoint:%s metric:%v\n", endpoint, metric)
-			return []string{}, nil
-		}
-
-		metricIndex, exists := metricIndexMap.GetMetricIndex(metric)
-		if !exists {
-			logger.Warningf("not found step by endpoint:%s metric:%v\n", endpoint, metric)
-			return []string{}, nil
-		}
-
-		counterList := metricIndex.CounterMap.GetCounters()
-		return counterList, nil
-	}
-
 	tagkvs, err := e.QueryTagkvMapBy(endpoint, metric)
 	if err != nil {
 		return []string{}, err
 	}
 	if len(include) > 0 {
 		// include合法性校验
-		for _, clude := range include {
-			_, exists := tagkvs[clude.TagK]
+		for _, tagPair := range include {
+			_, exists := tagkvs[tagPair.Key]
 			if !exists {
-				return []string{}, fmt.Errorf("include tagk %s 不存在", clude)
+				return []string{}, fmt.Errorf("include tagk %s 不存在", tagPair)
 			}
 		}
 	}
@@ -146,23 +129,23 @@ func (e *EndpointIndexMap) QueryCountersByXclude(endpoint, metric string, includ
 	exMap := make(map[string]map[string]bool)
 
 	if len(include) > 0 {
-		for _, clude := range include {
-			if _, found := inMap[clude.TagK]; !found {
-				inMap[clude.TagK] = make(map[string]bool)
+		for _, tagPair := range include {
+			if _, found := inMap[tagPair.Key]; !found {
+				inMap[tagPair.Key] = make(map[string]bool)
 			}
-			for _, tagv := range clude.TagV {
-				inMap[clude.TagK][tagv] = true
+			for _, tagv := range tagPair.Values {
+				inMap[tagPair.Key][tagv] = true
 			}
 		}
 	}
 
 	if len(exclude) > 0 {
-		for _, clude := range exclude {
-			if _, found := exMap[clude.TagK]; !found {
-				exMap[clude.TagK] = make(map[string]bool)
+		for _, tagPair := range exclude {
+			if _, found := exMap[tagPair.Key]; !found {
+				exMap[tagPair.Key] = make(map[string]bool)
 			}
-			for _, tagv := range clude.TagV {
-				exMap[clude.TagK][tagv] = true
+			for _, tagv := range tagPair.Values {
+				exMap[tagPair.Key][tagv] = true
 			}
 		}
 	}
@@ -171,14 +154,14 @@ func (e *EndpointIndexMap) QueryCountersByXclude(endpoint, metric string, includ
 	for tagk, tagvs := range tagkvs {
 		for _, tagv := range tagvs {
 			// 排除必须排除的, exclude的优先级高于include
-			if _, found1 := exMap[tagk]; found1 {
-				if _, found2 := exMap[tagk][tagv]; found2 {
+			if _, tagkExists := exMap[tagk]; tagkExists {
+				if _, tagvExists := exMap[tagk][tagv]; tagvExists {
 					continue
 				}
 			}
 			// 包含必须包含的
-			if _, found3 := inMap[tagk]; found3 {
-				if _, found4 := inMap[tagk][tagv]; found4 {
+			if _, tagkExists := inMap[tagk]; tagkExists {
+				if _, tagvExists := inMap[tagk][tagv]; tagvExists {
 					if _, found := fullmatch[tagk]; !found {
 						fullmatch[tagk] = make([]string, 0)
 					}
@@ -199,25 +182,21 @@ func (e *EndpointIndexMap) QueryCountersByXclude(endpoint, metric string, includ
 		return []string{}, nil
 	}
 
-	retrieve := false
 	multiRes := 1
 	for _, tagvs := range fullmatch {
-		multiRes = multiRes * len(tagvs)
+		multiRes = multiRes * len(tagvs) //计算n个tagk组合出来的曲线个数
 		if multiRes > config.Config.Limit.Clude {
 			logger.Warningf("xclude fullmatch get too much counters, retrieve, endpoint:%s metric:%s, "+
 				"include:%v, exclude:%v\n", endpoint, metric, include, exclude)
-			retrieve = true
+			return []string{}, nil
 		}
-	}
-	if retrieve {
-		logger.Info("retrieve:", retrieve)
 	}
 
 	var tags XCludeList
 	for tagk, tagvs := range fullmatch {
-		tags = append(tags, &TagkvStruct{
-			TagK: tagk,
-			TagV: tagvs,
+		tags = append(tags, &TagPair{
+			Key:    tagk,
+			Values: tagvs,
 		})
 	}
 
