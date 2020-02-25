@@ -33,7 +33,8 @@ func InitDB() {
 
 func Rebuild() {
 	fromRemote := false
-	err := DownloadFile()
+	err := getIndexFromRemote()
+
 	if err == nil {
 		dbFile := fmt.Sprintf("%s%s", PERMANENCE_DIR, "download")
 		e := RebuildFromDisk(dbFile)
@@ -51,26 +52,20 @@ func Rebuild() {
 	}
 }
 
-func RebuildFromDisk(permanDir string) error {
-	logger.Info("Try to Rebuild index from Disk.")
-	if !file.IsExist(permanDir) {
-		return fmt.Errorf("Permanence_dir not exists.")
+func RebuildFromDisk(indexFileDir string, concurrency int) error {
+	logger.Info("Try to rebuild index from disk")
+	if !file.IsExist(indexFileDir) {
+		return fmt.Errorf("index persistence dir not exists.")
 	}
 
 	//遍历目录
-	files, err := ioutil.ReadDir(permanDir)
+	files, err := ioutil.ReadDir(indexFileDir)
 	if err != nil {
 		return err
 	}
 	logger.Infof("There're [%d] ns need rebuild", len(files))
 
-	limit := 1
-	if Config.RebuildWorker > 0 {
-		limit = Config.RebuildWorker
-	}
-
-	concurrency := semaphore.NewSemaphore(limit)
-
+	concurrency := semaphore.NewSemaphore(concurrency)
 	for _, fileObj := range files {
 		if fileObj.IsDir() {
 			continue
@@ -81,7 +76,7 @@ func RebuildFromDisk(permanDir string) error {
 		go func(endpoint string) {
 			defer concurrency.Release()
 
-			body, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", permanDir, endpoint))
+			body, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", indexFileDir, endpoint))
 			if err != nil {
 				logger.Errorf("read file error, [endpoint:%s][reason:%v]", endpoint, err)
 				return
@@ -101,11 +96,11 @@ func RebuildFromDisk(permanDir string) error {
 		}(endpoint)
 
 	}
-	logger.Infof("rebuild from disk , [%d%%] complete\n", 100)
+	logger.Infof("rebuild from disk done")
 	return nil
 }
 
-func DownloadFile() error {
+func getIndexFromRemote() error {
 	filepath := fmt.Sprintf("db.tar.gz")
 	var err error
 	// Get the data

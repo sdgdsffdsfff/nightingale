@@ -3,8 +3,37 @@ package cache
 import (
 	"sync"
 
+	"github.com/didi/nightingale/src/dataobj"
+
 	"github.com/toolkits/pkg/logger"
 )
+
+type MetricIndex struct {
+	Metric     string        `json:"metric"`
+	Step       int           `json:"step"`
+	DsType     string        `json:"dstype"`
+	TagkvMap   *TagkvIndex   `json:"tags"`
+	CounterMap *CounterTsMap `json:"counters"`
+}
+
+func NewMetricIndex(item dataobj.IndexModel, counter string, now int64) *MetricIndex {
+	metricIndex := &MetricIndex{
+		Metric:     item.Metric,
+		Step:       item.Step,
+		DsType:     item.DsType,
+		TagkvMap:   NewTagkvIndex(),
+		CounterMap: NewCounterTsMap(),
+	}
+
+	metricIndex.TagkvMap = NewTagkvIndex()
+	for k, v := range item.Tags {
+		metricIndex.TagkvMap.Set(k, v, now)
+	}
+
+	metricIndex.CounterMap.Set(counter, now)
+
+	return metricIndex
+}
 
 type MetricIndexMap struct {
 	sync.RWMutex
@@ -54,38 +83,6 @@ func (m *MetricIndexMap) SetMetricIndex(metric string, metricIndex *MetricIndex)
 	m.Lock()
 	defer m.Unlock()
 	m.Data[metric] = metricIndex
-}
-
-func (m *MetricIndexMap) GetStepAndDstype(metric string) (int, string, bool) {
-	m.RLock()
-	defer m.RUnlock()
-	metricIndex, exists := m.Data[metric]
-	if !exists {
-		return 0, "", exists
-	}
-	return metricIndex.Step, metricIndex.DsType, exists
-}
-
-func (m *MetricIndexMap) GetMetricIndexCounters(metric string) (*CounterTsMap, bool) {
-	m.RLock()
-	defer m.RUnlock()
-	metricIndex, exists := m.Data[metric]
-	if !exists {
-		return nil, exists
-	}
-	return metricIndex.CounterMap, exists
-}
-
-func (m *MetricIndexMap) GetMetricIndexTagkvMap(metric string) (*TagkvIndex, bool) {
-	m.RLock()
-	defer m.RUnlock()
-
-	metricIndex, exists := m.Data[metric]
-	if !exists {
-		return nil, exists
-	}
-
-	return metricIndex.TagkvMap, exists
 }
 
 func (m *MetricIndexMap) GetMetrics() []string {

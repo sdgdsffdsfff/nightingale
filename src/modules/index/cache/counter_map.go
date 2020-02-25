@@ -2,9 +2,6 @@ package cache
 
 import (
 	"sync"
-	"sync/atomic"
-
-	"github.com/didi/nightingale/src/modules/index/config"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -30,7 +27,6 @@ func (c *CounterTsMap) Clean(now, timeDuration int64, endpoint, metric string) {
 	for counter, ts := range c.M {
 		if now-ts > timeDuration {
 			delete(c.M, counter)
-			atomic.AddInt64(&config.IndexClean, 1)
 			logger.Debugf("clean index endpoint:%s metric:%s counter:%s", endpoint, metric, counter)
 		}
 	}

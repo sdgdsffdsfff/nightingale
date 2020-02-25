@@ -44,9 +44,7 @@ type TreeSection struct {
 }
 
 type LimitSection struct {
-	UI                  int `yaml:"ui"`
-	Clude               int `yaml:"clude"`
-	FullmatchLogCounter int `yaml:"fullmatchLogCounter"`
+	MaxQueryCount int `yaml:"max_query"`
 }
 
 type LoggerSection struct {
@@ -102,9 +100,7 @@ func Parse(conf string) error {
 	viper.SetDefault("rpc.enabled", true)
 
 	viper.SetDefault("limit", map[string]int{
-		"fullmatchLogCounter": 100000,  //每次从待落盘队列中间等待间隔，单位毫秒
-		"ui":                  1000000, //ui请求的最大曲线个数
-		"clude":               1000000, //clude接口支持查询的最大曲线个数
+		"max_query": 1000000, //clude接口支持查询的最大曲线个数
 	})
 
 	viper.SetDefault("report", map[string]interface{}{

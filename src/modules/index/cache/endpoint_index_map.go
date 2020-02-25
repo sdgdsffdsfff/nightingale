@@ -6,11 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/index/config"
 	"github.com/didi/nightingale/src/toolkits/compress"
 
 	"github.com/toolkits/pkg/logger"
@@ -18,7 +16,7 @@ import (
 
 type EndpointIndexMap struct { // ns -> metrics
 	sync.RWMutex
-	M map[string]*MetricIndexMap //map[endpoint]metricMap{map[metric]Index}
+	M map[string]*MetricIndexMap `json:"endpoint_index"` //map[endpoint]metricMap{map[metric]Index}
 }
 
 //push 索引数据
@@ -64,7 +62,6 @@ func (e *EndpointIndexMap) Clean(timeDuration int64) {
 			delete(e.M, endpoint)
 			e.Unlock()
 			logger.Debug("clean index endpoint: ", endpoint)
-			atomic.AddInt64(&config.IndexClean, 1)
 		}
 	}
 }
@@ -72,8 +69,18 @@ func (e *EndpointIndexMap) Clean(timeDuration int64) {
 func (e *EndpointIndexMap) GetMetricIndexMap(endpoint string) (*MetricIndexMap, bool) {
 	e.RLock()
 	defer e.RUnlock()
-	metricsStruct, exists := e.M[endpoint]
-	return metricsStruct, exists
+	metricIndexMap, exists := e.M[endpoint]
+	return metricIndexMap, exists
+}
+
+func (e *EndpointIndexMap) GetMetricIndex(endpoint, metric string) (*MetricIndex, bool) {
+	e.RLock()
+	defer e.RUnlock()
+	metricIndexMap, exists := e.M[endpoint]
+	if !exists {
+		return nil, false
+	}
+	return metricIndexMap.GetMetricIndex(metric)
 }
 
 func (e *EndpointIndexMap) SetMetricIndexMap(endpoint string, metricIndex *MetricIndexMap) {
@@ -91,128 +98,31 @@ func (e *EndpointIndexMap) GetMetricsBy(endpoint string) []string {
 	return e.M[endpoint].GetMetrics()
 }
 
-func (e *EndpointIndexMap) QueryCountersFullMatchByTags(endpoint, metric string, tags XCludeList) ([]string, error) {
-	//check if over limit range
-	err := tags.CheckFullMatch(int64(config.Config.Limit.UI)) //todo 改为int
-	if err != nil {
-		return []string{}, fmt.Errorf("err:%v  endpoint:%v metric:%v\n", err.Error(), endpoint, metric)
-	}
-
-	allCombination, err := tags.GetAllCombinationString()
-	if err != nil {
-		return []string{}, err
-	}
-	if len(allCombination) > config.Config.Limit.FullmatchLogCounter {
-		// 超限 则代表tags数组非常大, 不打印详细信息
-		logger.Warningf("fullmatch get too much counters, endpoint:%s metric:%s\n", endpoint, metric)
-	}
-
-	return allCombination, nil
-}
-
-func (e *EndpointIndexMap) QueryCountersByXclude(endpoint, metric string, include, exclude XCludeList) ([]string, error) {
+func (e *EndpointIndexMap) GetIndexByClude(endpoint, metric string, include, exclude []*TagPair, max int) ([]string, error) {
 	tagkvs, err := e.QueryTagkvMapBy(endpoint, metric)
 	if err != nil {
 		return []string{}, err
 	}
-	if len(include) > 0 {
-		// include合法性校验
-		for _, tagPair := range include {
-			_, exists := tagkvs[tagPair.Key]
-			if !exists {
-				return []string{}, fmt.Errorf("include tagk %s 不存在", tagPair)
-			}
-		}
-	}
 
-	inMap := make(map[string]map[string]bool)
-	exMap := make(map[string]map[string]bool)
-
-	if len(include) > 0 {
-		for _, tagPair := range include {
-			if _, found := inMap[tagPair.Key]; !found {
-				inMap[tagPair.Key] = make(map[string]bool)
-			}
-			for _, tagv := range tagPair.Values {
-				inMap[tagPair.Key][tagv] = true
-			}
-		}
-	}
-
-	if len(exclude) > 0 {
-		for _, tagPair := range exclude {
-			if _, found := exMap[tagPair.Key]; !found {
-				exMap[tagPair.Key] = make(map[string]bool)
-			}
-			for _, tagv := range tagPair.Values {
-				exMap[tagPair.Key][tagv] = true
-			}
-		}
-	}
-
-	fullmatch := make(map[string][]string)
-	for tagk, tagvs := range tagkvs {
-		for _, tagv := range tagvs {
-			// 排除必须排除的, exclude的优先级高于include
-			if _, tagkExists := exMap[tagk]; tagkExists {
-				if _, tagvExists := exMap[tagk][tagv]; tagvExists {
-					continue
-				}
-			}
-			// 包含必须包含的
-			if _, tagkExists := inMap[tagk]; tagkExists {
-				if _, tagvExists := inMap[tagk][tagv]; tagvExists {
-					if _, found := fullmatch[tagk]; !found {
-						fullmatch[tagk] = make([]string, 0)
-					}
-					fullmatch[tagk] = append(fullmatch[tagk], tagv)
-				}
-				continue
-			}
-			// 除此之外全都包含
-			if _, found := fullmatch[tagk]; !found {
-				fullmatch[tagk] = make([]string, 0)
-			}
-			fullmatch[tagk] = append(fullmatch[tagk], tagv)
-		}
-	}
-
+	fullmatch := getMatchedTags(tagkvs, include, exclude)
 	// 部分tagk的tagv全部被exclude 或者 完全没有匹配的
 	if len(fullmatch) != len(tagkvs) || len(fullmatch) == 0 {
 		return []string{}, nil
 	}
 
-	multiRes := 1
-	for _, tagvs := range fullmatch {
-		multiRes = multiRes * len(tagvs) //计算n个tagk组合出来的曲线个数
-		if multiRes > config.Config.Limit.Clude {
-			logger.Warningf("xclude fullmatch get too much counters, retrieve, endpoint:%s metric:%s, "+
-				"include:%v, exclude:%v\n", endpoint, metric, include, exclude)
-			return []string{}, nil
-		}
+	if OverMaxLimit(fullmatch, max) {
+		err := fmt.Errorf("xclude fullmatch get too much counters,  endpoint:%s metric:%s, "+
+			"include:%v, exclude:%v\n", endpoint, metric, include, exclude)
+		return []string{}, err
 	}
 
-	var tags XCludeList
-	for tagk, tagvs := range fullmatch {
-		tags = append(tags, &TagPair{
-			Key:    tagk,
-			Values: tagvs,
-		})
-	}
-
-	retList, err := e.QueryCountersFullMatchByTags(endpoint, metric, tags)
-
-	return retList, err
+	return GetAllCounter(GetSortTags(fullmatch)), nil
 }
 
 func (e *EndpointIndexMap) QueryTagkvMapBy(endpoint, metric string) (map[string][]string, error) {
 	tagkvs := make(map[string][]string)
-	metricIndexMap, exists := e.GetMetricIndexMap(endpoint)
-	if !exists {
-		return tagkvs, nil
-	}
 
-	metricIndex, exists := metricIndexMap.GetMetricIndex(metric)
+	metricIndex, exists := e.GetMetricIndex(endpoint, metric)
 	if !exists {
 		return tagkvs, nil
 	}
