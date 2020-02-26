@@ -20,6 +20,7 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/http"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/identity"
 )
 
 const version = 1
@@ -55,10 +56,9 @@ func main() {
 	config.InitLogger()
 
 	cfg := config.Config
-	ident, err := config.GetIdentity(cfg.Identity)
-	if err != nil {
-		log.Fatalln("[F] cannot get identity:", err)
-	}
+	identity.Init(cfg.Identity)
+
+	ident := identity.Identity
 
 	port, err := config.GetPort(address.GetRPCListen("judge"))
 	if err != nil {

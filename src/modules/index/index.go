@@ -102,11 +102,6 @@ func ending() {
 
 	logger.Close()
 	http.Shutdown()
-
-	err := cache.Persist("end", config.Config.PersistDir)
-	if err != nil {
-		logger.Error("Persist err:", err)
-	}
 	fmt.Println("sender stopped successfully")
 }
 

@@ -159,6 +159,10 @@ func judgeItemWithStrategy(stra *model.Stra, historyData []*dataobj.RRDData, exp
 	straFunc := exp.Func
 
 	straParam := []interface{}{}
+	if firstItem.Step == 0 {
+		logger.Errorf("wrond step:%v", firstItem)
+		return
+	}
 	straParam = append(straParam, stra.AlertDur/int(firstItem.Step))
 
 	switch straFunc {

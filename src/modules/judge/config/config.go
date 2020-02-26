@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/didi/nightingale/src/toolkits/identity"
+
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
 
 type ConfYaml struct {
-	Logger   LoggerSection      `yaml:"logger"`
-	Query    SeriesQuerySection `yaml:"query"`
-	Redis    RedisSection       `yaml:"redis"`
-	Strategy StrategySection    `yaml:"strategy"`
-	Identity IdentitySection    `yaml:"identity"`
-	Report   ReportSection      `yaml:"report"`
-	PushUrl  string             `yaml:"pushUrl"`
+	Logger   LoggerSection            `yaml:"logger"`
+	Query    SeriesQuerySection       `yaml:"query"`
+	Redis    RedisSection             `yaml:"redis"`
+	Strategy StrategySection          `yaml:"strategy"`
+	Identity identity.IdentitySection `yaml:"identity"`
+	Report   ReportSection            `yaml:"report"`
+	PushUrl  string                   `yaml:"pushUrl"`
 }
 
 var (
