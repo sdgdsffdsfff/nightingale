@@ -69,16 +69,9 @@ func RebuildFromDisk(indexFileDir string, concurrency int) error {
 		go func(endpoint string) {
 			defer sema.Release()
 
-			body, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", indexFileDir, endpoint))
+			metricIndexMap, err := ReadIndexFromFile(indexFileDir, endpoint)
 			if err != nil {
 				logger.Errorf("read file error, [endpoint:%s][reason:%v]", endpoint, err)
-				return
-			}
-
-			metricIndexMap := new(MetricIndexMap)
-			err = json.Unmarshal(body, metricIndexMap)
-			if err != nil {
-				logger.Errorf("json unmarshal failed, [endpoint:%s][reason:%v]", endpoint, err)
 				return
 			}
 
@@ -93,79 +86,90 @@ func RebuildFromDisk(indexFileDir string, concurrency int) error {
 }
 
 func Persist(mode string, indexFileDir string) error {
-	if mode == "normal" || mode == "download" {
-		if !semaPermanence.TryAcquire() {
-			return fmt.Errorf("Permanence operate is Already running...")
-		}
-	} else if mode == "end" {
+	if mode == "end" {
 		semaPermanence.Acquire()
+		defer semaPermanence.Release()
+	} else if mode == "normal" || mode == "download" {
+		if !semaPermanence.TryAcquire() {
+			return fmt.Errorf("permanence operate is Already running...")
+		}
 	} else {
-		return fmt.Errorf("Your mode is Wrong![normal,end]")
+		return fmt.Errorf("wrong mode:%v", mode)
 	}
+
 	var tmpDir string
-	defer semaPermanence.Release()
 	if mode == "download" {
-		tmpDir = fmt.Sprintf("%s%s", indexFileDir, "download")
+		tmpDir = fmt.Sprintf("%s/%s", indexFileDir, "download")
 	} else {
-		tmpDir = fmt.Sprintf("%s%s", indexFileDir, "tmp")
+		tmpDir = fmt.Sprintf("%s/%s", indexFileDir, "tmp")
 	}
-
-	finalDir := fmt.Sprintf("%s%s", indexFileDir, "db")
-
-	var err error
-	//清空tmp目录
-	if err = os.RemoveAll(tmpDir); err != nil {
+	if err := os.RemoveAll(tmpDir); err != nil {
 		return err
 	}
-
 	//创建tmp目录
-	if err = os.MkdirAll(tmpDir, 0777); err != nil {
+	if err := os.MkdirAll(tmpDir, 0777); err != nil {
 		return err
 	}
 
 	//填充tmp目录
 	endpoints := IndexDB.GetEndpoints()
-	logger.Infof("now start to save index data to disk...[ns-num:%d][mode:%s]\n", len(endpoints), mode)
+	logger.Infof("save index data to disk[num:%d][mode:%s]\n", len(endpoints), mode)
 
 	for i, endpoint := range endpoints {
-
 		logger.Infof("sync [%s] to disk, [%d%%] complete\n", endpoint, int((float64(i)/float64(len(endpoints)))*100))
-		metricIndexMap, exists := IndexDB.GetMetricIndexMap(endpoint)
-		if !exists || metricIndexMap == nil {
-			continue
-		}
 
-		metricIndexMap.Lock()
-		body, err_m := json.Marshal(metricIndexMap)
-		metricIndexMap.Unlock()
-
-		if err_m != nil {
-			logger.Errorf("marshal struct to json failed : [endpoint:%s][msg:%s]\n", endpoint, err_m.Error())
-			continue
-		}
-
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s", tmpDir, endpoint), body, 0666)
+		err := WriteIndexToFile(tmpDir, endpoint)
 		if err != nil {
-			logger.Errorf("write file error : [endpoint:%s][msg:%s]\n", endpoint, err.Error())
+			logger.Errorf("write %s index to file err:%v", endpoint, err)
 		}
 	}
+
 	logger.Infof("sync to disk , [%d%%] complete\n", 100)
 
 	if mode == "download" {
-		compress.TarGz(fmt.Sprintf("%s%s", indexFileDir, "db.tar.gz"), tmpDir)
+		compress.TarGz(fmt.Sprintf("%s/%s", indexFileDir, "db.tar.gz"), tmpDir)
 	}
 
-	//清空db目录
-	if err = os.RemoveAll(finalDir); err != nil {
+	//清空旧的db目录
+	oleIndexDir := fmt.Sprintf("%s/%s", indexFileDir, "db")
+	if err := os.RemoveAll(oleIndexDir); err != nil {
 		return err
 	}
-
-	//将tmp目录改名为final
-	if err = os.Rename(tmpDir, finalDir); err != nil {
+	//将tmp目录改名为正式的文件名
+	if err := os.Rename(tmpDir, oleIndexDir); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func WriteIndexToFile(indexDir, endpoint string) error {
+	metricIndexMap, exists := IndexDB.GetMetricIndexMap(endpoint)
+	if !exists || metricIndexMap == nil {
+		return fmt.Errorf("endpoint index not found")
+	}
+
+	metricIndexMap.Lock()
+	body, err := json.Marshal(metricIndexMap)
+	metricIndexMap.Unlock()
+	if err != nil {
+		return fmt.Errorf("marshal struct to json failed:%v", err)
+	}
+
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s", indexDir, endpoint), body, 0666)
+	return err
+}
+
+func ReadIndexFromFile(indexDir, endpoint string) (*MetricIndexMap, error) {
+	metricIndexMap := new(MetricIndexMap)
+
+	body, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", indexDir, endpoint))
+	if err != nil {
+		return metricIndexMap, err
+	}
+
+	err = json.Unmarshal(body, metricIndexMap)
+	return metricIndexMap, err
 }
 
 func getIndexFromRemote(identity string) error {
@@ -175,7 +179,7 @@ func getIndexFromRemote(identity string) error {
 	activeIndexs := GetIndex(identity)
 	perm := rand.Perm(len(activeIndexs))
 	for i := range perm {
-		url := fmt.Sprintf("http://%s:%s/api/index/dumpfile", activeIndexs[perm[i]].IP, activeIndexs[perm[i]].HttpPort)
+		url := fmt.Sprintf("http://%s:%s/api/index/idxfile", activeIndexs[perm[i]].IP, activeIndexs[perm[i]].HttpPort)
 		resp, err := http.Get(url)
 		if err != nil {
 			return err

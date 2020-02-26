@@ -346,10 +346,10 @@ func DumpIndex(c *gin.Context) {
 	renderData(c, "ok", nil)
 }
 
-func DumpFile(c *gin.Context) {
+func GetIdxFile(c *gin.Context) {
 	err := cache.Persist("download", config.Config.PersistDir)
 	errors.Dangerous(err)
 
-	traGz := fmt.Sprintf("%s%s", config.Config.PersistDir, "db.tar.gz")
+	traGz := fmt.Sprintf("%s/%s", config.Config.PersistDir, "db.tar.gz")
 	c.File(traGz)
 }
