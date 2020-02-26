@@ -11,6 +11,7 @@ import (
 	"github.com/didi/nightingale/src/modules/collector/log/worker"
 	"github.com/didi/nightingale/src/modules/collector/stra"
 	"github.com/didi/nightingale/src/modules/collector/sys/funcs"
+	"github.com/didi/nightingale/src/toolkits/http/render"
 	"github.com/didi/nightingale/src/toolkits/identity"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func pid(c *gin.Context) {
 
 func pushData(c *gin.Context) {
 	if c.Request.ContentLength == 0 {
-		renderMessage(c, "blank body")
+		render.Message(c, "blank body")
 		return
 	}
 
@@ -63,11 +64,11 @@ func pushData(c *gin.Context) {
 	funcs.Push(metricValues)
 
 	if msg != "" {
-		renderMessage(c, msg)
+		render.Message(c, msg)
 		return
 	}
 
-	renderData(c, "ok", nil)
+	render.Data(c, "ok", nil)
 	return
 }
 
@@ -89,9 +90,9 @@ func getStrategy(c *gin.Context) {
 		resp = append(resp, stra)
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 func getLogCached(c *gin.Context) {
-	renderData(c, worker.GetCachedAll(), nil)
+	render.Data(c, worker.GetCachedAll(), nil)
 }

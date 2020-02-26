@@ -1,8 +1,8 @@
-package routes
+package render
 
 import "github.com/gin-gonic/gin"
 
-func renderMessage(c *gin.Context, v interface{}) {
+func Message(c *gin.Context, v interface{}) {
 	if v == nil {
 		c.JSON(200, gin.H{"err": ""})
 		return
@@ -16,11 +16,11 @@ func renderMessage(c *gin.Context, v interface{}) {
 	}
 }
 
-func renderData(c *gin.Context, data interface{}, err error) {
+func Data(c *gin.Context, data interface{}, err error) {
 	if err == nil {
 		c.JSON(200, gin.H{"dat": data, "err": ""})
 		return
 	}
 
-	renderMessage(c, err.Error())
+	Message(c, err.Error())
 }

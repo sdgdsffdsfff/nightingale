@@ -33,11 +33,7 @@ func (e *EndpointIndexMap) Push(item dataobj.IndexModel, now int64) {
 		metricIndexMap.SetMetricIndex(metric, NewMetricIndex(item, counter, now))
 		return
 	}
-
-	for k, v := range item.Tags {
-		metricIndex.TagkvMap.Set(k, v, now)
-	}
-	metricIndex.CounterMap.Set(counter, now)
+	metricIndex.Set(item, counter, now)
 
 	return
 }
@@ -62,13 +58,6 @@ func (e *EndpointIndexMap) Clean(timeDuration int64) {
 	}
 }
 
-func (e *EndpointIndexMap) GetMetricIndexMap(endpoint string) (*MetricIndexMap, bool) {
-	e.RLock()
-	defer e.RUnlock()
-	metricIndexMap, exists := e.M[endpoint]
-	return metricIndexMap, exists
-}
-
 func (e *EndpointIndexMap) GetMetricIndex(endpoint, metric string) (*MetricIndex, bool) {
 	e.RLock()
 	defer e.RUnlock()
@@ -77,6 +66,13 @@ func (e *EndpointIndexMap) GetMetricIndex(endpoint, metric string) (*MetricIndex
 		return nil, false
 	}
 	return metricIndexMap.GetMetricIndex(metric)
+}
+
+func (e *EndpointIndexMap) GetMetricIndexMap(endpoint string) (*MetricIndexMap, bool) {
+	e.RLock()
+	defer e.RUnlock()
+	metricIndexMap, exists := e.M[endpoint]
+	return metricIndexMap, exists
 }
 
 func (e *EndpointIndexMap) SetMetricIndexMap(endpoint string, metricIndex *MetricIndexMap) {
@@ -95,10 +91,11 @@ func (e *EndpointIndexMap) GetMetricsBy(endpoint string) []string {
 }
 
 func (e *EndpointIndexMap) GetIndexByClude(endpoint, metric string, include, exclude []*TagPair, max int) ([]string, error) {
-	tagkvs, err := e.QueryTagkvMapBy(endpoint, metric)
-	if err != nil {
-		return []string{}, err
+	metricIndex, exists := e.GetMetricIndex(endpoint, metric)
+	if !exists {
+		return []string{}, nil
 	}
+	tagkvs := metricIndex.TagkvMap.GetTagkvMap()
 
 	fullmatch := getMatchedTags(tagkvs, include, exclude)
 	// 部分tagk的tagv全部被exclude 或者 完全没有匹配的
@@ -113,18 +110,6 @@ func (e *EndpointIndexMap) GetIndexByClude(endpoint, metric string, include, exc
 	}
 
 	return GetAllCounter(GetSortTags(fullmatch)), nil
-}
-
-func (e *EndpointIndexMap) QueryTagkvMapBy(endpoint, metric string) (map[string][]string, error) {
-	tagkvs := make(map[string][]string)
-
-	metricIndex, exists := e.GetMetricIndex(endpoint, metric)
-	if !exists {
-		return tagkvs, nil
-	}
-
-	tagkvs = metricIndex.TagkvMap.GetTagkvMap()
-	return tagkvs, nil
 }
 
 func (e *EndpointIndexMap) GetEndpoints() []string {

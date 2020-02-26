@@ -4,16 +4,16 @@ import (
 	"sync"
 
 	"github.com/didi/nightingale/src/dataobj"
-
-	"github.com/toolkits/pkg/logger"
 )
 
 type MetricIndex struct {
+	sync.RWMutex
 	Metric     string        `json:"metric"`
 	Step       int           `json:"step"`
 	DsType     string        `json:"dstype"`
 	TagkvMap   *TagkvIndex   `json:"tags"`
 	CounterMap *CounterTsMap `json:"counters"`
+	Ts         int64         `json:"ts"`
 }
 
 func NewMetricIndex(item dataobj.IndexModel, counter string, now int64) *MetricIndex {
@@ -23,6 +23,7 @@ func NewMetricIndex(item dataobj.IndexModel, counter string, now int64) *MetricI
 		DsType:     item.DsType,
 		TagkvMap:   NewTagkvIndex(),
 		CounterMap: NewCounterTsMap(),
+		Ts:         now,
 	}
 
 	metricIndex.TagkvMap = NewTagkvIndex()
@@ -35,6 +36,21 @@ func NewMetricIndex(item dataobj.IndexModel, counter string, now int64) *MetricI
 	return metricIndex
 }
 
+func (m *MetricIndex) Set(item dataobj.IndexModel, counter string, now int64) {
+	m.Lock()
+	defer m.Unlock()
+
+	m.Step = item.Step
+	m.DsType = item.DsType
+	m.Ts = now
+
+	for k, v := range item.Tags {
+		m.TagkvMap.Set(k, v, now)
+	}
+
+	m.CounterMap.Set(counter, now)
+}
+
 type MetricIndexMap struct {
 	sync.RWMutex
 	Data map[string]*MetricIndex
@@ -45,19 +61,17 @@ func (m *MetricIndexMap) Clean(now, timeDuration int64, endpoint string) {
 	defer m.Unlock()
 	for metric, metricIndex := range m.Data {
 		//清理tagkv
-		metricIndex.TagkvMap.Clean(now, timeDuration)
-
-		//清理counter
-		metricIndex.CounterMap.Clean(now, timeDuration, endpoint, metric)
-
-		if metricIndex.TagkvMap.Len() == 0 {
+		if now-metricIndex.Ts > timeDuration {
 			delete(m.Data, metric)
-			logger.Errorf("[clean index metric] endpoint:%s metric:%s now:%d time duration:%d", endpoint, metric, now, timeDuration)
+			continue
 		}
+
+		metricIndex.TagkvMap.Clean(now, timeDuration)
+		metricIndex.CounterMap.Clean(now, timeDuration, endpoint, metric)
 	}
 }
 
-func (m *MetricIndexMap) CleanMetric(metric string) {
+func (m *MetricIndexMap) DelMetric(metric string) {
 	m.Lock()
 	defer m.Unlock()
 	delete(m.Data, metric)

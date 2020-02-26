@@ -6,6 +6,7 @@ import (
 
 	"github.com/didi/nightingale/src/modules/index/cache"
 	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/http/render"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
@@ -36,7 +37,7 @@ func GetMetrics(c *gin.Context) {
 		}
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 type EndpointMetricRecv struct {
@@ -51,12 +52,12 @@ func DelMetrics(c *gin.Context) {
 	for _, endpoint := range recv.Endpoints {
 		if metricIndexMap, exists := cache.IndexDB.GetMetricIndexMap(endpoint); exists {
 			for _, metric := range recv.Metrics {
-				metricIndexMap.CleanMetric(metric)
+				metricIndexMap.DelMetric(metric)
 			}
 		}
 	}
 
-	renderData(c, "ok", nil)
+	render.Data(c, "ok", nil)
 }
 
 type IndexTagkvResp struct {
@@ -82,7 +83,7 @@ func DelCounter(c *gin.Context) {
 		}
 	}
 
-	renderData(c, "ok", nil)
+	render.Data(c, "ok", nil)
 }
 
 func GetTagPairs(c *gin.Context) {
@@ -139,7 +140,7 @@ func GetTagPairs(c *gin.Context) {
 		}
 		resp = append(resp, &TagkvResp)
 	}
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 type GetIndexByFullTagsRecv struct {
@@ -222,7 +223,7 @@ func GetIndexByFullTags(c *gin.Context) {
 		})
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 type CludeRecv struct {
@@ -336,14 +337,14 @@ func GetIndexByClude(c *gin.Context) {
 		}
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 func DumpIndex(c *gin.Context) {
 	err := cache.Persist("normal", config.Config.PersistDir)
 	errors.Dangerous(err)
 
-	renderData(c, "ok", nil)
+	render.Data(c, "ok", nil)
 }
 
 func GetIdxFile(c *gin.Context) {
