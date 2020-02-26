@@ -49,12 +49,13 @@ func main() {
 	start()
 
 	config.InitLogger()
+	cfg := config.Config
 
 	cache.InitDB()
-	cache.Rebuild()
+	cache.Rebuild(cfg.PersistDir, cfg.RebuildWorker, config.Identity)
 
-	go cron.StartCleaner()
-	go cron.StartPersist()
+	go cron.StartCleaner(cfg.CleanInterval, cfg.CacheDuration)
+	go cron.StartPersist(cfg.PersistInterval, cfg.PersistDir)
 	go cron.Report()
 	go cron.Statstic()
 

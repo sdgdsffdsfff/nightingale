@@ -15,6 +15,7 @@ type ConfYaml struct {
 	CacheDuration   int             `yaml:"cacheDuration"`
 	CleanInterval   int             `yaml:"cleanInterval"`
 	PersistInterval int             `yaml:"persistInterval"`
+	PersistDir      string          `yaml:"persistDir"`
 	RebuildWorker   int             `yaml:"rebuildWorker"`
 	BuildWorker     int             `yaml:"buildWorker"`
 	DefaultStep     int             `yaml:"defaultStep"`
@@ -23,7 +24,6 @@ type ConfYaml struct {
 	HTTP            HTTPSection     `yaml:"http"`
 	RPC             RPCSection      `yaml:"rpc"`
 	Limit           LimitSection    `yaml:"limit"`
-	Tree            TreeSection     `yaml:"tree"`
 	Identity        IdentitySection `yaml:"identity"`
 	Report          ReportSection   `yaml:"report"`
 }
@@ -36,11 +36,6 @@ type ReportSection struct {
 type IdentitySection struct {
 	Specify string `yaml:"specify"`
 	Shell   string `yaml:"shell"`
-}
-
-type TreeSection struct {
-	Timeout int      `yaml:"timeout"`
-	Addrs   []string `yaml:"addrs"`
 }
 
 type LimitSection struct {
@@ -87,12 +82,13 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("cacheDuration", 90000) //不活跃索引保留最大时长，单位秒，默认是1天+1小时，这里的时间，要大于tsdb模块的重建周期
-	viper.SetDefault("cleanInterval", 4500)  //清理周期，单位秒
-	viper.SetDefault("persistInterval", 900) //数据落盘周期，单位秒
-	viper.SetDefault("rebuildWorker", 20)    //从磁盘读取所以的数据的并发个数
-	viper.SetDefault("buildWorker", 20)      //往内存中推索引的并发个数
-	viper.SetDefault("defaultStep", 60)      //系统监控指标默认周期，需要和collector模块中的上报周期一致
+	viper.SetDefault("cacheDuration", 90000)   //不活跃索引保留最大时长，单位秒，默认是1天+1小时，这里的时间，要大于tsdb模块的重建周期
+	viper.SetDefault("cleanInterval", 4500)    //清理周期，单位秒
+	viper.SetDefault("persistInterval", 900)   //数据落盘周期，单位秒
+	viper.SetDefault("persistDir", "./.index") //索引落盘目录
+	viper.SetDefault("rebuildWorker", 20)      //从磁盘读取所以的数据的并发个数
+	viper.SetDefault("buildWorker", 20)        //往内存中推索引的并发个数
+	viper.SetDefault("defaultStep", 60)        //系统监控指标默认周期，需要和collector模块中的上报周期一致
 
 	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
 

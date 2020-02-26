@@ -1,15 +1,11 @@
 package cache
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"sync"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/toolkits/compress"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -143,80 +139,4 @@ func (e *EndpointIndexMap) GetEndpoints() []string {
 		i++
 	}
 	return ret
-}
-
-func (e *EndpointIndexMap) Persist(mode string) error {
-	if mode == "normal" || mode == "download" {
-		if !semaPermanence.TryAcquire() {
-			return fmt.Errorf("Permanence operate is Already running...")
-		}
-	} else if mode == "end" {
-		semaPermanence.Acquire()
-	} else {
-		return fmt.Errorf("Your mode is Wrong![normal,end]")
-	}
-	var tmpDir string
-	defer semaPermanence.Release()
-	if mode == "download" {
-		tmpDir = fmt.Sprintf("%s%s", PERMANENCE_DIR, "download")
-	} else {
-		tmpDir = fmt.Sprintf("%s%s", PERMANENCE_DIR, "tmp")
-	}
-
-	finalDir := fmt.Sprintf("%s%s", PERMANENCE_DIR, "db")
-
-	var err error
-	//清空tmp目录
-	if err = os.RemoveAll(tmpDir); err != nil {
-		return err
-	}
-
-	//创建tmp目录
-	if err = os.MkdirAll(tmpDir, 0777); err != nil {
-		return err
-	}
-
-	//填充tmp目录
-	endpoints := e.GetEndpoints()
-	logger.Infof("now start to save index data to disk...[ns-num:%d][mode:%s]\n", len(endpoints), mode)
-
-	for i, endpoint := range endpoints {
-
-		logger.Infof("sync [%s] to disk, [%d%%] complete\n", endpoint, int((float64(i)/float64(len(endpoints)))*100))
-		metricIndexMap, exists := e.GetMetricIndexMap(endpoint)
-		if !exists || metricIndexMap == nil {
-			continue
-		}
-
-		metricIndexMap.Lock()
-		body, err_m := json.Marshal(metricIndexMap)
-		metricIndexMap.Unlock()
-
-		if err_m != nil {
-			logger.Errorf("marshal struct to json failed : [endpoint:%s][msg:%s]\n", endpoint, err_m.Error())
-			continue
-		}
-
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s", tmpDir, endpoint), body, 0666)
-		if err != nil {
-			logger.Errorf("write file error : [endpoint:%s][msg:%s]\n", endpoint, err.Error())
-		}
-	}
-	logger.Infof("sync to disk , [%d%%] complete\n", 100)
-
-	if mode == "download" {
-		compress.TarGz(fmt.Sprintf("%s%s", PERMANENCE_DIR, "db.tar.gz"), tmpDir)
-	}
-
-	//清空db目录
-	if err = os.RemoveAll(finalDir); err != nil {
-		return err
-	}
-
-	//将tmp目录改名为final
-	if err = os.Rename(tmpDir, finalDir); err != nil {
-		return err
-	}
-
-	return nil
 }
