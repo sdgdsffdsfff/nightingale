@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"github.com/didi/nightingale/src/toolkits/identity"
+	"github.com/didi/nightingale/src/toolkits/logger"
 
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
 
 type ConfYaml struct {
-	Logger   LoggerSection            `yaml:"logger"`
+	Logger   logger.LoggerSection     `yaml:"logger"`
 	Query    SeriesQuerySection       `yaml:"query"`
 	Redis    RedisSection             `yaml:"redis"`
 	Strategy StrategySection          `yaml:"strategy"`

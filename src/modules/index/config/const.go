@@ -14,7 +14,6 @@ var (
 )
 
 var (
-	Identity = ""
 	RpcPort  = ""
 	HttpPort = ""
 )

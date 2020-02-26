@@ -10,9 +10,12 @@ import (
 	"github.com/didi/nightingale/src/modules/transfer/backend"
 	"github.com/didi/nightingale/src/modules/transfer/config"
 	"github.com/didi/nightingale/src/modules/transfer/cron"
-	"github.com/didi/nightingale/src/modules/transfer/http"
+	"github.com/didi/nightingale/src/modules/transfer/http/routes"
 	"github.com/didi/nightingale/src/modules/transfer/rpc"
+	"github.com/didi/nightingale/src/toolkits/http"
+	tlogger "github.com/didi/nightingale/src/toolkits/logger"
 
+	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
@@ -48,13 +51,18 @@ func main() {
 	pconf()
 	start()
 
-	config.InitLogger()
+	cfg := config.Config
 
+	tlogger.Init(cfg.Logger)
 	backend.Init()
 	cron.Init()
 
 	go rpc.Start()
-	http.Start()
+
+	r := gin.New()
+	routes.Config(r)
+	go http.Start(r, "judge", cfg.Logger.Level)
+
 	ending()
 }
 

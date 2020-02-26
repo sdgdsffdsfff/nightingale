@@ -10,6 +10,7 @@ import (
 
 	"github.com/didi/nightingale/src/modules/index/config"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/identity"
 )
 
 func Report() {
@@ -21,10 +22,10 @@ func Report() {
 	addrs := address.GetHTTPAddresses("monapi")
 
 	t1 := time.NewTicker(time.Duration(ReportCfg.Interval) * time.Millisecond)
-	report(config.Identity, config.RpcPort, config.HttpPort, addrs)
+	report(identity.Identity, config.RpcPort, config.HttpPort, addrs)
 	for {
 		<-t1.C
-		report(config.Identity, config.RpcPort, config.HttpPort, addrs)
+		report(identity.Identity, config.RpcPort, config.HttpPort, addrs)
 	}
 }
 

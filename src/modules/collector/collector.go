@@ -19,7 +19,7 @@ import (
 	"github.com/didi/nightingale/src/modules/collector/sys/procs"
 	"github.com/didi/nightingale/src/toolkits/http"
 	"github.com/didi/nightingale/src/toolkits/identity"
-	"github.com/didi/nightingale/src/toolkits/nlogger"
+	tlogger "github.com/didi/nightingale/src/toolkits/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
@@ -58,7 +58,7 @@ func main() {
 	start()
 	cfg := config.Get()
 
-	nlogger.Init(cfg.Logger)
+	tlogger.Init(cfg.Logger)
 
 	identity.Init(cfg.Identity)
 	if identity.Identity == "127.0.0.1" {

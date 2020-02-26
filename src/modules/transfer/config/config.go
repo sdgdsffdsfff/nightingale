@@ -5,19 +5,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/didi/nightingale/src/toolkits/logger"
+
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
 
 type ConfYaml struct {
-	Debug   bool          `yaml:"debug"`
-	MinStep int           `yaml:"minStep"`
-	Logger  LoggerSection `yaml:"logger"`
-	HTTP    HTTPSection   `yaml:"http"`
-	RPC     RPCSection    `yaml:"rpc"`
-	Tsdb    TsdbSection   `yaml:"tsdb"`
-	Judge   JudgeSection  `yaml:"judge"`
-	Index   IndexSection  `yaml:"index"`
+	Debug   bool                 `yaml:"debug"`
+	MinStep int                  `yaml:"minStep"`
+	Logger  logger.LoggerSection `yaml:"logger"`
+	HTTP    HTTPSection          `yaml:"http"`
+	RPC     RPCSection           `yaml:"rpc"`
+	Tsdb    TsdbSection          `yaml:"tsdb"`
+	Judge   JudgeSection         `yaml:"judge"`
+	Index   IndexSection         `yaml:"index"`
 }
 
 type IndexSection struct {

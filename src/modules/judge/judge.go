@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
@@ -17,10 +18,12 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/modules/judge/cron"
-	"github.com/didi/nightingale/src/modules/judge/http"
+	"github.com/didi/nightingale/src/modules/judge/http/routes"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/http"
 	"github.com/didi/nightingale/src/toolkits/identity"
+	tlogger "github.com/didi/nightingale/src/toolkits/logger"
 )
 
 const version = 1
@@ -53,10 +56,9 @@ func main() {
 	pconf()
 	start()
 
-	config.InitLogger()
-
 	cfg := config.Config
 	identity.Init(cfg.Identity)
+	tlogger.Init(cfg.Logger)
 
 	ident := identity.Identity
 
@@ -75,12 +77,15 @@ func main() {
 	cache.SeriesMap = cache.NewIndexMap()
 	redi.InitRedis()
 
-	go http.Start(address.GetHTTPListen("judge"), cfg.Logger.Level)
 	go rpc.Start()
 	go cron.Report(ident, port, address.GetHTTPAddresses("monapi"), cfg.Report.Interval)
 	go cron.Statstic()
 	go cron.GetStrategy()
 	go cron.NodataJudge()
+
+	r := gin.New()
+	routes.Config(r)
+	go http.Start(r, "judge", cfg.Logger.Level)
 
 	ending()
 }

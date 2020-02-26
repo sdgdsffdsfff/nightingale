@@ -9,14 +9,14 @@ import (
 	"github.com/didi/nightingale/src/modules/collector/stra"
 	"github.com/didi/nightingale/src/modules/collector/sys"
 	"github.com/didi/nightingale/src/toolkits/identity"
-	"github.com/didi/nightingale/src/toolkits/nlogger"
+	"github.com/didi/nightingale/src/toolkits/logger"
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
 
 type ConfYaml struct {
 	Identity identity.IdentitySection `yaml:"identity"`
-	Logger   nlogger.LoggerSection    `yaml:"logger"`
+	Logger   logger.LoggerSection     `yaml:"logger"`
 	Stra     stra.StraSection         `yaml:"stra"`
 	Worker   worker.WorkerSection     `yaml:"worker"`
 	Sys      sys.SysSection           `yaml:"sys"`

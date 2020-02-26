@@ -9,23 +9,25 @@ import (
 	"github.com/toolkits/pkg/file"
 
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/identity"
+	"github.com/didi/nightingale/src/toolkits/logger"
 )
 
 type ConfYaml struct {
-	CacheDuration   int             `yaml:"cacheDuration"`
-	CleanInterval   int             `yaml:"cleanInterval"`
-	PersistInterval int             `yaml:"persistInterval"`
-	PersistDir      string          `yaml:"persistDir"`
-	RebuildWorker   int             `yaml:"rebuildWorker"`
-	BuildWorker     int             `yaml:"buildWorker"`
-	DefaultStep     int             `yaml:"defaultStep"`
-	PushUrl         string          `yaml:"pushUrl"`
-	Logger          LoggerSection   `yaml:"logger"`
-	HTTP            HTTPSection     `yaml:"http"`
-	RPC             RPCSection      `yaml:"rpc"`
-	Limit           LimitSection    `yaml:"limit"`
-	Identity        IdentitySection `yaml:"identity"`
-	Report          ReportSection   `yaml:"report"`
+	CacheDuration   int                      `yaml:"cacheDuration"`
+	CleanInterval   int                      `yaml:"cleanInterval"`
+	PersistInterval int                      `yaml:"persistInterval"`
+	PersistDir      string                   `yaml:"persistDir"`
+	RebuildWorker   int                      `yaml:"rebuildWorker"`
+	BuildWorker     int                      `yaml:"buildWorker"`
+	DefaultStep     int                      `yaml:"defaultStep"`
+	PushUrl         string                   `yaml:"pushUrl"`
+	Logger          logger.LoggerSection     `yaml:"logger"`
+	HTTP            HTTPSection              `yaml:"http"`
+	RPC             RPCSection               `yaml:"rpc"`
+	Limit           LimitSection             `yaml:"limit"`
+	Identity        identity.IdentitySection `yaml:"identity"`
+	Report          ReportSection            `yaml:"report"`
 }
 
 type ReportSection struct {
@@ -33,19 +35,8 @@ type ReportSection struct {
 	Interval int  `yaml:"interval"`
 }
 
-type IdentitySection struct {
-	Specify string `yaml:"specify"`
-	Shell   string `yaml:"shell"`
-}
-
 type LimitSection struct {
 	MaxQueryCount int `yaml:"max_query"`
-}
-
-type LoggerSection struct {
-	Dir       string `yaml:"dir"`
-	Level     string `yaml:"level"`
-	KeepHours uint   `yaml:"keepHours"`
 }
 
 type HTTPSection struct {
@@ -107,11 +98,6 @@ func Parse(conf string) error {
 	err = viper.Unmarshal(&Config)
 	if err != nil {
 		return fmt.Errorf("Unmarshal %v", err)
-	}
-
-	Identity, err = GetIdentity()
-	if err != nil {
-		return fmt.Errorf("err %v", err)
 	}
 
 	HttpPort, err = GetPort(address.GetHTTPListen("index"))

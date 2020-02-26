@@ -9,6 +9,7 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/identity"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -34,7 +35,7 @@ func Statstic() {
 func NewMetricValue(metric string, value int64) dataobj.MetricValue {
 	item := dataobj.MetricValue{
 		Metric:       metric,
-		Endpoint:     config.Identity,
+		Endpoint:     identity.Identity,
 		Timestamp:    time.Now().Unix(),
 		ValueUntyped: value,
 		CounterType:  "GAUGE",
