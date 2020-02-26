@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/didi/nightingale/src/modules/collector/config"
-	"github.com/didi/nightingale/src/modules/collector/http"
+	"github.com/didi/nightingale/src/modules/collector/http/routes"
 	"github.com/didi/nightingale/src/modules/collector/log/worker"
 	"github.com/didi/nightingale/src/modules/collector/stra"
 	"github.com/didi/nightingale/src/modules/collector/sys"
@@ -17,9 +17,11 @@ import (
 	"github.com/didi/nightingale/src/modules/collector/sys/plugins"
 	"github.com/didi/nightingale/src/modules/collector/sys/ports"
 	"github.com/didi/nightingale/src/modules/collector/sys/procs"
+	"github.com/didi/nightingale/src/toolkits/http"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	"github.com/didi/nightingale/src/toolkits/nlogger"
 
+	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
@@ -85,7 +87,9 @@ func main() {
 	go worker.PusherStart()
 	go worker.Zeroize()
 
-	http.Start()
+	r := gin.New()
+	routes.Config(r)
+	http.Start(r, "collector", cfg.Logger.Level)
 	ending()
 }
 

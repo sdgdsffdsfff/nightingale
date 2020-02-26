@@ -9,8 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/didi/nightingale/src/modules/collector/config"
-	"github.com/didi/nightingale/src/modules/collector/http/routes"
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/http/middleware"
 )
@@ -22,25 +20,20 @@ var srv = &http.Server{
 }
 
 // Start http server
-func Start() {
-	c := config.Get()
-
+func Start(r *gin.Engine, mod string, level string) {
 	loggerMid := middleware.LoggerWithConfig(middleware.LoggerConfig{})
 	recoveryMid := middleware.Recovery()
 
-	if c.Logger.Level != "DEBUG" {
+	if level != "DEBUG" {
 		gin.SetMode(gin.ReleaseMode)
 		middleware.DisableConsoleColor()
 	} else {
 		srv.WriteTimeout = 120 * time.Second
 	}
 
-	r := gin.New()
 	r.Use(loggerMid, recoveryMid)
 
-	routes.Config(r)
-
-	srv.Addr = address.GetHTTPListen("collector")
+	srv.Addr = address.GetHTTPListen(mod)
 	srv.Handler = r
 
 	go func() {
