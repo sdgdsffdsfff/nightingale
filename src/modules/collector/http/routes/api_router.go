@@ -9,9 +9,9 @@ import (
 	"github.com/didi/nightingale/src/modules/collector/config"
 	"github.com/didi/nightingale/src/modules/collector/log/strategy"
 	"github.com/didi/nightingale/src/modules/collector/log/worker"
+	"github.com/didi/nightingale/src/modules/collector/stra"
 	"github.com/didi/nightingale/src/modules/collector/sys/funcs"
-	"github.com/didi/nightingale/src/modules/collector/sys/ports"
-	"github.com/didi/nightingale/src/modules/collector/sys/procs"
+	"github.com/didi/nightingale/src/toolkits/identity"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
@@ -49,7 +49,7 @@ func pushData(c *gin.Context) {
 	for _, v := range recvMetricValues {
 		logger.Debug("->recv: ", v)
 		if v.Endpoint == "" {
-			v.Endpoint = config.Endpoint
+			v.Endpoint = identity.Identity
 		}
 		err := v.CheckValidity()
 		if err != nil {
@@ -74,12 +74,12 @@ func pushData(c *gin.Context) {
 func getStrategy(c *gin.Context) {
 	var resp []interface{}
 
-	port := ports.ListPorts()
+	port := stra.GetPortCollects()
 	for _, stra := range port {
 		resp = append(resp, stra)
 	}
 
-	proc := procs.ListProcs()
+	proc := stra.GetProcCollects()
 	for _, stra := range proc {
 		resp = append(resp, stra)
 	}

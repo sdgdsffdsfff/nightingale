@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/config"
+	"github.com/didi/nightingale/src/modules/collector/sys"
 
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/nux"
@@ -30,7 +30,7 @@ var (
 )
 
 func NetMetrics() (ret []*dataobj.MetricValue) {
-	netIfs, err := nux.NetIfs(config.Config.Collector.IfacePrefix)
+	netIfs, err := nux.NetIfs(sys.Config.IfacePrefix)
 	if err != nil {
 		logger.Error(err)
 		return []*dataobj.MetricValue{}

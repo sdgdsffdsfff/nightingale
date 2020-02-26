@@ -1,4 +1,4 @@
-package cron
+package stra
 
 import (
 	"fmt"
@@ -9,17 +9,12 @@ import (
 	"github.com/toolkits/pkg/net/httplib"
 
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/collector/config"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/identity"
 )
 
-type CollectResp struct {
-	Dat model.Collect `json:"dat"`
-	Err string        `json:"err"`
-}
-
 func GetCollects() {
-	if !config.Config.Collector.SyncCollect {
+	if !StraConfig.Enable {
 		return
 	}
 
@@ -28,7 +23,7 @@ func GetCollects() {
 }
 
 func loopDetect() {
-	t1 := time.NewTicker(time.Duration(config.Config.Collector.SyncInterval) * time.Second)
+	t1 := time.NewTicker(time.Duration(StraConfig.Interval) * time.Second)
 	for {
 		<-t1.C
 		detect()
@@ -41,7 +36,13 @@ func detect() {
 		logger.Errorf("get collect err:%v", err)
 		return
 	}
-	config.Collect.Update(&c)
+
+	Collect.Update(&c)
+}
+
+type CollectResp struct {
+	Dat model.Collect `json:"dat"`
+	Err string        `json:"err"`
 }
 
 func GetCollectsRetry() (model.Collect, error) {
@@ -70,8 +71,8 @@ func getCollects() (CollectResp, error) {
 	var res CollectResp
 	var err error
 
-	url := fmt.Sprintf("http://%s/api/portal/collects/%s", addr, config.Endpoint)
-	err = httplib.Get(url).SetTimeout(time.Duration(config.Config.Collector.SyncTimeout) * time.Millisecond).ToJSON(&res)
+	url := fmt.Sprintf("http://%s%s%s", addr, StraConfig.Api, identity.Identity)
+	err = httplib.Get(url).SetTimeout(time.Duration(StraConfig.Timeout) * time.Millisecond).ToJSON(&res)
 	if err != nil {
 		err = fmt.Errorf("get collects from remote failed, error:%v", err)
 	}

@@ -23,7 +23,7 @@ var srv = &http.Server{
 
 // Start http server
 func Start() {
-	c := config.Config
+	c := config.Get()
 
 	loggerMid := middleware.LoggerWithConfig(middleware.LoggerConfig{})
 	recoveryMid := middleware.Recovery()

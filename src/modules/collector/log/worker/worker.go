@@ -9,10 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/collector/config"
-	"github.com/didi/nightingale/src/modules/collector/log/schema"
 	"github.com/didi/nightingale/src/modules/collector/log/strategy"
-	"github.com/didi/nightingale/src/modules/collector/log/utils"
+	"github.com/didi/nightingale/src/modules/collector/stra"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -69,17 +67,17 @@ func (this *WorkerGroup) SetLatestTmsAndDelay(tms int64, delay int64) {
 /*
  * filepath和stream依赖外部，其他的都自己创建
  */
-func NewWorkerGroup(filePath string, stream chan string, st *schema.Strategy) *WorkerGroup {
-
+func NewWorkerGroup(filePath string, stream chan string, st *stra.Strategy) *WorkerGroup {
+	wokerNum := WorkerConfig.WorkerNum
 	wg := &WorkerGroup{
-		WorkerNum: config.Config.Worker.WorkerNum,
+		WorkerNum: wokerNum,
 		Workers:   make([]*Worker, 0),
 	}
 
-	logger.Infof("new worker group, [file:%s][worker_num:%d]", filePath, config.Config.Worker.WorkerNum)
+	logger.Infof("new worker group, [file:%s][worker_num:%d]", filePath, wokerNum)
 
 	for i := 0; i < wg.WorkerNum; i++ {
-		mark := fmt.Sprintf("[worker][file:%s][num:%d][id:%d]", filePath, config.Config.Worker.WorkerNum, i)
+		mark := fmt.Sprintf("[worker][file:%s][num:%d][id:%d]", filePath, wokerNum, i)
 		w := Worker{}
 		w.Close = make(chan struct{})
 		w.FilePath = filePath
@@ -199,7 +197,7 @@ func (w *Worker) analysis(line string) {
 	}
 }
 
-func (w *Worker) producer(line string, strategy *schema.Strategy) (*AnalysPoint, error) {
+func (w *Worker) producer(line string, strategy *stra.Strategy) (*AnalysPoint, error) {
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Errorf("%s[producer panic] : %v", w.Mark, err)
@@ -207,7 +205,7 @@ func (w *Worker) producer(line string, strategy *schema.Strategy) (*AnalysPoint,
 	}()
 
 	var reg *regexp.Regexp
-	_, timeFormat := utils.GetPatAndTimeFormat(strategy.TimeFormat)
+	_, timeFormat := stra.GetPatAndTimeFormat(strategy.TimeFormat)
 
 	reg = strategy.TimeReg
 

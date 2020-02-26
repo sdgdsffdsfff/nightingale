@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
-	"github.com/toolkits/pkg/sys"
 )
 
 type ConfYaml struct {
@@ -111,19 +110,6 @@ type StrategySection struct {
 	UpdateInterval int    `yaml:"updateInterval"`
 	IndexInterval  int    `yaml:"indexInterval"`
 	ReportInterval int    `yaml:"reportInterval"`
-}
-
-type IdentitySection struct {
-	Specify string `yaml:"specify"`
-	Shell   string `yaml:"shell"`
-}
-
-func GetIdentity(opts IdentitySection) (string, error) {
-	if opts.Specify != "" {
-		return opts.Specify, nil
-	}
-
-	return sys.CmdOutTrim("bash", "-c", opts.Shell)
 }
 
 func GetPort(l string) (string, error) {

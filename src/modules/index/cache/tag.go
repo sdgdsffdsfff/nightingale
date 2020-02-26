@@ -5,8 +5,8 @@ import (
 )
 
 type TagPair struct {
-	Key    string   `json:"key"`
-	Values []string `json:"values"`
+	Key    string   `json:"tagk"` //json和变量不一致为了兼容前端
+	Values []string `json:"tagv"`
 }
 
 type TagPairs []*TagPair

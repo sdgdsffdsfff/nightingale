@@ -9,8 +9,8 @@ import (
 	"unsafe"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/log/schema"
 	"github.com/didi/nightingale/src/modules/collector/log/strategy"
+	"github.com/didi/nightingale/src/modules/collector/stra"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -43,7 +43,7 @@ type PointsCounter struct {
 // 单step统计, 推送完则删
 type StrategyCounter struct {
 	sync.RWMutex
-	Strategy  *schema.Strategy         //Strategy结构体扔这里，以备不时之需
+	Strategy  *stra.Strategy           //Strategy结构体扔这里，以备不时之需
 	TmsPoints map[int64]*PointsCounter //按照时间戳分类的分别的counter
 }
 
@@ -261,7 +261,7 @@ func (this *StrategyCounter) AddTms(tms int64) error {
 }
 
 // 只做更新和删除，添加 由数据驱动
-func (this *GlobalCounter) UpdateByStrategy(globalStras map[int64]*schema.Strategy) {
+func (this *GlobalCounter) UpdateByStrategy(globalStras map[int64]*stra.Strategy) {
 	var delCount, upCount int
 	// 先以count的ID为准，更新count
 	// 若ID没有了, 那就删掉
@@ -295,7 +295,7 @@ func (this *GlobalCounter) UpdateByStrategy(globalStras map[int64]*schema.Strate
 	logger.Infof("Update global count done, [del:%d][update:%d]", delCount, upCount)
 }
 
-func (this *GlobalCounter) AddStrategyCount(st *schema.Strategy) {
+func (this *GlobalCounter) AddStrategyCount(st *stra.Strategy) {
 	this.Lock()
 	if _, ok := this.StrategyCounts[st.ID]; !ok {
 		tmp := new(StrategyCounter)
@@ -306,7 +306,7 @@ func (this *GlobalCounter) AddStrategyCount(st *schema.Strategy) {
 	this.Unlock()
 }
 
-func (this *GlobalCounter) upStrategy(st *schema.Strategy) {
+func (this *GlobalCounter) upStrategy(st *stra.Strategy) {
 	this.Lock()
 	if _, ok := this.StrategyCounts[st.ID]; ok {
 		this.StrategyCounts[st.ID].Strategy = st
@@ -353,7 +353,7 @@ func (this *GlobalCounter) cleanStrategyData(id int64) {
 }
 
 // countEqual意味着不会对统计的结构产生影响
-func countEqual(A *schema.Strategy, B *schema.Strategy) bool {
+func countEqual(A *stra.Strategy, B *stra.Strategy) bool {
 	if A == nil || B == nil {
 		return false
 	}

@@ -17,7 +17,7 @@ func ConfigRoutes(r *mux.Router) {
 	r.HandleFunc("/api/tsdb/pid", pid)
 
 	r.HandleFunc("/api/tsdb/get-item-by-series-id", getItemBySeriesID)
-	r.HandleFunc("/api/tsdb/updateAll", rebuildIndex)
+	r.HandleFunc("/api/tsdb/update-index", rebuildIndex)
 
 	r.PathPrefix("/debug").Handler(http.DefaultServeMux)
 }

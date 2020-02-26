@@ -5,60 +5,21 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/didi/nightingale/src/modules/collector/log/worker"
+	"github.com/didi/nightingale/src/modules/collector/stra"
+	"github.com/didi/nightingale/src/modules/collector/sys"
+	"github.com/didi/nightingale/src/toolkits/identity"
+	"github.com/didi/nightingale/src/toolkits/nlogger"
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
 
 type ConfYaml struct {
-	Debug            bool                `yaml:"debug"`
-	Reportor         bool                `yaml:"reportor"`
-	NtpServers       []string            `yaml:"ntpServers"`
-	PortPath         string              `yaml:"portPath"`
-	ProcPath         string              `yaml:"procPath"`
-	LogPath          string              `yaml:"logPath"`
-	Plugin           string              `yaml:"plugin"`
-	MaxCPURate       float64             `yaml:"max_cpu_rate"`
-	MaxMemRate       float64             `yaml:"max_mem_rate"`
-	Endpoint         EndpointSection     `yaml:"endpoint"`
-	Logger           LoggerSection       `yaml:"logger"`
-	Transfer         TransferSection     `yaml:"transfer"`
-	Collector        CollectorSection    `yaml:"collector"`
-	Worker           WorkerSection       `yaml:"worker"`
-	IgnoreMetrics    []string            `yaml:"ignoreMetrics"`
-	IgnoreMetricsMap map[string]struct{} `yaml:"-"`
-}
-
-type WorkerSection struct {
-	WorkerNum    int `yaml:"workerNum"`
-	QueueSize    int `yaml:"queueSize"`
-	PushInterval int `yaml:"pushInterval"`
-	WaitPush     int `yaml:"waitPush"`
-}
-
-type EndpointSection struct {
-	Specify string `yaml:"specify"`
-	Shell   string `yaml:"shell"`
-}
-
-type TransferSection struct {
-	Enabled  string `yaml:"enabled"`
-	Interval int    `yaml:"interval"`
-	Timeout  int    `yaml:"timeout"`
-}
-
-type LoggerSection struct {
-	Dir       string `yaml:"dir"`
-	Level     string `yaml:"level"`
-	KeepHours uint   `yaml:"keepHours"`
-}
-
-type CollectorSection struct {
-	IfacePrefix       []string `yaml:"ifacePrefix"`
-	MountPoint        []string `yaml:"mountPoint"`
-	MountIgnorePrefix []string `yaml:"mountIgnorePrefix"`
-	SyncCollect       bool     `yaml:"syncCollect"`
-	SyncTimeout       int      `yaml:"syncTimeout"`
-	SyncInterval      int      `yaml:"syncInterval"`
+	Identity identity.IdentitySection `yaml:"identity"`
+	Logger   nlogger.LoggerSection    `yaml:"logger"`
+	Stra     stra.StraSection         `yaml:"stra"`
+	Worker   worker.WorkerSection     `yaml:"worker"`
+	Sys      sys.SysSection           `yaml:"sys"`
 }
 
 var (
@@ -90,12 +51,6 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("plugin", "/home/n9e/plugin")     //插件采集配置文件目录
-	viper.SetDefault("portPath", "/home/n9e/etc/port") //端口采集配置文件目录
-	viper.SetDefault("procPath", "/home/n9e/etc/proc") //进程采集配置文件目录
-	viper.SetDefault("logPath", "/home/n9e/etc/log")   //进程采集配置文件目录
-	viper.SetDefault("reportor", false)                //是否启用reportor采集CPU、内存等信息上报，executor和collector都具备此能力，任开一个即可
-
 	viper.SetDefault("worker", map[string]interface{}{
 		"workerNum":    10,
 		"queueSize":    1024000,
@@ -103,29 +58,26 @@ func Parse(conf string) error {
 		"waitPush":     0,
 	})
 
-	viper.SetDefault("transfer", map[string]interface{}{
+	viper.SetDefault("stra", map[string]interface{}{
 		"enabled":  true,
 		"timeout":  1000,
 		"interval": 20, //基础指标上报周期
+		"portPath": "/home/n9e/etc/port",
+		"procPath": "/home/n9e/etc/proc",
+		"logPath":  "/home/n9e/etc/log",
+		"api":      "/api/portal/collects/",
 	})
 
-	viper.SetDefault("collector", map[string]interface{}{
-		"timeout":  1000, //请求超时时间
-		"interval": 10,   //采集策略更新时间
+	viper.SetDefault("sys", map[string]interface{}{
+		"timeoutMs": 1000, //请求超时时间
+		"interval":  10,   //采集策略更新时间
+		"plugin":    "/home/n9e/plugin",
 	})
 
 	err = viper.Unmarshal(&Config)
 	if err != nil {
 		return fmt.Errorf("Unmarshal %v", err)
 	}
-
-	l := len(Config.IgnoreMetrics)
-	m := make(map[string]struct{}, l)
-	for i := 0; i < l; i++ {
-		m[Config.IgnoreMetrics[i]] = struct{}{}
-	}
-
-	Config.IgnoreMetricsMap = m
 
 	return nil
 }

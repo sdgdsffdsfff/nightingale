@@ -2,6 +2,8 @@ package ports
 
 import (
 	"time"
+
+	"github.com/didi/nightingale/src/modules/collector/stra"
 )
 
 func Detect() {
@@ -17,7 +19,7 @@ func loopDetect() {
 }
 
 func detect() {
-	ps := ListPorts()
+	ps := stra.GetPortCollects()
 	DelNoPortCollect(ps)
 	AddNewPortCollect(ps)
 }
