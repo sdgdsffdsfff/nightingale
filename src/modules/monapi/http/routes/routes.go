@@ -12,10 +12,8 @@ func Config(r *gin.Engine) {
 
 	hbs := r.Group("/api/hbs")
 	{
-		hbs.POST("/report-judge-heartbeat", judgeHeartBeat)
-		hbs.POST("/report-index-heartbeat", indexHeartBeat)
-		hbs.GET("/judges", judgeInstanceGets)
-		hbs.GET("/indexs", indexInstanceGets)
+		hbs.POST("/heartbeat", heartBeat)
+		hbs.GET("/instances", instanceGets)
 	}
 
 	nolog := r.Group("/api/portal")

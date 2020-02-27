@@ -15,6 +15,7 @@ import (
 	"github.com/didi/nightingale/src/toolkits/http"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	tlogger "github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/report"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
@@ -59,12 +60,13 @@ func main() {
 	cache.InitDB()
 	identity.Init(cfg.Identity)
 
-	cache.Rebuild(cfg.PersistDir, cfg.RebuildWorker, identity.Identity)
+	cache.Rebuild(cfg.PersistDir, cfg.RebuildWorker)
 
 	go cron.StartCleaner(cfg.CleanInterval, cfg.CacheDuration)
 	go cron.StartPersist(cfg.PersistInterval, cfg.PersistDir)
-	go cron.Report()
 	go cron.Statstic()
+
+	report.Init(cfg.Report, "monapi")
 
 	go rpc.Start()
 

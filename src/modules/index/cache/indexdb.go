@@ -8,16 +8,13 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
-	"github.com/toolkits/pkg/net/httplib"
 
-	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/compress"
+	"github.com/didi/nightingale/src/toolkits/report"
 )
 
 var IndexDB *EndpointIndexMap
@@ -28,9 +25,9 @@ func InitDB() {
 	IndexDB = &EndpointIndexMap{M: make(map[string]*MetricIndexMap, 0)}
 }
 
-func Rebuild(persistenceDir string, concurrency int, identity string) {
+func Rebuild(persistenceDir string, concurrency int) {
 	var dbDir string
-	err := getIndexFromRemote(identity)
+	err := getIndexFromRemote()
 	if err == nil {
 		dbDir = fmt.Sprintf("%s/%s", persistenceDir, "download")
 	} else {
@@ -172,14 +169,14 @@ func ReadIndexFromFile(indexDir, endpoint string) (*MetricIndexMap, error) {
 	return metricIndexMap, err
 }
 
-func getIndexFromRemote(identity string) error {
+func getIndexFromRemote() error {
 	filepath := fmt.Sprintf("db.tar.gz")
 	var err error
 	// Get the data
-	activeIndexs := GetIndex(identity)
+	activeIndexs := report.GetAlive("index", "monapi")
 	perm := rand.Perm(len(activeIndexs))
 	for i := range perm {
-		url := fmt.Sprintf("http://%s:%s/api/index/idxfile", activeIndexs[perm[i]].IP, activeIndexs[perm[i]].HttpPort)
+		url := fmt.Sprintf("http://%s:%s/api/index/idxfile", activeIndexs[perm[i]].Identity, activeIndexs[perm[i]].HTTPPort)
 		resp, err := http.Get(url)
 		if err != nil {
 			return err
@@ -206,40 +203,4 @@ func getIndexFromRemote(identity string) error {
 	}
 
 	return err
-}
-
-type indexRes struct {
-	Err string       `json:"err"`
-	Dat []*model.Idx `json:"dat"`
-}
-
-func GetIndex(identity string) []*model.Idx {
-	addrs := address.GetHTTPAddresses("monapi")
-	perm := rand.Perm(len(addrs))
-	activeIndexs := []*model.Idx{}
-
-	var body indexRes
-
-	for i := range perm {
-		url := fmt.Sprintf("http://%s/api/hbs/indexs", addrs[perm[i]])
-		err := httplib.Get(url).SetTimeout(3 * time.Second).ToJSON(&body)
-
-		if err != nil {
-			logger.Warningf("curl %s fail: %v", url, err)
-			continue
-		}
-
-		if body.Err != "" {
-			logger.Warningf("curl %s fail: %v", url, body.Err)
-			continue
-		}
-
-		for _, index := range body.Dat {
-			if index.Active && index.IP != identity {
-				activeIndexs = append(activeIndexs, index)
-			}
-		}
-		return activeIndexs
-	}
-	return activeIndexs
 }

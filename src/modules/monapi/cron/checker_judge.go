@@ -25,7 +25,7 @@ func CheckJudgeLoop() {
 }
 
 func CheckJudge() error {
-	judges, err := model.GetActiveJudges()
+	judges, err := model.GetAllInstances("judge", 1) //1表示只获取存活的实例列表
 	if err != nil {
 		return fmt.Errorf("model.GetActiveJudges fail: %v", err)
 	}
@@ -39,7 +39,7 @@ func CheckJudge() error {
 
 	jmap := make(map[string]string, size)
 	for i := 0; i < size; i++ {
-		jmap[strconv.FormatInt(judges[i].Id, 10)] = judges[i].IP + ":" + judges[i].Port
+		jmap[strconv.FormatInt(judges[i].Id, 10)] = judges[i].Identity + ":" + judges[i].RPCPort
 	}
 
 	rehash := false

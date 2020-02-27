@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,10 +19,10 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/cron"
 	"github.com/didi/nightingale/src/modules/judge/http/routes"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
-	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/http"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	tlogger "github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/report"
 )
 
 const version = 1
@@ -60,16 +59,6 @@ func main() {
 	identity.Init(cfg.Identity)
 	tlogger.Init(cfg.Logger)
 
-	ident := identity.Identity
-
-	port, err := config.GetPort(address.GetRPCListen("judge"))
-	if err != nil {
-		log.Fatalln("[F] cannot get identity:", err)
-	}
-
-	config.Identity = ident + ":" + port
-	log.Printf("[I] identity -> %s", config.Identity)
-
 	query.InitConnPools()
 	cache.InitHistoryBigMap()
 	cache.Strategy = cache.NewStrategyMap()
@@ -78,10 +67,10 @@ func main() {
 	redi.InitRedis()
 
 	go rpc.Start()
-	go cron.Report(ident, port, address.GetHTTPAddresses("monapi"), cfg.Report.Interval)
 	go cron.Statstic()
 	go cron.GetStrategy()
 	go cron.NodataJudge()
+	go report.Init(cfg.Report, "monapi")
 
 	r := gin.New()
 	routes.Config(r)

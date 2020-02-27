@@ -53,12 +53,12 @@ func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem,
 	if !isEnough {
 		return
 	}
-	history := []config.History{}
+	history := []dataobj.History{}
 
 	Judge(stra, stra.Exprs, historyData, val, now, history, "")
 }
 
-func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []config.History, info string) {
+func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string) {
 	atomic.AddInt64(&config.JudgeRun, 1)
 
 	if len(exps) < 1 {
@@ -74,7 +74,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 	} else {
 		info += fmt.Sprintf(" %s (%s,%ds)%s%v", exp.Metric, exp.Func, stra.AlertDur, exp.Eopt, exp.Threshold)
 	}
-	h := config.History{
+	h := dataobj.History{
 		Metric:      exp.Metric,
 		Tags:        firstItem.TagsMap,
 		Granularity: int(firstItem.Step),
@@ -88,7 +88,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 			if err != nil {
 				logger.Error("Marshal history:%v err:%v", history, err)
 			}
-			event := &config.Event{
+			event := &dataobj.Event{
 				ID:        fmt.Sprintf("s_%d_%s", stra.Id, firstItem.PrimaryKey()),
 				Etime:     now,
 				Endpoint:  firstItem.Endpoint,
@@ -368,7 +368,7 @@ func GetReqs(stra *model.Stra, metric string, endpoints []string, now int64) ([]
 	return reqs, nil
 }
 
-func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64, event *config.Event) {
+func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64, event *dataobj.Event) {
 	lastEvent, exists := cache.LastEvents.Get(event.ID)
 	if isTriggered {
 		event.EventType = config.EVENT_ALERT
@@ -393,7 +393,7 @@ func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64
 	}
 }
 
-func sendEvent(event *config.Event) {
+func sendEvent(event *dataobj.Event) {
 	// update last event
 	cache.LastEvents.Set(event.ID, event)
 

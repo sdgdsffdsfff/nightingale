@@ -13,6 +13,8 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/identity"
+	"github.com/didi/nightingale/src/toolkits/report"
 )
 
 type StrasResp struct {
@@ -39,7 +41,7 @@ func getStrategy(opts config.StrategySection) {
 	var resp StrasResp
 	perm := rand.Perm(len(addrs))
 	for i := range perm {
-		url := fmt.Sprintf("http://%s"+opts.PartitionApi, addrs[perm[i]], config.Identity)
+		url := fmt.Sprintf("http://%s:%s"+opts.PartitionApi, addrs[perm[i]], identity.Identity, report.Config.RPCPort)
 		err := httplib.Get(url).SetTimeout(time.Duration(opts.Timeout) * time.Millisecond).ToJSON(&resp)
 
 		if err != nil {

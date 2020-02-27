@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -11,6 +12,7 @@ import (
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	"github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/report"
 )
 
 type ConfYaml struct {
@@ -27,12 +29,13 @@ type ConfYaml struct {
 	RPC             RPCSection               `yaml:"rpc"`
 	Limit           LimitSection             `yaml:"limit"`
 	Identity        identity.IdentitySection `yaml:"identity"`
-	Report          ReportSection            `yaml:"report"`
+	Report          report.ReportSection     `yaml:"report"`
 }
 
 type ReportSection struct {
-	Enabled  bool `yaml:"enabled"`
-	Interval int  `yaml:"interval"`
+	Enabled  bool   `yaml:"enabled"`
+	Interval int    `yaml:"interval"`
+	Api      string `yaml:"api"`
 }
 
 type LimitSection struct {
@@ -91,8 +94,12 @@ func Parse(conf string) error {
 	})
 
 	viper.SetDefault("report", map[string]interface{}{
+		"mod":      "index",
 		"enabled":  true,
 		"interval": 4000,
+		"timeout":  3000,
+		"api":      "api/hbs/heartbeat",
+		"remark":   "",
 	})
 
 	err = viper.Unmarshal(&Config)
@@ -100,12 +107,8 @@ func Parse(conf string) error {
 		return fmt.Errorf("Unmarshal %v", err)
 	}
 
-	HttpPort, err = GetPort(address.GetHTTPListen("index"))
-	if err != nil {
-		return fmt.Errorf("err %v", err)
-	}
-
-	RpcPort, err = GetPort(address.GetRPCListen("index"))
+	Config.Report.HTTPPort = strconv.Itoa(address.GetHTTPPort("index"))
+	Config.Report.RPCPort = strconv.Itoa(address.GetRPCPort("index"))
 
 	return err
 }

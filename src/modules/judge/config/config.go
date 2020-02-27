@@ -3,10 +3,12 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"strings"
+	"strconv"
 
+	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	"github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/report"
 
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
@@ -18,7 +20,7 @@ type ConfYaml struct {
 	Redis    RedisSection             `yaml:"redis"`
 	Strategy StrategySection          `yaml:"strategy"`
 	Identity identity.IdentitySection `yaml:"identity"`
-	Report   ReportSection            `yaml:"report"`
+	Report   report.ReportSection     `yaml:"report"`
 	PushUrl  string                   `yaml:"pushUrl"`
 }
 
@@ -62,7 +64,12 @@ func Parse(conf string) error {
 	})
 
 	viper.SetDefault("report", map[string]interface{}{
+		"mod":      "judge",
+		"enabled":  true,
 		"interval": 4000,
+		"timeout":  3000,
+		"api":      "api/hbs/heartbeat",
+		"remark":   "",
 	})
 
 	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
@@ -71,6 +78,10 @@ func Parse(conf string) error {
 	if err != nil {
 		return fmt.Errorf("cannot read yml[%s]: %v\n", conf, err)
 	}
+
+	Config.Report.HTTPPort = strconv.Itoa(address.GetHTTPPort("judge"))
+	Config.Report.RPCPort = strconv.Itoa(address.GetRPCPort("judge"))
+
 	return err
 }
 
@@ -113,13 +124,4 @@ type StrategySection struct {
 	UpdateInterval int    `yaml:"updateInterval"`
 	IndexInterval  int    `yaml:"indexInterval"`
 	ReportInterval int    `yaml:"reportInterval"`
-}
-
-func GetPort(l string) (string, error) {
-	tmp := strings.Split(l, ":")
-	if len(tmp) < 2 {
-		return "", fmt.Errorf("port error:%s", l)
-	}
-	p := tmp[1]
-	return p, nil
 }

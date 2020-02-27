@@ -1,21 +1,14 @@
 package backend
 
 import (
-	"fmt"
-	"math/rand"
-	"time"
-
 	"github.com/toolkits/pkg/container/list"
 	"github.com/toolkits/pkg/container/set"
-	"github.com/toolkits/pkg/logger"
-	"github.com/toolkits/pkg/net/httplib"
 	"github.com/toolkits/pkg/pool"
 	"github.com/toolkits/pkg/str"
 
-	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/transfer/cache"
 	. "github.com/didi/nightingale/src/modules/transfer/config"
-	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/report"
 )
 
 var (
@@ -84,41 +77,12 @@ func initSendQueues() {
 	}
 }
 
-type judgeRes struct {
-	Err string         `json:"err"`
-	Dat []*model.Judge `json:"dat"`
-}
-
 func GetJudges() []string {
-	addrs := address.GetHTTPAddresses("monapi")
-	perm := rand.Perm(len(addrs))
-
-	var (
-		judgeInstance []string
-		body          judgeRes
-	)
-
-	for i := range perm {
-		url := fmt.Sprintf("http://%s/api/hbs/judges", addrs[perm[i]])
-		err := httplib.Get(url).SetTimeout(3 * time.Second).ToJSON(&body)
-
-		if err != nil {
-			logger.Warningf("curl %s fail: %v", url, err)
-			continue
-		}
-
-		if body.Err != "" {
-			logger.Warningf("curl %s fail: %v", url, body.Err)
-			continue
-		}
-
-		for _, judge := range body.Dat {
-			if judge.Active {
-				instance := judge.IP + ":" + judge.Port
-				judgeInstance = append(judgeInstance, instance)
-			}
-		}
-		return judgeInstance
+	var judgeInstances []string
+	instances := report.GetAlive("judge", "monapi")
+	for _, instance := range instances {
+		judgeInstance := instance.Identity + ":" + instance.RPCPort
+		judgeInstances = append(judgeInstances, judgeInstance)
 	}
-	return judgeInstance
+	return judgeInstances
 }

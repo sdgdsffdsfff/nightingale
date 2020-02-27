@@ -6,6 +6,7 @@ import (
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/backend"
 	. "github.com/didi/nightingale/src/modules/transfer/config"
+	"github.com/didi/nightingale/src/toolkits/http/render"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
@@ -14,7 +15,7 @@ import (
 
 func PushData(c *gin.Context) {
 	if c.Request.ContentLength == 0 {
-		renderMessage(c, "blank body")
+		render.Message(c, "blank body")
 		return
 	}
 
@@ -43,10 +44,10 @@ func PushData(c *gin.Context) {
 	}
 
 	if msg != "" {
-		renderMessage(c, msg)
+		render.Message(c, msg)
 		return
 	}
 
-	renderData(c, "ok", nil)
+	render.Data(c, "ok", nil)
 	return
 }
