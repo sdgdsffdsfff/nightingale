@@ -341,16 +341,16 @@ func GetIndexByClude(c *gin.Context) {
 }
 
 func DumpIndex(c *gin.Context) {
-	err := cache.Persist("normal", config.Config.PersistDir)
+	err := cache.Persist("normal")
 	errors.Dangerous(err)
 
 	render.Data(c, "ok", nil)
 }
 
 func GetIdxFile(c *gin.Context) {
-	err := cache.Persist("download", config.Config.PersistDir)
+	err := cache.Persist("download")
 	errors.Dangerous(err)
 
-	traGz := fmt.Sprintf("%s/%s", config.Config.PersistDir, "db.tar.gz")
+	traGz := fmt.Sprintf("%s/%s", cache.Config.PersistDir, "db.tar.gz")
 	c.File(traGz)
 }

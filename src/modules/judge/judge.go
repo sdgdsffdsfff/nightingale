@@ -18,7 +18,9 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/modules/judge/cron"
 	"github.com/didi/nightingale/src/modules/judge/http/routes"
+	"github.com/didi/nightingale/src/modules/judge/judge"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
+	"github.com/didi/nightingale/src/modules/judge/stra"
 	"github.com/didi/nightingale/src/toolkits/http"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	tlogger "github.com/didi/nightingale/src/toolkits/logger"
@@ -59,17 +61,19 @@ func main() {
 	identity.Init(cfg.Identity)
 	tlogger.Init(cfg.Logger)
 
-	query.InitConnPools()
+	query.Init(cfg.Query)
+	redi.Init(cfg.Redis)
+
 	cache.InitHistoryBigMap()
 	cache.Strategy = cache.NewStrategyMap()
 	cache.NodataStra = cache.NewStrategyMap()
 	cache.SeriesMap = cache.NewIndexMap()
-	redi.InitRedis()
 
 	go rpc.Start()
 	go cron.Statstic()
-	go cron.GetStrategy()
-	go cron.NodataJudge()
+
+	go stra.GetStrategy(cfg.Strategy)
+	go judge.NodataJudge()
 	go report.Init(cfg.Report, "monapi")
 
 	r := gin.New()

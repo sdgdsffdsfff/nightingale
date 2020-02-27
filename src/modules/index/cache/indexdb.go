@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/file"
@@ -17,12 +18,52 @@ import (
 	"github.com/didi/nightingale/src/toolkits/report"
 )
 
+type CacheSection struct {
+	CacheDuration   int    `yaml:"cacheDuration"`
+	CleanInterval   int    `yaml:"cleanInterval"`
+	PersistInterval int    `yaml:"persistInterval"`
+	PersistDir      string `yaml:"persistDir"`
+	RebuildWorker   int    `yaml:"rebuildWorker"`
+}
+
 var IndexDB *EndpointIndexMap
+var Config CacheSection
 
 var semaPermanence = semaphore.NewSemaphore(1)
 
-func InitDB() {
+func InitDB(cfg CacheSection) {
+	Config = cfg
+
 	IndexDB = &EndpointIndexMap{M: make(map[string]*MetricIndexMap, 0)}
+
+	Rebuild(Config.PersistDir, Config.RebuildWorker)
+
+	go StartCleaner(Config.CleanInterval, Config.CacheDuration)
+	go StartPersist(Config.PersistInterval)
+}
+
+func StartCleaner(interval int, cacheDuration int) {
+	t1 := time.NewTicker(time.Duration(interval) * time.Second)
+	for {
+		<-t1.C
+
+		start := time.Now()
+		IndexDB.Clean(int64(cacheDuration))
+		logger.Infof("clean took %.2f ms\n", float64(time.Since(start).Nanoseconds())*1e-6)
+	}
+}
+
+func StartPersist(interval int) {
+	t1 := time.NewTicker(time.Duration(interval) * time.Second)
+	for {
+		<-t1.C
+
+		err := Persist("normal")
+		if err != nil {
+			logger.Error("Persist err:", err)
+		}
+		//logger.Infof("clean %+v, took %.2f ms\n", cleanRet, float64(time.Since(start).Nanoseconds())*1e-6)
+	}
 }
 
 func Rebuild(persistenceDir string, concurrency int) {
@@ -82,7 +123,8 @@ func RebuildFromDisk(indexFileDir string, concurrency int) error {
 	return nil
 }
 
-func Persist(mode string, indexFileDir string) error {
+func Persist(mode string) error {
+	indexFileDir := Config.PersistDir
 	if mode == "end" {
 		semaPermanence.Acquire()
 		defer semaPermanence.Release()

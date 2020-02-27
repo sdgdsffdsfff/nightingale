@@ -56,18 +56,11 @@ func main() {
 	cfg := config.Config
 
 	tlogger.Init(cfg.Logger)
-
-	cache.InitDB()
+	cache.InitDB(cfg.Cache)
 	identity.Init(cfg.Identity)
-
-	cache.Rebuild(cfg.PersistDir, cfg.RebuildWorker)
-
-	go cron.StartCleaner(cfg.CleanInterval, cfg.CacheDuration)
-	go cron.StartPersist(cfg.PersistInterval, cfg.PersistDir)
-	go cron.Statstic()
-
 	report.Init(cfg.Report, "monapi")
 
+	go cron.Statstic()
 	go rpc.Start()
 
 	r := gin.New()

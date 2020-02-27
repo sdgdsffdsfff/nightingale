@@ -1,9 +1,8 @@
-package cron
+package stra
 
 import (
 	"fmt"
 	"math/rand"
-	"sync/atomic"
 	"time"
 
 	"github.com/toolkits/pkg/logger"
@@ -11,27 +10,35 @@ import (
 
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/judge/cache"
-	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	"github.com/didi/nightingale/src/toolkits/report"
 )
+
+type StrategySection struct {
+	PartitionApi   string `yaml:"partitionApi"`
+	Timeout        int    `yaml:"timeout"`
+	Token          string `yaml:"token"`
+	UpdateInterval int    `yaml:"updateInterval"`
+	IndexInterval  int    `yaml:"indexInterval"`
+	ReportInterval int    `yaml:"reportInterval"`
+}
 
 type StrasResp struct {
 	Data []*model.Stra `json:"dat"`
 	Err  string        `json:"err"`
 }
 
-func GetStrategy() {
-	t1 := time.NewTicker(time.Duration(config.Config.Strategy.UpdateInterval) * time.Millisecond)
-	getStrategy(config.Config.Strategy)
+func GetStrategy(cfg StrategySection) {
+	t1 := time.NewTicker(time.Duration(cfg.UpdateInterval) * time.Millisecond)
+	getStrategy(cfg)
 	for {
 		<-t1.C
-		getStrategy(config.Config.Strategy)
+		getStrategy(cfg)
 	}
 }
 
-func getStrategy(opts config.StrategySection) {
+func getStrategy(opts StrategySection) {
 	addrs := address.GetHTTPAddresses("monapi")
 	if len(addrs) == 0 {
 		logger.Error("empty config addr")
@@ -59,7 +66,6 @@ func getStrategy(opts config.StrategySection) {
 		}
 	}
 	for _, stra := range resp.Data {
-		atomic.AddInt64(&config.Stra, 1)
 		if len(stra.Exprs) < 1 {
 			logger.Warningf("strategy:%v exprs < 1", stra)
 			continue

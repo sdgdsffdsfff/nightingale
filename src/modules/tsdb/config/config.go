@@ -5,6 +5,13 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
+	"github.com/didi/nightingale/src/modules/tsdb/cache"
+	"github.com/didi/nightingale/src/modules/tsdb/index"
+	"github.com/didi/nightingale/src/modules/tsdb/migrate"
+	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
+	"github.com/didi/nightingale/src/toolkits/logger"
+
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
@@ -15,48 +22,18 @@ type File struct {
 }
 
 type ConfYaml struct {
-	Http           *HttpSection    `yaml:"http"`
-	Rpc            *RpcSection     `yaml:"rpc"`
-	RRD            *RRDSection     `yaml:"rrd"`
-	Logger         *LoggerSection  `yaml:"logger"`
-	Migrate        *MigrateSection `yaml:"migrate"`
-	Index          *IndexSection   `yaml:"index"`
-	Cache          *CacheSection   `yaml:"cache"`
-	CallTimeout    int             `yaml:"callTimeout"`
-	IOWorkerNum    int             `yaml:"ioWorkerNum"`
-	FirstBytesSize int             `yaml:"firstBytesSize"`
-	PushUrl        string          `yaml:"pushUrl"`
-}
-
-type CacheSection struct {
-	SpanInSeconds    int `yaml:"spanInSeconds"`
-	NumOfChunks      int `yaml:"numOfChunks"`
-	ExpiresInMinutes int `yaml:"expiresInMinutes"`
-	DoCleanInMinutes int `yaml:"doCleanInMinutes"`
-	FlushDiskStepMs  int `yaml:"flushDiskStepMs"`
-}
-
-type IndexSection struct {
-	ActiveDuration  int64    `yaml:"activeDuration"`  //内存索引保留时间
-	RebuildInterval int64    `yaml:"rebuildInterval"` //索引重建周期
-	Addrs           []string `yaml:"addrs"`
-	MaxConns        int      `yaml:"maxConns"`
-	MaxIdle         int      `yaml:"maxIdle"`
-	ConnTimeout     int      `yaml:"connTimeout"`
-	CallTimeout     int      `yaml:"callTimeout"`
-}
-
-type MigrateSection struct {
-	Batch       int               `yaml:"batch"`
-	Concurrency int               `yaml:"concurrency"` //number of multiple worker per node
-	Enabled     bool              `yaml:"enabled"`
-	Replicas    int               `yaml:"replicas"`
-	OldCluster  map[string]string `yaml:"oldCluster"`
-	NewCluster  map[string]string `yaml:"newCluster"`
-	MaxConns    int               `yaml:"maxConns"`
-	MaxIdle     int               `yaml:"maxIdle"`
-	ConnTimeout int               `yaml:"connTimeout"`
-	CallTimeout int               `yaml:"callTimeout"`
+	Http           *HttpSection           `yaml:"http"`
+	Rpc            *RpcSection            `yaml:"rpc"`
+	RRD            rrdtool.RRDSection     `yaml:"rrd"`
+	Logger         logger.LoggerSection   `yaml:"logger"`
+	Migrate        migrate.MigrateSection `yaml:"migrate"`
+	Index          index.IndexSection     `yaml:"index"`
+	RpcClient      rpc.RpcClientSection   `yaml:"rpcClient"`
+	Cache          cache.CacheSection     `yaml:"cache"`
+	CallTimeout    int                    `yaml:"callTimeout"`
+	IOWorkerNum    int                    `yaml:"ioWorkerNum"`
+	FirstBytesSize int                    `yaml:"firstBytesSize"`
+	PushUrl        string                 `yaml:"pushUrl"`
 }
 
 type HttpSection struct {
@@ -65,21 +42,6 @@ type HttpSection struct {
 
 type RpcSection struct {
 	Enabled bool `yaml:"enabled"`
-}
-
-type RRDSection struct {
-	Enabled     bool        `yaml:"enabled"`
-	Storage     string      `yaml:"storage"`
-	Batch       int         `yaml:"batch"`
-	Concurrency int         `yaml:"concurrency"`
-	Wait        int         `yaml:"wait"`
-	RRA         map[int]int `yaml:"rra"`
-}
-
-type LoggerSection struct {
-	Dir       string `yaml:"dir"`
-	Level     string `yaml:"level"`
-	KeepHours uint   `yaml:"keepHours"`
 }
 
 var (
@@ -147,10 +109,13 @@ func Parse(conf string) error {
 	viper.SetDefault("index", map[string]int{
 		"activeDuration":  90000, //索引最大的保留时间，超过此数值，索引不会被重建，默认是1天+1小时
 		"rebuildInterval": 86400, //重建索引的周期，单位为秒，默认是1天
-		"maxConns":        320,   //查询和推送数据的并发个数
-		"maxIdle":         320,   //建立的连接池的最大空闲数
-		"connTimeout":     1000,  //链接超时时间，单位毫秒
-		"callTimeout":     3000,  //访问超时时间，单位毫秒
+	})
+
+	viper.SetDefault("rpcClient", map[string]int{
+		"maxConns":    320,  //查询和推送数据的并发个数
+		"maxIdle":     320,  //建立的连接池的最大空闲数
+		"connTimeout": 1000, //链接超时时间，单位毫秒
+		"callTimeout": 3000, //访问超时时间，单位毫秒
 	})
 
 	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")

@@ -7,7 +7,6 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/tsdb/cache"
-	"github.com/didi/nightingale/src/modules/tsdb/chunk"
 	"github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/modules/tsdb/index"
 	"github.com/didi/nightingale/src/modules/tsdb/migrate"
@@ -163,32 +162,30 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 
 		itemEndTs := cachePoints[cachePointsSize-1].Timestamp
 		itemIdx := 0 //时间戳游标
-		if dsType == config.GAUGE {
-			for cacheTs <= itemEndTs {
-				vals := dataobj.JsonFloat(0.0)
-				cnt := 0
+		for cacheTs <= itemEndTs {
+			vals := dataobj.JsonFloat(0.0)
+			cnt := 0
 
-				for ; itemIdx < cachePointsSize; itemIdx += 1 {
-					// 依赖: cache的数据按照时间升序排列
-					if cachePoints[itemIdx].Timestamp > cacheTs { //超过一个step范围，跳出去
-						break
-					}
-					if isNumber(cachePoints[itemIdx].Value) {
-						vals += dataobj.JsonFloat(cachePoints[itemIdx].Value)
-						cnt += 1
-					}
+			for ; itemIdx < cachePointsSize; itemIdx += 1 {
+				// 依赖: cache的数据按照时间升序排列
+				if cachePoints[itemIdx].Timestamp > cacheTs { //超过一个step范围，跳出去
+					break
 				}
-
-				//cache内多个点合成一个点
-				if cnt > 0 {
-					val = vals / dataobj.JsonFloat(cnt)
-				} else {
-					val = dataobj.JsonFloat(math.NaN())
+				if isNumber(cachePoints[itemIdx].Value) {
+					vals += dataobj.JsonFloat(cachePoints[itemIdx].Value)
+					cnt += 1
 				}
-
-				dataPoints = append(dataPoints, &dataobj.RRDData{Timestamp: cacheTs, Value: val})
-				cacheTs += int64(step)
 			}
+
+			//cache内多个点合成一个点
+			if cnt > 0 {
+				val = vals / dataobj.JsonFloat(cnt)
+			} else {
+				val = dataobj.JsonFloat(math.NaN())
+			}
+
+			dataPoints = append(dataPoints, &dataobj.RRDData{Timestamp: cacheTs, Value: val})
+			cacheTs += int64(step)
 		}
 		cacheSize := len(dataPoints)
 
@@ -242,9 +239,7 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 		mergedSize := len(merged)
 		// fmt result
 		retSize := int((endTs - startTs) / int64(step))
-		if dsType == config.GAUGE {
-			retSize += 1
-		}
+		retSize += 1
 		ret := make([]*dataobj.RRDData, retSize, retSize)
 		mergedIdx := 0
 		ts = startTs - startTs%int64(step)
@@ -367,7 +362,7 @@ _RETURN_OK:
 func (g *Tsdb) GetRRD(param dataobj.RRDFileQuery, resp *dataobj.RRDFileResp) (err error) {
 	go func() { //异步更新flag
 		for _, f := range param.Files {
-			err := cache.Caches.SetFlag(str.GetKey(f.Filename), config.ITEM_TO_SEND)
+			err := cache.Caches.SetFlag(str.GetKey(f.Filename), rrdtool.ITEM_TO_SEND)
 			if err != nil {
 				logger.Errorf("key:%v file:%s set flag error:%v", f.Key, f.Filename, err)
 			}
@@ -408,12 +403,12 @@ func getRRD(f dataobj.RRDFile, worker chan struct{}, dataChan chan *dataobj.File
 	//将内存中的数据落盘
 	key := str.GetKey(f.Filename)
 	if c, exists := cache.Caches.GetCurrentChunk(key); exists {
-		chunk.ChunksSlots.Push(key, c)
+		cache.ChunksSlots.Push(key, c)
 	}
 
-	chunks, exists := chunk.ChunksSlots.GetChunks(key)
+	chunks, exists := cache.ChunksSlots.GetChunks(key)
 	if exists {
-		m := make(map[interface{}][]*chunk.Chunk)
+		m := make(map[interface{}][]*cache.Chunk)
 		m[key] = chunks
 		rrdtool.FlushRRD(m)
 	}

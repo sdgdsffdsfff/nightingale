@@ -1,15 +1,34 @@
-package cron
+package index
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/toolkits/pkg/logger"
 
 	"github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/toolkits/report"
 )
+
+var IndexList IndexAddrs
+
+type IndexAddrs struct {
+	sync.RWMutex
+	Data []string
+}
+
+func (i *IndexAddrs) Set(addrs []string) {
+	i.Lock()
+	defer i.Unlock()
+	i.Data = addrs
+}
+
+func (i *IndexAddrs) Get() []string {
+	i.RLock()
+	defer i.RUnlock()
+	return i.Data
+}
 
 func GetIndexLoop() {
 	t1 := time.NewTicker(time.Duration(9) * time.Second)
@@ -17,7 +36,7 @@ func GetIndexLoop() {
 	for {
 		<-t1.C
 		GetIndex()
-		ReNewPools()
+		rpc.ReNewPools(IndexList.Get())
 	}
 }
 
@@ -33,11 +52,6 @@ func GetIndex() {
 		activeIndexs = append(activeIndexs, fmt.Sprintf("%s:%s", instance.Identity, instance.RPCPort))
 	}
 
-	config.IndexAddrs.Set(activeIndexs)
-
+	IndexList.Set(activeIndexs)
 	return
-}
-
-func ReNewPools() {
-	rpc.IndexConnPools.UpdatePools(config.IndexAddrs.Get())
 }

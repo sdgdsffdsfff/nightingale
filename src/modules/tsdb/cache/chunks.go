@@ -1,10 +1,8 @@
-package chunk
+package cache
 
 import (
 	"fmt"
 	"sync"
-
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -25,7 +23,7 @@ func NewChunks(numOfChunks int) *CS {
 
 func (cs *CS) Push(seriesID interface{}, ts int64, value float64) error {
 	//找到当前chunk的起始时间
-	t0 := uint32(ts - (ts % int64(config.Config.Cache.SpanInSeconds)))
+	t0 := uint32(ts - (ts % int64(Config.SpanInSeconds)))
 
 	// 尚无chunk
 	if len(cs.Chunks) == 0 {
@@ -59,12 +57,12 @@ func (cs *CS) Push(seriesID interface{}, ts int64, value float64) error {
 
 	// 超过chunks限制, pos回绕到0
 	cs.CurrentChunkPos++
-	if cs.CurrentChunkPos >= int(config.Config.Cache.NumOfChunks) {
+	if cs.CurrentChunkPos >= int(Config.NumOfChunks) {
 		cs.CurrentChunkPos = 0
 	}
 
 	// chunks未满, 直接append即可
-	if len(cs.Chunks) < int(config.Config.Cache.NumOfChunks) {
+	if len(cs.Chunks) < int(Config.NumOfChunks) {
 		c := NewChunk(uint32(t0))
 		c.FirstTs = uint32(ts)
 		cs.Chunks = append(cs.Chunks, c)
@@ -99,7 +97,7 @@ func (cs *CS) Get(from, to int64) []Iter {
 
 	// from 超出最新chunk可能达到的最新点, 这种case不应该发生
 	newestChunk := cs.GetChunk(cs.CurrentChunkPos)
-	if from >= int64(newestChunk.T0)+int64(config.Config.Cache.SpanInSeconds) {
+	if from >= int64(newestChunk.T0)+int64(Config.SpanInSeconds) {
 		return nil
 	}
 
@@ -123,7 +121,7 @@ func (cs *CS) Get(from, to int64) []Iter {
 	}
 
 	// 找from所在的chunk
-	for from >= int64(oldestChunk.T0)+int64(config.Config.Cache.SpanInSeconds) {
+	for from >= int64(oldestChunk.T0)+int64(Config.SpanInSeconds) {
 		oldestPos++
 		if oldestPos >= len(cs.Chunks) {
 			oldestPos = 0

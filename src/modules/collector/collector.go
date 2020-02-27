@@ -83,7 +83,7 @@ func main() {
 
 	//日志采集
 	worker.Init(config.Config.Worker)
-	go worker.UpdateConfigsLoop() // step2, step1和step2有顺序依赖
+	go worker.UpdateConfigsLoop()
 	go worker.PusherStart()
 	go worker.Zeroize()
 

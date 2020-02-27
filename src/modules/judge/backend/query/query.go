@@ -10,7 +10,6 @@ import (
 	"github.com/toolkits/pkg/net/httplib"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/str"
 )
@@ -114,8 +113,8 @@ func Xclude(request *IndexReq) ([]IndexData, error) {
 	)
 	perm := rand.Perm(len(addrs))
 	for i := range perm {
-		url := fmt.Sprintf("http://%s%s", addrs[perm[i]], config.Config.Query.IndexPath)
-		err := httplib.Post(url).JSONBodyQuiet([]IndexReq{*request}).SetTimeout(time.Duration(config.Config.Query.IndexCallTimeout) * time.Millisecond).ToJSON(&result)
+		url := fmt.Sprintf("http://%s%s", addrs[perm[i]], Config.IndexPath)
+		err := httplib.Post(url).JSONBodyQuiet([]IndexReq{*request}).SetTimeout(time.Duration(Config.IndexCallTimeout) * time.Millisecond).ToJSON(&result)
 		if err != nil {
 			logger.Warningf("index xclude failed, error:%v, req:%v", err, request)
 			continue

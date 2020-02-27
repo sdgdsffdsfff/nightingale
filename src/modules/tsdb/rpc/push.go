@@ -10,6 +10,7 @@ import (
 	"github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/modules/tsdb/index"
 	"github.com/didi/nightingale/src/modules/tsdb/migrate"
+	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
 	"github.com/didi/nightingale/src/toolkits/str"
 
@@ -63,7 +64,7 @@ func handleItems(items []*dataobj.TsdbItem) {
 
 		if config.Config.Migrate.Enabled {
 			//曲线要迁移到新的存储实例，将数据转发给新存储实例
-			if cache.Caches.GetFlag(item.Key) == config.ITEM_TO_SEND && items[i].From != dataobj.GRAPH { //转发数据
+			if cache.Caches.GetFlag(item.Key) == rrdtool.ITEM_TO_SEND && items[i].From != dataobj.GRAPH { //转发数据
 				migrate.Push2NewTsdbSendQueue(items[i])
 			} else {
 				rrdFile := utils.RrdFileName(config.Config.RRD.Storage, item.Key, items[i].DsType, items[i].Step)

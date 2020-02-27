@@ -1,4 +1,4 @@
-package cron
+package judge
 
 import (
 	"strings"
@@ -7,8 +7,6 @@ import (
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/judge/cache"
-	"github.com/didi/nightingale/src/modules/judge/config"
-	"github.com/didi/nightingale/src/modules/judge/judge"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
@@ -19,7 +17,7 @@ var nodataJob *semaphore.Semaphore
 func NodataJudge() {
 	nodataJob = semaphore.NewSemaphore(100)
 
-	t1 := time.NewTicker(time.Duration(config.Config.Strategy.UpdateInterval) * time.Millisecond)
+	t1 := time.NewTicker(time.Duration(9000) * time.Millisecond)
 	nodataJudge()
 	for {
 		<-t1.C
@@ -32,7 +30,7 @@ func nodataJudge() {
 	for _, stra := range stras {
 		//nodata处理
 		now := time.Now().Unix()
-		respData, err := judge.GetData(stra, stra.Exprs[0], nil, now, false)
+		respData, err := GetData(stra, stra.Exprs[0], nil, now, false)
 		if err != nil {
 			logger.Errorf("stra:%v get query data err:%v", stra, err)
 			//获取数据报错，直接出发nodata
@@ -50,7 +48,7 @@ func nodataJudge() {
 				nodataJob.Acquire()
 				go func(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string) {
 					defer nodataJob.Release()
-					judge.Judge(stra, exps, historyData, firstItem, now, history, info)
+					Judge(stra, exps, historyData, firstItem, now, history, info)
 				}(stra, stra.Exprs, []*dataobj.RRDData{}, judgeItem, now, []dataobj.History{}, "")
 			}
 			return
@@ -80,7 +78,7 @@ func nodataJudge() {
 			nodataJob.Acquire()
 			go func(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string) {
 				defer nodataJob.Release()
-				judge.Judge(stra, exps, historyData, firstItem, now, history, info)
+				Judge(stra, exps, historyData, firstItem, now, history, info)
 			}(stra, stra.Exprs, data.Values, judgeItem, now, []dataobj.History{}, "")
 		}
 	}

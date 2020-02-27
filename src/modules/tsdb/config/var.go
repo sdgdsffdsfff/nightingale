@@ -1,7 +1,5 @@
 package config
 
-import "sync"
-
 var (
 	PointIn          int64 = 0
 	PointInErr       int64 = 0
@@ -16,31 +14,4 @@ var (
 
 	ToOldTsdb int64 = 0
 	ToNewTsdb int64 = 0
-
-	IndexAddrs indexAddrs
 )
-
-type indexAddrs struct {
-	sync.RWMutex
-	Data []string
-}
-
-func (i *indexAddrs) Set(addrs []string) {
-	if len(Config.Index.Addrs) != 0 {
-		return
-	}
-
-	i.Lock()
-	defer i.Unlock()
-	i.Data = addrs
-}
-
-func (i *indexAddrs) Get() []string {
-	if len(Config.Index.Addrs) != 0 {
-		return Config.Index.Addrs
-	}
-
-	i.RLock()
-	defer i.RUnlock()
-	return i.Data
-}

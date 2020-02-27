@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 
+	"github.com/didi/nightingale/src/modules/index/cache"
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	"github.com/didi/nightingale/src/toolkits/logger"
@@ -16,26 +17,14 @@ import (
 )
 
 type ConfYaml struct {
-	CacheDuration   int                      `yaml:"cacheDuration"`
-	CleanInterval   int                      `yaml:"cleanInterval"`
-	PersistInterval int                      `yaml:"persistInterval"`
-	PersistDir      string                   `yaml:"persistDir"`
-	RebuildWorker   int                      `yaml:"rebuildWorker"`
-	BuildWorker     int                      `yaml:"buildWorker"`
-	DefaultStep     int                      `yaml:"defaultStep"`
-	PushUrl         string                   `yaml:"pushUrl"`
-	Logger          logger.LoggerSection     `yaml:"logger"`
-	HTTP            HTTPSection              `yaml:"http"`
-	RPC             RPCSection               `yaml:"rpc"`
-	Limit           LimitSection             `yaml:"limit"`
-	Identity        identity.IdentitySection `yaml:"identity"`
-	Report          report.ReportSection     `yaml:"report"`
-}
-
-type ReportSection struct {
-	Enabled  bool   `yaml:"enabled"`
-	Interval int    `yaml:"interval"`
-	Api      string `yaml:"api"`
+	Cache    cache.CacheSection       `yaml:"cache"`
+	PushUrl  string                   `yaml:"pushUrl"`
+	Logger   logger.LoggerSection     `yaml:"logger"`
+	HTTP     HTTPSection              `yaml:"http"`
+	RPC      RPCSection               `yaml:"rpc"`
+	Limit    LimitSection             `yaml:"limit"`
+	Identity identity.IdentitySection `yaml:"identity"`
+	Report   report.ReportSection     `yaml:"report"`
 }
 
 type LimitSection struct {
@@ -76,13 +65,7 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("cacheDuration", 90000)   //不活跃索引保留最大时长，单位秒，默认是1天+1小时，这里的时间，要大于tsdb模块的重建周期
-	viper.SetDefault("cleanInterval", 4500)    //清理周期，单位秒
-	viper.SetDefault("persistInterval", 900)   //数据落盘周期，单位秒
-	viper.SetDefault("persistDir", "./.index") //索引落盘目录
-	viper.SetDefault("rebuildWorker", 20)      //从磁盘读取所以的数据的并发个数
-	viper.SetDefault("buildWorker", 20)        //往内存中推索引的并发个数
-	viper.SetDefault("defaultStep", 60)        //系统监控指标默认周期，需要和collector模块中的上报周期一致
+	viper.SetDefault("cacheDuration", 90000) //不活跃索引保留最大时长，单位秒，默认是1天+1小时，这里的时间，要大于tsdb模块的重建周期
 
 	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
 
@@ -91,6 +74,14 @@ func Parse(conf string) error {
 
 	viper.SetDefault("limit", map[string]int{
 		"max_query": 1000000, //clude接口支持查询的最大曲线个数
+	})
+
+	viper.SetDefault("cache", map[string]interface{}{
+		"cacheDuration":   90000,
+		"cleanInterval":   4500,       //清理周期，单位秒
+		"persistInterval": 900,        //数据落盘周期，单位秒
+		"persistDir":      "./.index", //索引落盘目录
+		"rebuildWorker":   20,         //从磁盘读取所以的数据的并发个数
 	})
 
 	viper.SetDefault("report", map[string]interface{}{

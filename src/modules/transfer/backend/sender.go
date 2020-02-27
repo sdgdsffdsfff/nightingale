@@ -217,32 +217,13 @@ func convert2TsdbItem(d *dataobj.MetricValue) (*dataobj.TsdbItem, error) {
 		Tags:      d.Tags,
 		TagsMap:   d.TagsMap,
 		Step:      int(d.Step),
+		Heartbeat: int(d.Step) * 2,
+		DsType:    dataobj.GAUGE,
+		Min:       "U",
+		Max:       "U",
 	}
 
-	if item.Step < MinStep {
-		item.Step = MinStep
-	}
-	item.Heartbeat = item.Step * 2
-
-	if d.CounterType == dataobj.GAUGE {
-		item.DsType = dataobj.GAUGE
-		item.Min = "U"
-		item.Max = "U"
-	} else if d.CounterType == dataobj.COUNTER {
-		item.DsType = dataobj.COUNTER
-		item.Min = "0"
-		item.Max = "U"
-	} else if d.CounterType == dataobj.DERIVE {
-		item.DsType = dataobj.DERIVE
-		item.Min = "0"
-		item.Max = "U"
-	} else { //其他类型统一转为 GAUGE
-		item.DsType = dataobj.GAUGE
-		item.Min = "U"
-		item.Max = "U"
-	}
-
-	item.Timestamp = alignTs(item.Timestamp, int64(item.Step)) //item.Timestamp - item.Timestamp%int64(item.Step)
+	item.Timestamp = alignTs(item.Timestamp, int64(item.Step))
 
 	return item, nil
 }

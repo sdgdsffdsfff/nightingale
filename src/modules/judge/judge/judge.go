@@ -8,14 +8,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/judge/backend/query"
 	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
-	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/spaolacci/murmur3"
@@ -24,6 +22,9 @@ import (
 
 var (
 	bufferPool = sync.Pool{New: func() interface{} { return new(bytes.Buffer) }}
+
+	EVENT_ALERT   = "alert"
+	EVENT_RECOVER = "recovery"
 )
 
 func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem, now int64) {
@@ -59,7 +60,6 @@ func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem,
 }
 
 func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string) {
-	atomic.AddInt64(&config.JudgeRun, 1)
 
 	if len(exps) < 1 {
 		logger.Errorf("stra:%v exp is null", stra)
@@ -371,7 +371,7 @@ func GetReqs(stra *model.Stra, metric string, endpoints []string, now int64) ([]
 func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64, event *dataobj.Event) {
 	lastEvent, exists := cache.LastEvents.Get(event.ID)
 	if isTriggered {
-		event.EventType = config.EVENT_ALERT
+		event.EventType = EVENT_ALERT
 		if !exists || lastEvent.EventType[0] == 'r' {
 			sendEvent(event)
 			return
@@ -387,7 +387,7 @@ func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64
 	} else {
 		// 如果LastEvent是Problem，报OK，否则啥都不做
 		if exists && lastEvent.EventType[0] == 'a' {
-			event.EventType = config.EVENT_RECOVER
+			event.EventType = EVENT_RECOVER
 			sendEvent(event)
 		}
 	}

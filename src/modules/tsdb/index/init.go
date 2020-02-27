@@ -10,9 +10,19 @@ import (
 	"github.com/toolkits/pkg/logger"
 )
 
+type IndexSection struct {
+	ActiveDuration  int64 `yaml:"activeDuration"`  //内存索引保留时间
+	RebuildInterval int64 `yaml:"rebuildInterval"` //索引重建周期
+	MaxConns        int   `yaml:"maxConns"`
+	MaxIdle         int   `yaml:"maxIdle"`
+	ConnTimeout     int   `yaml:"connTimeout"`
+	CallTimeout     int   `yaml:"callTimeout"`
+}
+
 //重建索引全局锁
 var UpdateIndexToNSQLock = semaphore.NewSemaphore(1)
 var UpdateNSToNSQLock = semaphore.NewSemaphore(1)
+var Config IndexSection
 
 const INDEX_SHARD = 256
 
@@ -20,12 +30,14 @@ var IndexedItemCacheBigMap = make([]*IndexCacheBase, INDEX_SHARD)
 var UnIndexedItemCacheBigMap = make([]*IndexCacheBase, INDEX_SHARD)
 
 // 初始化索引功能模块
-func Init() {
+func Init(cfg IndexSection) {
+	Config = cfg
 	for i := 0; i < INDEX_SHARD; i++ {
 		IndexedItemCacheBigMap[i] = NewIndexCacheBase(DefaultMaxCacheSize)
 		UnIndexedItemCacheBigMap[i] = NewIndexCacheBase(DefaultMaxCacheSize)
 	}
 
+	go GetIndexLoop()
 	go StartIndexUpdateIncrTask()
 	go StartUpdateIndexTask()
 	logger.Info("index.Start ok")

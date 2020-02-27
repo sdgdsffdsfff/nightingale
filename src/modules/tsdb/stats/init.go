@@ -1,4 +1,4 @@
-package cron
+package stats
 
 import (
 	"bytes"
@@ -8,9 +8,24 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 
 	"github.com/toolkits/pkg/logger"
+)
+
+var (
+	PointIn          int64 = 0
+	PointInErr       int64 = 0
+	QueryCount       int64 = 0
+	QueryUnHit       int64 = 0
+	FlushRRDCount    int64 = 0
+	FlushRRDErrCount int64 = 0
+	PushIndex        int64 = 0
+	PushIncrIndex    int64 = 0
+	PushIndexErr     int64 = 0
+	OldIndex         int64 = 0
+
+	ToOldTsdb int64 = 0
+	ToNewTsdb int64 = 0
 )
 
 func Statstic() {
@@ -19,15 +34,15 @@ func Statstic() {
 	for {
 		<-t1.C
 
-		pointIn := atomic.SwapInt64(&config.PointIn, 0)
-		pointInErr := atomic.SwapInt64(&config.PointInErr, 0)
-		queryCount := atomic.SwapInt64(&config.QueryCount, 0)
-		flushRRDCount := atomic.SwapInt64(&config.FlushRRDCount, 0)
-		flushRRDErrCount := atomic.SwapInt64(&config.FlushRRDErrCount, 0)
-		pushIndex := atomic.SwapInt64(&config.PushIndex, 0)
-		pushIndexErr := atomic.SwapInt64(&config.PushIndexErr, 0)
-		pushIncrIndex := atomic.SwapInt64(&config.PushIncrIndex, 0)
-		oldIndex := atomic.SwapInt64(&config.OldIndex, 0)
+		pointIn := atomic.SwapInt64(&PointIn, 0)
+		pointInErr := atomic.SwapInt64(&PointInErr, 0)
+		queryCount := atomic.SwapInt64(&QueryCount, 0)
+		flushRRDCount := atomic.SwapInt64(&FlushRRDCount, 0)
+		flushRRDErrCount := atomic.SwapInt64(&FlushRRDErrCount, 0)
+		pushIndex := atomic.SwapInt64(&PushIndex, 0)
+		pushIndexErr := atomic.SwapInt64(&PushIndexErr, 0)
+		pushIncrIndex := atomic.SwapInt64(&PushIncrIndex, 0)
+		oldIndex := atomic.SwapInt64(&OldIndex, 0)
 
 		var items []dataobj.MetricValue
 		items = append(items, NewMetricValue("n9e.tsdb.point_in", pointIn))
@@ -65,7 +80,7 @@ func pushToMonitor(items []dataobj.MetricValue) {
 
 	bf := bytes.NewBuffer(bs)
 
-	resp, err := http.Post(config.GetCfgYml().PushUrl, "application/json", bf)
+	resp, err := http.Post("", "application/json", bf)
 	if err != nil {
 		logger.Error(err)
 		return
