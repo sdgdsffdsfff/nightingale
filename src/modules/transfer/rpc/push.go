@@ -6,7 +6,6 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/backend"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -34,11 +33,11 @@ func (t *Transfer) Push(args []*dataobj.MetricValue, reply *dataobj.TransferResp
 		items = append(items, v)
 	}
 
-	if Config.Tsdb.Enabled {
+	if backend.Config.Enabled {
 		backend.Push2TsdbSendQueue(items)
 	}
 
-	if Config.Judge.Enabled {
+	if backend.Config.Enabled {
 		backend.Push2JudgeSendQueue(items)
 	}
 	if reply.Invalid == 0 {

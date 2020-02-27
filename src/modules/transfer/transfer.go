@@ -54,7 +54,7 @@ func main() {
 	cfg := config.Config
 
 	tlogger.Init(cfg.Logger)
-	backend.Init()
+	backend.Init(cfg.Backend)
 	cron.Init()
 
 	go rpc.Start()

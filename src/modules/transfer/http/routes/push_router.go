@@ -5,7 +5,6 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/backend"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
 	"github.com/didi/nightingale/src/toolkits/http/render"
 
 	"github.com/gin-gonic/gin"
@@ -35,11 +34,11 @@ func PushData(c *gin.Context) {
 		metricValues = append(metricValues, v)
 	}
 
-	if Config.Tsdb.Enabled {
+	if backend.Config.Enabled {
 		backend.Push2TsdbSendQueue(metricValues)
 	}
 
-	if Config.Judge.Enabled {
+	if backend.Config.Enabled {
 		backend.Push2JudgeSendQueue(metricValues)
 	}
 

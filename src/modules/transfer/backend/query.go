@@ -10,7 +10,6 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/calc"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
 
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/pool"
@@ -307,7 +306,7 @@ func selectPoolByPK(pk string) ([]Pool, error) {
 		return []Pool{}, err
 	}
 
-	nodeAddrs, found := Config.Tsdb.ClusterList[node]
+	nodeAddrs, found := Config.ClusterList[node]
 	if !found {
 		return []Pool{}, errors.New("node not found")
 	}

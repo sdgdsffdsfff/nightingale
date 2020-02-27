@@ -3,15 +3,14 @@ package backend
 import (
 	"time"
 
-	"github.com/toolkits/pkg/concurrent/semaphore"
-	"github.com/toolkits/pkg/container/list"
-	"github.com/toolkits/pkg/logger"
-
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/transfer/cache"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
 	"github.com/didi/nightingale/src/toolkits/str"
+
+	"github.com/toolkits/pkg/concurrent/semaphore"
+	"github.com/toolkits/pkg/container/list"
+	"github.com/toolkits/pkg/logger"
 )
 
 // send
@@ -26,18 +25,18 @@ var (
 
 func startSendTasks() {
 
-	tsdbConcurrent := Config.Tsdb.WorkerNum
+	tsdbConcurrent := Config.WorkerNum
 	if tsdbConcurrent < 1 {
 		tsdbConcurrent = 1
 	}
 
-	judgeConcurrent := Config.Judge.WorkerNum
+	judgeConcurrent := Config.WorkerNum
 	if judgeConcurrent < 1 {
 		judgeConcurrent = 1
 	}
 
-	if Config.Tsdb.Enabled {
-		for node, item := range Config.Tsdb.ClusterList {
+	if Config.Enabled {
+		for node, item := range Config.ClusterList {
 			for _, addr := range item.Addrs {
 				queue := TsdbQueues[node+addr]
 				go Send2TsdbTask(queue, node, addr, tsdbConcurrent)
@@ -45,7 +44,7 @@ func startSendTasks() {
 		}
 	}
 
-	if Config.Judge.Enabled {
+	if Config.Enabled {
 		judgeQueue := JudgeQueues.GetAll()
 		for instance, queue := range judgeQueue {
 			go Send2JudgeTask(queue, instance, judgeConcurrent)
@@ -54,7 +53,7 @@ func startSendTasks() {
 }
 
 func Send2TsdbTask(Q *list.SafeListLimited, node string, addr string, concurrent int) {
-	batch := Config.Tsdb.Batch // 一次发送,最多batch条数据
+	batch := Config.Batch // 一次发送,最多batch条数据
 	Q = TsdbQueues[node+addr]
 
 	sema := semaphore.NewSemaphore(concurrent)
@@ -117,7 +116,7 @@ func Push2TsdbSendQueue(items []*dataobj.MetricValue) {
 			continue
 		}
 
-		cnode := Config.Tsdb.ClusterList[node]
+		cnode := Config.ClusterList[node]
 		errCnt := 0
 		for _, addr := range cnode.Addrs {
 			Q := TsdbQueues[node+addr]
@@ -134,7 +133,7 @@ func Push2TsdbSendQueue(items []*dataobj.MetricValue) {
 }
 
 func Send2JudgeTask(Q *list.SafeListLimited, addr string, concurrent int) {
-	batch := Config.Judge.Batch
+	batch := Config.Batch
 	sema := semaphore.NewSemaphore(concurrent)
 
 	for {

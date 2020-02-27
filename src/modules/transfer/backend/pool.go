@@ -10,8 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/transfer/config"
-
 	"github.com/toolkits/pkg/pool"
 	"github.com/ugorji/go/codec"
 )
@@ -73,8 +71,8 @@ func (cp *ConnPools) Update(cluster []string) {
 	cp.Lock()
 	defer cp.Unlock()
 
-	maxConns := config.Config.Judge.MaxConns
-	maxIdle := config.Config.Judge.MaxIdle
+	maxConns := Config.MaxConns
+	maxIdle := Config.MaxIdle
 	ct := time.Duration(cp.ConnTimeout) * time.Millisecond
 	newCluster := make(map[string]struct{})
 	for _, address := range cluster {
