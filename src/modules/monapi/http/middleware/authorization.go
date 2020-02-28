@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"encoding/base64"
-	"fmt"
 	"strings"
 
 	"github.com/didi/nightingale/src/model"
@@ -14,16 +13,14 @@ import (
 
 func Logined() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("in Logined()")
 		username := cookieUser(c)
 		if username == "" {
-			fmt.Println("in Logined(): after cookieUser: username == blank")
 			username = headerUser(c)
-			fmt.Println("in Logined(): after headerUser: username=", username)
 		}
 
 		if username == "" {
 			errors.Bomb("unauthorized")
+			c.Abort()
 		}
 
 		c.Set("username", username)
