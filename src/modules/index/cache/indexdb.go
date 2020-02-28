@@ -229,7 +229,7 @@ func ReadIndexFromFile(indexDir, endpoint string) (*MetricIndexMap, error) {
 
 func IndexList() []*model.Instance {
 	var instances []*model.Instance
-	activeIndexs := report.GetAlive("index", "monapi")
+	activeIndexs, _ := report.GetAlive("index", "monapi")
 	for _, instance := range activeIndexs {
 		if instance.Identity != identity.Identity {
 			instances = append(instances, instance)

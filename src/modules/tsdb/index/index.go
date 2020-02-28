@@ -44,9 +44,9 @@ func GetIndexLoop() {
 }
 
 func GetIndex() {
-	instances := report.GetAlive("index", "monapi")
-	if len(instances) < 1 {
-		logger.Warningf("instances is null")
+	instances, err := report.GetAlive("index", "monapi")
+	if err != nil {
+		logger.Warningf("get index list err:%v", err)
 		return
 	}
 
