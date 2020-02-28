@@ -11,11 +11,6 @@ sys:
   # interval in second
   timeout: 1000
   interval: 20
-  syncCollect: true
-  # in second
-  syncInterval: 10
-  # in ms
-  syncTimeout: 1000
   ifacePrefix:
     - eth
     - em
