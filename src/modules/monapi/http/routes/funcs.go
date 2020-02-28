@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gin-contrib/sessions"
@@ -146,7 +147,16 @@ func cookieUsername(c *gin.Context) string {
 }
 
 func loginUsername(c *gin.Context) string {
-	username, _ := c.Get("username")
+	username, has := c.Get("username")
+	fmt.Printf("loginUsername: %v, %v", username, has)
+	if !has {
+		return ""
+	}
+
+	if username == nil {
+		return ""
+	}
+
 	return username.(string)
 }
 
