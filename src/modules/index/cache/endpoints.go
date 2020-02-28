@@ -47,12 +47,12 @@ func reportEndpoint(endpoints []interface{}) {
 		var body reportRes
 		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(3 * time.Second).ToJSON(&body)
 		if err != nil {
-			logger.Errorf("curl %s fail: %v", url, err)
+			logger.Warningf("curl %s fail: %v", url, err)
 			continue
 		}
 
 		if body.Err != "" {
-			logger.Error(body.Err)
+			logger.Warningf("curl %s fail: %s", url, body.Err)
 			continue
 		}
 

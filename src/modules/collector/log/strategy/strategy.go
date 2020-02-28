@@ -2,7 +2,6 @@ package strategy
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/didi/nightingale/src/modules/collector/stra"
 
@@ -19,15 +18,14 @@ func init() {
 }
 
 func Update() error {
-	markTms := time.Now().Unix()
 	strategys := stra.GetLogCollects()
 
 	err := UpdateGlobalStrategy(strategys)
 	if err != nil {
-		logger.Errorf("[%d]Update Strategy cache error ! [msg:%v]", err)
+		logger.Errorf("Update Strategy cache error ! [msg:%v]", err)
 		return err
 	}
-	logger.Infof("[%d]Update Strategy end", markTms)
+	logger.Infof("Update Strategy end")
 	return nil
 }
 

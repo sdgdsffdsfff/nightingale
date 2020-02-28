@@ -95,7 +95,7 @@ func Send2TsdbTask(Q *list.SafeListLimited, node string, addr string, concurrent
 			if !sendOk {
 				logger.Errorf("send %v to tsdb %s:%s fail: %v", tsdbItems, node, addr, err)
 			} else {
-				logger.Infof("send to tsdb %s:%s ok", node, addr)
+				logger.Debugf("send to tsdb %s:%s ok", node, addr)
 			}
 		}(addr, tsdbItems, count)
 	}
@@ -106,13 +106,13 @@ func Push2TsdbSendQueue(items []*dataobj.MetricValue) {
 	for _, item := range items {
 		tsdbItem, err := convert2TsdbItem(item)
 		if err != nil {
-			logger.Error("E:", err)
+			logger.Warning("E:", err)
 			continue
 		}
 
 		node, err := TsdbNodeRing.GetNode(item.PK())
 		if err != nil {
-			logger.Error("E:", err)
+			logger.Warning("E:", err)
 			continue
 		}
 
@@ -147,7 +147,7 @@ func Send2JudgeTask(Q *list.SafeListLimited, addr string, concurrent int) {
 		judgeItems := make([]*dataobj.JudgeItem, count)
 		for i := 0; i < count; i++ {
 			judgeItems[i] = items[i].(*dataobj.JudgeItem)
-			logger.Info("send to judge: ", judgeItems[i])
+			logger.Debug("send to judge: ", judgeItems[i])
 		}
 
 		sema.Acquire()

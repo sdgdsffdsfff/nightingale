@@ -36,7 +36,7 @@ func push(args []*dataobj.IndexModel, reply *dataobj.IndexResp) {
 	reply.Invalid = 0
 	now := time.Now().Unix()
 	for _, item := range args {
-		logger.Debugf("<index %v", item)
+		logger.Debugf("<---index %v", item)
 		cache.IndexDB.Push(*item, now)
 	}
 

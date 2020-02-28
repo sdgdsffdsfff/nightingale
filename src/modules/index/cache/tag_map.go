@@ -2,8 +2,6 @@ package cache
 
 import (
 	"sync"
-
-	"github.com/toolkits/pkg/logger"
 )
 
 //TagKeys
@@ -72,8 +70,6 @@ func (t *TagkvIndex) Clean(now, timeDuration int64) {
 		for v, ts := range vm {
 			if now-ts > timeDuration {
 				delete(t.Tagkv[k], v)
-				logger.Errorf("[clean index tagkv] tagk:%s %s now:%d time duration:%d updated:%d",
-					k, v, now, timeDuration, ts)
 			}
 		}
 		if len(t.Tagkv[k]) == 0 {

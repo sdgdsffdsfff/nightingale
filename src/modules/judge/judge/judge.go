@@ -62,7 +62,7 @@ func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem,
 func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string) {
 
 	if len(exps) < 1 {
-		logger.Errorf("stra:%v exp is null", stra)
+		logger.Warningf("stra:%v exp is null", stra)
 		return
 	}
 	exp := exps[0]
@@ -160,7 +160,7 @@ func judgeItemWithStrategy(stra *model.Stra, historyData []*dataobj.RRDData, exp
 
 	straParam := []interface{}{}
 	if firstItem.Step == 0 {
-		logger.Errorf("wrond step:%v", firstItem)
+		logger.Errorf("wrong step:%v", firstItem)
 		return
 	}
 	straParam = append(straParam, stra.AlertDur/int(firstItem.Step))

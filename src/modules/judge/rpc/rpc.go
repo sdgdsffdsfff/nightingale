@@ -42,7 +42,7 @@ func Start() {
 		for {
 			conn, err := l.Accept()
 			if err != nil {
-				logger.Warning("listener accept error: ", err)
+				logger.Error("listener accept error: ", err)
 				time.Sleep(time.Duration(100) * time.Millisecond)
 				continue
 			}

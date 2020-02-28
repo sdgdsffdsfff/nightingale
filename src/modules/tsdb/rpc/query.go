@@ -60,7 +60,7 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 	startTs := param.Start - param.Start%int64(step)
 	endTs := param.End - param.End%int64(step) + int64(step)
 	if endTs-startTs-int64(step) < 1 {
-		logger.Warning("time duration error", param)
+		logger.Debug("time duration error", param)
 		return nil
 	}
 	nowTs := time.Now().Unix()
@@ -70,7 +70,7 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 	if endTs > cacheFirstTs {                        //最后的时间点在cache范围内
 		iters, err := cache.Caches.Get(seriesID, startTs, endTs)
 		if err != nil {
-			logger.Warningf("get %v cache by %v err:%v", seriesID, param, err)
+			logger.Debug("get %v cache by %v err:%v", seriesID, param, err)
 			atomic.AddInt64(&config.QueryUnHit, 1)
 			return nil
 		}
