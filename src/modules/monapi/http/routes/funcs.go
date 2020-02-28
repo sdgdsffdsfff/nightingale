@@ -146,7 +146,15 @@ func cookieUsername(c *gin.Context) string {
 }
 
 func loginUsername(c *gin.Context) string {
-	username, _ := c.Get("username")
+	username, has := c.Get("username")
+	if !has {
+		return ""
+	}
+
+	if username == nil {
+		return ""
+	}
+
 	return username.(string)
 }
 
