@@ -13,5 +13,5 @@ create table `instance` (
   `remark` 	  text,
   `ts`        int unsigned not null,
   primary key (`id`),
-  key(`mod`,`identity`,`rpc_port`,`http_port`)
+  key(`module`,`identity`,`rpc_port`,`http_port`)
 ) engine=innodb default charset=utf8;
