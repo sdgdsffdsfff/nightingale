@@ -21,7 +21,7 @@ func (j *Judge) Send(items []*dataobj.JudgeItem, resp *dataobj.SimpleRpcResponse
 	now := time.Now().Unix()
 	for _, item := range items {
 		pk := item.MD5()
-		logger.Info(0, "recv-->", item)
+		logger.Debug("recv-->", item)
 		judge.ToJudge(cache.HistoryBigMap[pk[0:2]], pk, item, now)
 	}
 

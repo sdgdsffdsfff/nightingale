@@ -58,8 +58,8 @@ func main() {
 	tlogger.Init(cfg.Logger)
 	cache.InitDB(cfg.Cache)
 	identity.Init(cfg.Identity)
-	report.Init(cfg.Report, "monapi")
 
+	go report.Init(cfg.Report, "monapi")
 	go cron.Statstic()
 	go rpc.Start()
 

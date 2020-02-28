@@ -65,8 +65,6 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("cacheDuration", 90000) //不活跃索引保留最大时长，单位秒，默认是1天+1小时，这里的时间，要大于tsdb模块的重建周期
-
 	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
 
 	viper.SetDefault("http.enabled", true)

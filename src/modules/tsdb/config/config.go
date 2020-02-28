@@ -70,8 +70,6 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("ioWorkerNum", 64) //同时落盘的io并发个数
-
 	viper.SetDefault("http.enabled", true)
 	viper.SetDefault("rpc.enabled", true)
 
@@ -80,6 +78,7 @@ func Parse(conf string) error {
 		"wait":        100, //每次从待落盘队列中间等待间隔，单位毫秒
 		"batch":       100, //每次从待落盘队列中获取数据的个数
 		"concurrency": 20,  //每次从待落盘队列中获取数据的个数
+		"ioWorkerNum": 64,  //同时落盘的io并发个数
 		"rra": map[int]int{ //假设原始点是 10s 一个点
 			1:    720,   // 存储720个原始点，则 10s一个点存2h
 			6:    11520, // 6点个归档为一个点，则 1min一个点存8d
