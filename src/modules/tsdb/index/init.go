@@ -20,8 +20,7 @@ type IndexSection struct {
 }
 
 //重建索引全局锁
-var UpdateIndexToNSQLock = semaphore.NewSemaphore(1)
-var UpdateNSToNSQLock = semaphore.NewSemaphore(1)
+var UpdateIndexLock = semaphore.NewSemaphore(1)
 var Config IndexSection
 
 const INDEX_SHARD = 256
