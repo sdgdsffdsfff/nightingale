@@ -244,12 +244,7 @@ func TagMatch(straTags []model.Tag, tag map[string]string) bool {
 					break
 				}
 			}
-		}
-		if !match {
-			return match
-		}
-
-		if stag.Topt == "!=" {
+		} else {
 			match = true
 			for _, v := range stag.Tval {
 				if tag[stag.Tkey] == v {
@@ -257,6 +252,10 @@ func TagMatch(straTags []model.Tag, tag map[string]string) bool {
 					return match
 				}
 			}
+		}
+
+		if !match {
+			return false
 		}
 	}
 	return true

@@ -28,20 +28,23 @@ func StartUpdateIndexTask() {
 	for {
 		<-t1.C
 
-		RebuildAllIndex()
+		RebuildAllIndex([]string{})
 	}
 }
 
-func RebuildAllIndex() error {
+func RebuildAllIndex(addrs []string) error {
+	if len(addrs) == 0 {
+		addrs = IndexList.Get()
+	}
 	//postTms := time.Now().Unix()
 	start := time.Now().Unix()
 	lastTs := start - Config.ActiveDuration
 	aggrNum := 200
 
-	if !UpdateIndexToNSQLock.TryAcquire() {
+	if !UpdateIndexLock.TryAcquire() {
 		return fmt.Errorf("RebuildAllIndex already Rebuiding..")
 	} else {
-		defer UpdateIndexToNSQLock.Release()
+		defer UpdateIndexLock.Release()
 		var pushCnt = 0
 		var oldCnt = 0
 		for idx, _ := range IndexedItemCacheBigMap {
@@ -71,7 +74,7 @@ func RebuildAllIndex() error {
 					semaUpdateIndexAll.Acquire()
 					go func(items []*dataobj.TsdbItem) {
 						defer semaUpdateIndexAll.Release()
-						rpc.Push2Index(rpc.ALLINDEX, items, IndexList.Get())
+						rpc.Push2Index(rpc.ALLINDEX, items, addrs)
 					}(tmpList)
 
 					i = 0
@@ -82,7 +85,7 @@ func RebuildAllIndex() error {
 				semaUpdateIndexAll.Acquire()
 				go func(items []*dataobj.TsdbItem) {
 					defer semaUpdateIndexAll.Release()
-					rpc.Push2Index(rpc.ALLINDEX, items, IndexList.Get())
+					rpc.Push2Index(rpc.ALLINDEX, items, addrs)
 				}(tmpList[:i])
 			}
 		}

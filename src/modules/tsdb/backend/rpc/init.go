@@ -21,6 +21,6 @@ func Init(cfg RpcClientSection, indexs []string) {
 		cfg.ConnTimeout, cfg.CallTimeout, indexs)
 }
 
-func ReNewPools(indexs []string) {
-	IndexConnPools.UpdatePools(indexs)
+func ReNewPools(indexs []string) []string {
+	return IndexConnPools.UpdatePools(indexs)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/toolkits/pkg/logger"
 )
 
-type EndpointIndexMap struct { // ns -> metrics
+type EndpointIndexMap struct {
 	sync.RWMutex
 	M map[string]*MetricIndexMap `json:"endpoint_index"` //map[endpoint]metricMap{map[metric]Index}
 }
@@ -22,6 +22,8 @@ func (e *EndpointIndexMap) Push(item dataobj.IndexModel, now int64) {
 
 	metricIndexMap, exists := e.GetMetricIndexMap(item.Endpoint)
 	if !exists {
+		NewEndpoints.PushFront(item.Endpoint)
+
 		metricIndexMap = &MetricIndexMap{Data: make(map[string]*MetricIndex)}
 		metricIndexMap.SetMetricIndex(metric, NewMetricIndex(item, counter, now))
 		e.SetMetricIndexMap(item.Endpoint, metricIndexMap)

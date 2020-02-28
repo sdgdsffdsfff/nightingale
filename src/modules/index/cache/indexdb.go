@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"pkg/container/list"
 	"time"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
@@ -28,6 +29,7 @@ type CacheSection struct {
 
 var IndexDB *EndpointIndexMap
 var Config CacheSection
+var NewEndpoints *list.SafeListLimited
 
 var semaPermanence = semaphore.NewSemaphore(1)
 
@@ -35,11 +37,13 @@ func InitDB(cfg CacheSection) {
 	Config = cfg
 
 	IndexDB = &EndpointIndexMap{M: make(map[string]*MetricIndexMap, 0)}
+	NewEndpoints = list.NewSafeListLimited(100000)
 
 	Rebuild(Config.PersistDir, Config.RebuildWorker)
 
 	go StartCleaner(Config.CleanInterval, Config.CacheDuration)
 	go StartPersist(Config.PersistInterval)
+	go ReportEndpoint()
 }
 
 func StartCleaner(interval int, cacheDuration int) {
