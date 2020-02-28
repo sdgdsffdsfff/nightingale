@@ -61,7 +61,7 @@ func main() {
 
 	r := gin.New()
 	routes.Config(r)
-	go http.Start(r, "judge", cfg.Logger.Level)
+	go http.Start(r, "transfer", cfg.Logger.Level)
 
 	ending()
 }

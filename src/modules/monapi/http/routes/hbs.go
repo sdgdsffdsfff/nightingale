@@ -13,14 +13,14 @@ import (
 func heartBeat(c *gin.Context) {
 	var rev model.Instance
 	errors.Dangerous(c.ShouldBind(&rev))
-	instance, err := model.GetInstanceBy(rev.Mod, rev.Identity, rev.RPCPort, rev.HTTPPort)
+	instance, err := model.GetInstanceBy(rev.Module, rev.Identity, rev.RPCPort, rev.HTTPPort)
 	errors.Dangerous(err)
 
 	now := time.Now().Unix()
 	if instance == nil {
 		instance = &model.Instance{
 			Identity: rev.Identity,
-			Mod:      rev.Mod,
+			Module:   rev.Module,
 			RPCPort:  rev.RPCPort,
 			HTTPPort: rev.HTTPPort,
 			TS:       now,

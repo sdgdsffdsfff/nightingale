@@ -6,7 +6,7 @@ use n9e_hbs;
 
 create table `instance` (
   `id`        int unsigned not null auto_increment,
-  `mod`       varchar(32) not null,  
+  `module`    varchar(32) not null,  
   `identity`  varchar(255) not null,
   `rpc_port`  varchar(16) not null,
   `http_port` varchar(16) not null,

@@ -4,7 +4,7 @@ import "time"
 
 type Instance struct {
 	Id       int64  `json:"id"`
-	Mod      string `json:"mod"`
+	Module   string `json:"module"`
 	Identity string `json:"identity"` //ip 或者 机器名
 	RPCPort  string `json:"rpc_port" xorm:"rpc_port"`
 	HTTPPort string `json:"http_port" xorm:"http_port"`
@@ -25,7 +25,7 @@ func (i *Instance) Update() error {
 
 func GetInstanceBy(mod, identity, rpcPort, httpPort string) (*Instance, error) {
 	var obj Instance
-	has, err := DB["hbs"].Where("mod=? and identity=? and rpc_port=? and http_port=?", identity, rpcPort, httpPort).Get(&obj)
+	has, err := DB["hbs"].Where("module=? and identity=? and rpc_port=? and http_port=?", identity, rpcPort, httpPort).Get(&obj)
 	if err != nil {
 		return nil, err
 	}
@@ -42,10 +42,11 @@ func GetAllInstances(mod string, alive int) ([]*Instance, error) {
 	var err error
 	now := time.Now().Unix()
 
+	ts := now - 60
 	if alive == 1 {
-		err = DB["hbs"].Where("mod=? and ts>?", mod, now-60).OrderBy("id").Find(&objs)
+		err = DB["hbs"].Where("module = ? and ts > ?", mod, ts).OrderBy("id").Find(&objs)
 	} else {
-		err = DB["hbs"].Where("mod=?", mod).OrderBy("id").Find(&objs)
+		err = DB["hbs"].Where("module = ?", mod).OrderBy("id").Find(&objs)
 	}
 	if err != nil {
 		return objs, err
