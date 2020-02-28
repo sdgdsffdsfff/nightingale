@@ -53,7 +53,8 @@ func (m *MetricIndex) Set(item dataobj.IndexModel, counter string, now int64) {
 
 type MetricIndexMap struct {
 	sync.RWMutex
-	Data map[string]*MetricIndex
+	Reported bool //用途：判断endpoint是否已成功上报给monapi
+	Data     map[string]*MetricIndex
 }
 
 func (m *MetricIndexMap) Clean(now, timeDuration int64, endpoint string) {
@@ -107,4 +108,16 @@ func (m *MetricIndexMap) GetMetrics() []string {
 		metrics = append(metrics, k)
 	}
 	return metrics
+}
+
+func (m *MetricIndexMap) SetReported() {
+	m.Lock()
+	defer m.Unlock()
+	m.Reported = true
+}
+
+func (m *MetricIndexMap) IsReported() bool {
+	m.RLock()
+	defer m.RUnlock()
+	return m.Reported
 }

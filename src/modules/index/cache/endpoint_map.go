@@ -22,11 +22,11 @@ func (e *EndpointIndexMap) Push(item dataobj.IndexModel, now int64) {
 
 	metricIndexMap, exists := e.GetMetricIndexMap(item.Endpoint)
 	if !exists {
-		NewEndpoints.PushFront(item.Endpoint)
-
 		metricIndexMap = &MetricIndexMap{Data: make(map[string]*MetricIndex)}
 		metricIndexMap.SetMetricIndex(metric, NewMetricIndex(item, counter, now))
 		e.SetMetricIndexMap(item.Endpoint, metricIndexMap)
+
+		NewEndpoints.PushFront(item.Endpoint) //必须在metricIndexMap成功之后在push
 		return
 	}
 

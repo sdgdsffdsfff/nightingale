@@ -117,6 +117,10 @@ func RebuildFromDisk(indexFileDir string, concurrency int) error {
 				return
 			}
 
+			if !metricIndexMap.IsReported() {
+				NewEndpoints.PushFront(endpoint) //没有标记上报过的endpoint，重新上报给monapi
+			}
+
 			IndexDB.Lock()
 			IndexDB.M[endpoint] = metricIndexMap
 			IndexDB.Unlock()
