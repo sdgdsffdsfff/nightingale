@@ -39,6 +39,12 @@ func (c *Collect) Update(cc *Collect) {
 	for k, v := range cc.Procs {
 		c.Procs[k] = v
 	}
+
+	//更新log采集配置
+	c.Logs = make(map[string]*LogCollect)
+	for k, v := range cc.Logs {
+		c.Logs[k] = v
+	}
 }
 
 func (c *Collect) GetPorts() map[int]*PortCollect {
