@@ -9,9 +9,10 @@ import (
 	"github.com/didi/nightingale/src/modules/collector/config"
 	"github.com/didi/nightingale/src/modules/collector/log/strategy"
 	"github.com/didi/nightingale/src/modules/collector/log/worker"
+	"github.com/didi/nightingale/src/modules/collector/stra"
 	"github.com/didi/nightingale/src/modules/collector/sys/funcs"
-	"github.com/didi/nightingale/src/modules/collector/sys/ports"
-	"github.com/didi/nightingale/src/modules/collector/sys/procs"
+	"github.com/didi/nightingale/src/toolkits/http/render"
+	"github.com/didi/nightingale/src/toolkits/identity"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
@@ -36,7 +37,7 @@ func pid(c *gin.Context) {
 
 func pushData(c *gin.Context) {
 	if c.Request.ContentLength == 0 {
-		renderMessage(c, "blank body")
+		render.Message(c, "blank body")
 		return
 	}
 
@@ -49,7 +50,7 @@ func pushData(c *gin.Context) {
 	for _, v := range recvMetricValues {
 		logger.Debug("->recv: ", v)
 		if v.Endpoint == "" {
-			v.Endpoint = config.Endpoint
+			v.Endpoint = identity.Identity
 		}
 		err := v.CheckValidity()
 		if err != nil {
@@ -63,23 +64,23 @@ func pushData(c *gin.Context) {
 	funcs.Push(metricValues)
 
 	if msg != "" {
-		renderMessage(c, msg)
+		render.Message(c, msg)
 		return
 	}
 
-	renderData(c, "ok", nil)
+	render.Data(c, "ok", nil)
 	return
 }
 
 func getStrategy(c *gin.Context) {
 	var resp []interface{}
 
-	port := ports.ListPorts()
+	port := stra.GetPortCollects()
 	for _, stra := range port {
 		resp = append(resp, stra)
 	}
 
-	proc := procs.ListProcs()
+	proc := stra.GetProcCollects()
 	for _, stra := range proc {
 		resp = append(resp, stra)
 	}
@@ -89,9 +90,9 @@ func getStrategy(c *gin.Context) {
 		resp = append(resp, stra)
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 func getLogCached(c *gin.Context) {
-	renderData(c, worker.GetCachedAll(), nil)
+	render.Data(c, worker.GetCachedAll(), nil)
 }

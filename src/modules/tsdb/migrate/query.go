@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/toolkits/pkg/pool"
@@ -98,7 +97,7 @@ func QueryOne(para dataobj.TsdbQueryParam) (resp *dataobj.TsdbQueryResponse, err
 	}()
 
 	select {
-	case <-time.After(time.Duration(config.Config.Migrate.CallTimeout) * time.Millisecond):
+	case <-time.After(time.Duration(Config.CallTimeout) * time.Millisecond):
 		pool.ForceClose(conn)
 		return nil, fmt.Errorf("%s, call timeout. proc: %s", addr, pool.Proc())
 	case r := <-ch:
@@ -132,7 +131,7 @@ func selectPoolByPK(pk string) (*pool.ConnPool, string, error) {
 		return nil, "", err
 	}
 
-	addr, found := config.Config.Migrate.OldCluster[node]
+	addr, found := Config.OldCluster[node]
 	if !found {
 		return nil, "", errors.New("node not found")
 	}

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/config"
+	"github.com/didi/nightingale/src/modules/collector/sys"
 
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/nux"
@@ -20,13 +20,13 @@ func DeviceMetrics() (L []*dataobj.MetricValue) {
 	}
 
 	var myMountPoints map[string]bool = make(map[string]bool)
-	if len(config.Config.Collector.MountPoint) > 0 {
-		for _, mp := range config.Config.Collector.MountPoint {
+	if len(sys.Config.MountPoint) > 0 {
+		for _, mp := range sys.Config.MountPoint {
 			myMountPoints[mp] = true
 		}
 	}
 
-	ignoreMountPointsPrefix := config.Config.Collector.MountIgnorePrefix
+	ignoreMountPointsPrefix := sys.Config.MountIgnorePrefix
 
 	var diskTotal uint64 = 0
 	var diskUsed uint64 = 0

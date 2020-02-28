@@ -10,14 +10,13 @@ import (
 
 	brpc "github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
 	"github.com/didi/nightingale/src/modules/tsdb/cache"
-	"github.com/didi/nightingale/src/modules/tsdb/chunk"
 	"github.com/didi/nightingale/src/modules/tsdb/config"
-	"github.com/didi/nightingale/src/modules/tsdb/cron"
 	"github.com/didi/nightingale/src/modules/tsdb/http"
 	"github.com/didi/nightingale/src/modules/tsdb/index"
 	"github.com/didi/nightingale/src/modules/tsdb/migrate"
 	"github.com/didi/nightingale/src/modules/tsdb/rpc"
 	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
+	tlogger "github.com/didi/nightingale/src/toolkits/logger"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/runner"
@@ -53,26 +52,24 @@ func main() {
 	pconf()
 	start()
 
-	config.InitLogger()
+	cfg := config.Config
 
-	cron.GetIndex()
+	tlogger.Init(cfg.Logger)
+
 	// INIT
-	cache.Init()
-	index.Init()
-	brpc.Init()
+	cache.Init(cfg.Cache)
+	index.Init(cfg.Index)
+	brpc.Init(cfg.RpcClient, index.IndexList.Get())
 
 	cache.InitChunkSlot()
-	rrdtool.Init()
+	rrdtool.Init(cfg.RRD)
 
-	if config.Config.Migrate.Enabled {
-		migrate.Init() //读数据加队列
+	if cfg.Migrate.Enabled {
+		migrate.Init(cfg.Migrate) //读数据加队列
 	}
 
 	go http.Start()
 	go rpc.Start()
-
-	go cron.Statstic()
-	go cron.GetIndexLoop()
 
 	startSignal(os.Getpid())
 }
@@ -138,7 +135,7 @@ func startSignal(pid int) {
 			}
 			log.Println("rpc stop ok")
 
-			chunk.FlushDoneChan <- 1
+			cache.FlushDoneChan <- 1
 			rrdtool.Persist()
 			log.Println("====================== tsdb stop ok ======================")
 			log.Println(pid, "exit")

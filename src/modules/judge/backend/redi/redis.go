@@ -4,25 +4,34 @@ import (
 	"log"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/judge/config"
-
 	"github.com/garyburd/redigo/redis"
 	"github.com/toolkits/pkg/logger"
 )
 
 var RedisConnPools []*redis.Pool
 
-func InitRedis() {
-	cfg := config.Config
+type RedisSection struct {
+	Addrs   []string       `yaml:"addrs"`
+	Pass    string         `yaml:"pass"`
+	Idle    int            `yaml:"idle"`
+	Timeout TimeoutSection `yaml:"timeout"`
+}
 
-	addrs := cfg.Redis.Addrs
-	pass := cfg.Redis.Pass
-	maxIdle := cfg.Redis.Idle
+type TimeoutSection struct {
+	Conn  int `yaml:"conn"`
+	Read  int `yaml:"read"`
+	Write int `yaml:"write"`
+}
+
+func Init(cfg RedisSection) {
+	addrs := cfg.Addrs
+	pass := cfg.Pass
+	maxIdle := cfg.Idle
 	idleTimeout := 240 * time.Second
 
-	connTimeout := time.Duration(cfg.Redis.Timeout.Conn) * time.Millisecond
-	readTimeout := time.Duration(cfg.Redis.Timeout.Read) * time.Millisecond
-	writeTimeout := time.Duration(cfg.Redis.Timeout.Write) * time.Millisecond
+	connTimeout := time.Duration(cfg.Timeout.Conn) * time.Millisecond
+	readTimeout := time.Duration(cfg.Timeout.Read) * time.Millisecond
+	writeTimeout := time.Duration(cfg.Timeout.Write) * time.Millisecond
 	for _, addr := range addrs {
 		redisConnPool := &redis.Pool{
 			MaxIdle:     maxIdle,

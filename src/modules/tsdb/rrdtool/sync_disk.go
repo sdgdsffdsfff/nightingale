@@ -9,8 +9,6 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/tsdb/cache"
-	"github.com/didi/nightingale/src/modules/tsdb/chunk"
-	. "github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/modules/tsdb/index"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
 
@@ -27,12 +25,22 @@ var (
 )
 
 const (
+	ITEM_TO_SEND    = 1
+	ITEM_TO_PULLRRD = 2
+)
+
+const (
 	_ = iota
 	IO_TASK_M_READ
 	IO_TASK_M_WRITE
 	IO_TASK_M_FLUSH
 	IO_TASK_M_FETCH
 )
+
+type File struct {
+	Filename string
+	Body     []byte
+}
 
 type fetch_t struct {
 	filename string
@@ -63,9 +71,23 @@ var (
 	Out_done_chan    chan int
 	io_task_chans    []chan *io_task_t
 	flushrrd_timeout int32
+
+	Config RRDSection
 )
 
-func Init() {
+type RRDSection struct {
+	Enabled     bool        `yaml:"enabled"`
+	Migrate     bool        `yaml:"enabled"`
+	Storage     string      `yaml:"storage"`
+	Batch       int         `yaml:"batch"`
+	Concurrency int         `yaml:"concurrency"`
+	Wait        int         `yaml:"wait"`
+	RRA         map[int]int `yaml:"rra"`
+	IOWorkerNum int         `yaml:"ioWorkerNum"`
+}
+
+func Init(cfg RRDSection) {
+	Config = cfg
 	InitChannel()
 	Start()
 
@@ -84,8 +106,8 @@ func InitChannel() { //初始化io池
 func Start() {
 	var err error
 	// check data dir
-	if err = file.EnsureDirRW(Config.RRD.Storage); err != nil {
-		logger.Fatal("rrdtool.Start error, bad data dir "+Config.RRD.Storage+",", err)
+	if err = file.EnsureDirRW(Config.Storage); err != nil {
+		logger.Fatal("rrdtool.Start error, bad data dir "+Config.Storage+",", err)
 	}
 
 	// sync disk
@@ -133,22 +155,22 @@ func ioWorker() {
 
 func FlushFinishd2Disk() {
 	var idx int = 0
-	//time.Sleep(time.Second * time.Duration(Config.Cache.SpanInSeconds))
-	ticker := time.NewTicker(time.Millisecond * time.Duration(Config.Cache.FlushDiskStepMs)).C
-	slotNum := Config.Cache.SpanInSeconds * 1000 / Config.Cache.FlushDiskStepMs
+	//time.Sleep(time.Second * time.Duration(cache.Config.SpanInSeconds))
+	ticker := time.NewTicker(time.Millisecond * time.Duration(cache.Config.FlushDiskStepMs)).C
+	slotNum := cache.Config.SpanInSeconds * 1000 / cache.Config.FlushDiskStepMs
 	for {
 		select {
 		case <-ticker:
 			idx = idx % slotNum
-			chunks := chunk.ChunksSlots.Get(idx)
-			flushChunks := make(map[interface{}][]*chunk.Chunk, 0)
+			chunks := cache.ChunksSlots.Get(idx)
+			flushChunks := make(map[interface{}][]*cache.Chunk, 0)
 			for key, cs := range chunks {
-				if Config.Migrate.Enabled {
+				if Config.Migrate {
 					item := index.GetItemFronIndex(key)
-					rrdFile := utils.RrdFileName(Config.RRD.Storage, key, item.DsType, item.Step)
+					rrdFile := utils.RrdFileName(Config.Storage, key, item.DsType, item.Step)
 					//在扩容期间，当新实例内存中的曲线对应的rrd文件还没有从旧实例获取并落盘时，先在内存中继续保持
 					if !file.IsExist(rrdFile) && cache.Caches.GetFlag(key) == ITEM_TO_PULLRRD {
-						chunk.ChunksSlots.PushChunks(key, cs)
+						cache.ChunksSlots.PushChunks(key, cs)
 						continue
 					}
 				}
@@ -156,7 +178,7 @@ func FlushFinishd2Disk() {
 			}
 			FlushRRD(flushChunks)
 			idx += 1
-		case <-chunk.FlushDoneChan:
+		case <-cache.FlushDoneChan:
 			logger.Info("FlushFinishd2Disk recv sigout and exit...")
 			return
 		}
@@ -171,25 +193,25 @@ func Persist() {
 			continue
 		}
 		for id, chunks := range shard.Items {
-			chunk.ChunksSlots.Push(id, chunks.GetChunk(chunks.CurrentChunkPos))
+			cache.ChunksSlots.Push(id, chunks.GetChunk(chunks.CurrentChunkPos))
 		}
 	}
 
-	for i := 0; i < chunk.ChunksSlots.Size; i++ {
-		FlushRRD(chunk.ChunksSlots.Get(i))
+	for i := 0; i < cache.ChunksSlots.Size; i++ {
+		FlushRRD(cache.ChunksSlots.Get(i))
 	}
 
 	return
 }
 
-func FlushRRD(flushChunks map[interface{}][]*chunk.Chunk) {
-	sema := semaphore.NewSemaphore(Config.RRD.Concurrency)
+func FlushRRD(flushChunks map[interface{}][]*cache.Chunk) {
+	sema := semaphore.NewSemaphore(Config.Concurrency)
 	var wg sync.WaitGroup
 	for key, chunks := range flushChunks {
 		//控制并发
 		sema.Acquire()
 		wg.Add(1)
-		go func(seriesID interface{}, chunks []*chunk.Chunk) {
+		go func(seriesID interface{}, chunks []*cache.Chunk) {
 			defer sema.Release()
 			defer wg.Done()
 			for _, c := range chunks {
@@ -209,10 +231,8 @@ func FlushRRD(flushChunks map[interface{}][]*chunk.Chunk) {
 				err := FlushFile(seriesID, items)
 				if err != nil {
 					logger.Errorf("flush %v data to rrd err:%v", seriesID, err)
-					atomic.AddInt64(&FlushRRDErrCount, 1)
 					continue
 				}
-				atomic.AddInt64(&FlushRRDCount, 1)
 			}
 		}(key, chunks)
 	}

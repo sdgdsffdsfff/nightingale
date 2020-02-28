@@ -32,7 +32,7 @@ _test
 /data*
 
 .idea
-.data
+.index
 .vscode
 .DS_Store
 .cache-loader

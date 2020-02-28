@@ -6,6 +6,4 @@ var (
 
 	EVENT_ALERT   = "alert"
 	EVENT_RECOVER = "recovery"
-
-	Identity = ""
 )

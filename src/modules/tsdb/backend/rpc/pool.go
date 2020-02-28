@@ -110,18 +110,21 @@ func (this *ConnPools) Get(address string) (*pool.ConnPool, bool) {
 	return p, exists
 }
 
-func (c *ConnPools) UpdatePools(addrs []string) {
+func (c *ConnPools) UpdatePools(addrs []string) []string {
 	c.Lock()
 	defer c.Unlock()
 
+	newAddrs := []string{}
 	ct := time.Duration(c.ConnTimeout) * time.Millisecond
 	for _, addr := range addrs {
 		_, exists := c.M[addr]
 		if exists {
 			continue
 		}
+		newAddrs = append(newAddrs, addr)
 		c.M[addr] = createOnePool(addr, addr, ct, c.MaxConns, c.MaxIdle)
 	}
+	return newAddrs
 
 }
 

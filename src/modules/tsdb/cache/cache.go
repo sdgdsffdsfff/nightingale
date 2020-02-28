@@ -7,17 +7,24 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/tsdb/chunk"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
 
 	"github.com/toolkits/pkg/logger"
 )
 
+type CacheSection struct {
+	SpanInSeconds    int `yaml:"spanInSeconds"`
+	NumOfChunks      int `yaml:"numOfChunks"`
+	ExpiresInMinutes int `yaml:"expiresInMinutes"`
+	DoCleanInMinutes int `yaml:"doCleanInMinutes"`
+	FlushDiskStepMs  int `yaml:"flushDiskStepMs"`
+}
+
 const SHARD_COUNT = 256
 
 var (
 	Caches caches
+	Config CacheSection
 )
 
 var (
@@ -30,11 +37,12 @@ type (
 )
 
 type cache struct {
-	Items map[interface{}]*chunk.CS // [counter]ts,value
+	Items map[interface{}]*CS // [counter]ts,value
 	sync.RWMutex
 }
 
-func Init() {
+func Init(cfg CacheSection) {
+	Config = cfg
 	InitCaches()
 	go StartCleanup()
 }
@@ -44,30 +52,30 @@ func InitCaches() {
 }
 
 func InitChunkSlot() {
-	size := config.Config.Cache.SpanInSeconds * 1000 / config.Config.Cache.FlushDiskStepMs
+	size := Config.SpanInSeconds * 1000 / Config.FlushDiskStepMs
 	if size < 0 {
 		log.Panicf("store.init, bad size %d\n", size)
 	}
 
-	chunk.ChunksSlots = &chunk.ChunksSlot{
-		Data: make([]map[interface{}][]*chunk.Chunk, size),
+	ChunksSlots = &ChunksSlot{
+		Data: make([]map[interface{}][]*Chunk, size),
 		Size: size,
 	}
 	for i := 0; i < size; i++ {
-		chunk.ChunksSlots.Data[i] = make(map[interface{}][]*chunk.Chunk)
+		ChunksSlots.Data[i] = make(map[interface{}][]*Chunk)
 	}
 }
 
 func NewCaches() caches {
 	c := make(caches, SHARD_COUNT)
 	for i := 0; i < SHARD_COUNT; i++ {
-		c[i] = &cache{Items: make(map[interface{}]*chunk.CS)}
+		c[i] = &cache{Items: make(map[interface{}]*CS)}
 	}
 	return c
 }
 
 func StartCleanup() {
-	cfg := config.Config.Cache
+	cfg := Config
 	t := time.NewTicker(time.Minute * time.Duration(cfg.DoCleanInMinutes))
 	cleaning = false
 
@@ -100,7 +108,7 @@ func (c *caches) Push(seriesID interface{}, ts int64, value float64) error {
 	return err
 }
 
-func (c *caches) Get(seriesID interface{}, from, to int64) ([]chunk.Iter, error) {
+func (c *caches) Get(seriesID interface{}, from, to int64) ([]Iter, error) {
 	existC, exist := Caches.exist(seriesID)
 
 	if !exist {
@@ -132,18 +140,18 @@ func (c *caches) GetFlag(seriesID interface{}) uint32 {
 	return existC.GetFlag()
 }
 
-func (c *caches) create(seriesID interface{}) *chunk.CS {
+func (c *caches) create(seriesID interface{}) *CS {
 	atomic.AddInt64(&TotalCount, 1)
 	shard := c.getShard(seriesID)
 	shard.Lock()
-	newC := chunk.NewChunks(config.Config.Cache.NumOfChunks)
+	newC := NewChunks(Config.NumOfChunks)
 	shard.Items[seriesID] = newC
 	shard.Unlock()
 
 	return newC
 }
 
-func (c *caches) exist(seriesID interface{}) (*chunk.CS, bool) {
+func (c *caches) exist(seriesID interface{}) (*CS, bool) {
 	shard := c.getShard(seriesID)
 	shard.RLock()
 	existC, exist := shard.Items[seriesID]
@@ -152,7 +160,7 @@ func (c *caches) exist(seriesID interface{}) (*chunk.CS, bool) {
 	return existC, exist
 }
 
-func (c *caches) GetCurrentChunk(seriesID interface{}) (*chunk.Chunk, bool) {
+func (c *caches) GetCurrentChunk(seriesID interface{}) (*Chunk, bool) {
 	shard := c.getShard(seriesID)
 	if shard == nil {
 		return nil, false

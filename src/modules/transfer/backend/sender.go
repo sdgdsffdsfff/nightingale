@@ -3,15 +3,14 @@ package backend
 import (
 	"time"
 
-	"github.com/toolkits/pkg/concurrent/semaphore"
-	"github.com/toolkits/pkg/container/list"
-	"github.com/toolkits/pkg/logger"
-
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/transfer/cache"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
 	"github.com/didi/nightingale/src/toolkits/str"
+
+	"github.com/toolkits/pkg/concurrent/semaphore"
+	"github.com/toolkits/pkg/container/list"
+	"github.com/toolkits/pkg/logger"
 )
 
 // send
@@ -26,18 +25,18 @@ var (
 
 func startSendTasks() {
 
-	tsdbConcurrent := Config.Tsdb.WorkerNum
+	tsdbConcurrent := Config.WorkerNum
 	if tsdbConcurrent < 1 {
 		tsdbConcurrent = 1
 	}
 
-	judgeConcurrent := Config.Judge.WorkerNum
+	judgeConcurrent := Config.WorkerNum
 	if judgeConcurrent < 1 {
 		judgeConcurrent = 1
 	}
 
-	if Config.Tsdb.Enabled {
-		for node, item := range Config.Tsdb.ClusterList {
+	if Config.Enabled {
+		for node, item := range Config.ClusterList {
 			for _, addr := range item.Addrs {
 				queue := TsdbQueues[node+addr]
 				go Send2TsdbTask(queue, node, addr, tsdbConcurrent)
@@ -45,7 +44,7 @@ func startSendTasks() {
 		}
 	}
 
-	if Config.Judge.Enabled {
+	if Config.Enabled {
 		judgeQueue := JudgeQueues.GetAll()
 		for instance, queue := range judgeQueue {
 			go Send2JudgeTask(queue, instance, judgeConcurrent)
@@ -54,7 +53,7 @@ func startSendTasks() {
 }
 
 func Send2TsdbTask(Q *list.SafeListLimited, node string, addr string, concurrent int) {
-	batch := Config.Tsdb.Batch // 一次发送,最多batch条数据
+	batch := Config.Batch // 一次发送,最多batch条数据
 	Q = TsdbQueues[node+addr]
 
 	sema := semaphore.NewSemaphore(concurrent)
@@ -96,7 +95,7 @@ func Send2TsdbTask(Q *list.SafeListLimited, node string, addr string, concurrent
 			if !sendOk {
 				logger.Errorf("send %v to tsdb %s:%s fail: %v", tsdbItems, node, addr, err)
 			} else {
-				logger.Infof("send to tsdb %s:%s ok", node, addr)
+				logger.Debugf("send to tsdb %s:%s ok", node, addr)
 			}
 		}(addr, tsdbItems, count)
 	}
@@ -107,17 +106,17 @@ func Push2TsdbSendQueue(items []*dataobj.MetricValue) {
 	for _, item := range items {
 		tsdbItem, err := convert2TsdbItem(item)
 		if err != nil {
-			logger.Error("E:", err)
+			logger.Warning("E:", err)
 			continue
 		}
 
 		node, err := TsdbNodeRing.GetNode(item.PK())
 		if err != nil {
-			logger.Error("E:", err)
+			logger.Warning("E:", err)
 			continue
 		}
 
-		cnode := Config.Tsdb.ClusterList[node]
+		cnode := Config.ClusterList[node]
 		errCnt := 0
 		for _, addr := range cnode.Addrs {
 			Q := TsdbQueues[node+addr]
@@ -134,7 +133,7 @@ func Push2TsdbSendQueue(items []*dataobj.MetricValue) {
 }
 
 func Send2JudgeTask(Q *list.SafeListLimited, addr string, concurrent int) {
-	batch := Config.Judge.Batch
+	batch := Config.Batch
 	sema := semaphore.NewSemaphore(concurrent)
 
 	for {
@@ -148,7 +147,7 @@ func Send2JudgeTask(Q *list.SafeListLimited, addr string, concurrent int) {
 		judgeItems := make([]*dataobj.JudgeItem, count)
 		for i := 0; i < count; i++ {
 			judgeItems[i] = items[i].(*dataobj.JudgeItem)
-			logger.Info("send to judge: ", judgeItems[i])
+			logger.Debug("send to judge: ", judgeItems[i])
 		}
 
 		sema.Acquire()
@@ -217,32 +216,13 @@ func convert2TsdbItem(d *dataobj.MetricValue) (*dataobj.TsdbItem, error) {
 		Tags:      d.Tags,
 		TagsMap:   d.TagsMap,
 		Step:      int(d.Step),
+		Heartbeat: int(d.Step) * 2,
+		DsType:    dataobj.GAUGE,
+		Min:       "U",
+		Max:       "U",
 	}
 
-	if item.Step < MinStep {
-		item.Step = MinStep
-	}
-	item.Heartbeat = item.Step * 2
-
-	if d.CounterType == dataobj.GAUGE {
-		item.DsType = dataobj.GAUGE
-		item.Min = "U"
-		item.Max = "U"
-	} else if d.CounterType == dataobj.COUNTER {
-		item.DsType = dataobj.COUNTER
-		item.Min = "0"
-		item.Max = "U"
-	} else if d.CounterType == dataobj.DERIVE {
-		item.DsType = dataobj.DERIVE
-		item.Min = "0"
-		item.Max = "U"
-	} else { //其他类型统一转为 GAUGE
-		item.DsType = dataobj.GAUGE
-		item.Min = "U"
-		item.Max = "U"
-	}
-
-	item.Timestamp = alignTs(item.Timestamp, int64(item.Step)) //item.Timestamp - item.Timestamp%int64(item.Step)
+	item.Timestamp = alignTs(item.Timestamp, int64(item.Step))
 
 	return item, nil
 }
@@ -264,12 +244,7 @@ func TagMatch(straTags []model.Tag, tag map[string]string) bool {
 					break
 				}
 			}
-		}
-		if !match {
-			return match
-		}
-
-		if stag.Topt == "!=" {
+		} else {
 			match = true
 			for _, v := range stag.Tval {
 				if tag[stag.Tkey] == v {
@@ -277,6 +252,10 @@ func TagMatch(straTags []model.Tag, tag map[string]string) bool {
 					return match
 				}
 			}
+		}
+
+		if !match {
+			return false
 		}
 	}
 	return true

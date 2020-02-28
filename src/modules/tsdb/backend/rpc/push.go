@@ -1,11 +1,9 @@
 package rpc
 
 import (
-	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -15,12 +13,9 @@ const (
 	INCRINDEX = 1
 )
 
-func Push2Index(mode int, items []*dataobj.TsdbItem) {
-	addrs := config.IndexAddrs.Get()
-	if len(addrs) < 2 {
-		logger.Error("get_index_addrs < 2:", len(addrs))
-	}
-	for _, addr := range addrs {
+func Push2Index(mode int, items []*dataobj.TsdbItem, indexAddrs []string) {
+	for _, addr := range indexAddrs {
+		//TODO 改为并发
 		push(mode, addr, items)
 	}
 }
@@ -71,7 +66,6 @@ func push(mode int, addr string, tsdbItems []*dataobj.TsdbItem) {
 	}
 
 	if !sendOk {
-		atomic.AddInt64(&config.PushIndexErr, itemCount)
 		logger.Errorf("send %v to index %s fail: %v", bodyList, addr, err)
 	}
 }

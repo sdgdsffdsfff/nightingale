@@ -9,11 +9,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
 	"github.com/ugorji/go/codec"
 
-	"github.com/didi/nightingale/src/modules/index/config"
 	"github.com/didi/nightingale/src/toolkits/address"
 )
 
@@ -31,7 +29,6 @@ func Start() {
 		os.Exit(1)
 	}
 	logger.Info("listening ", addr)
-	nsemaPush = semaphore.NewSemaphore(config.Config.BuildWorker)
 
 	var mh codec.MsgpackHandle
 	mh.MapType = reflect.TypeOf(map[string]interface{}(nil))

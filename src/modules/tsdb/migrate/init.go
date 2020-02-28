@@ -3,8 +3,6 @@ package migrate
 import (
 	"sync"
 
-	. "github.com/didi/nightingale/src/modules/tsdb/config"
-
 	"github.com/toolkits/pkg/container/list"
 	"github.com/toolkits/pkg/container/set"
 	"github.com/toolkits/pkg/logger"
@@ -12,11 +10,25 @@ import (
 	"github.com/toolkits/pkg/str"
 )
 
+type MigrateSection struct {
+	Batch       int               `yaml:"batch"`
+	Concurrency int               `yaml:"concurrency"` //number of multiple worker per node
+	Enabled     bool              `yaml:"enabled"`
+	Replicas    int               `yaml:"replicas"`
+	OldCluster  map[string]string `yaml:"oldCluster"`
+	NewCluster  map[string]string `yaml:"newCluster"`
+	MaxConns    int               `yaml:"maxConns"`
+	MaxIdle     int               `yaml:"maxIdle"`
+	ConnTimeout int               `yaml:"connTimeout"`
+	CallTimeout int               `yaml:"callTimeout"`
+}
+
 const (
 	DefaultSendQueueMaxSize = 102400 //10.24w
 )
 
 var (
+	Config     MigrateSection
 	QueueCheck = QueueFilter{Data: make(map[interface{}]struct{})}
 
 	TsdbQueues    = make(map[string]*list.SafeListLimited)
@@ -52,8 +64,9 @@ func (q *QueueFilter) Set(key interface{}) {
 	return
 }
 
-func Init() {
+func Init(cfg MigrateSection) {
 	logger.Info("migrate start...")
+	Config = cfg
 	initHashRing()
 	initConnPools()
 	initQueues()
@@ -61,38 +74,38 @@ func Init() {
 }
 
 func initHashRing() {
-	TsdbNodeRing = NewConsistentHashRing(int32(Config.Migrate.Replicas), str.KeysOfMap(Config.Migrate.OldCluster))
-	NewTsdbNodeRing = NewConsistentHashRing(int32(Config.Migrate.Replicas), str.KeysOfMap(Config.Migrate.NewCluster))
+	TsdbNodeRing = NewConsistentHashRing(int32(Config.Replicas), str.KeysOfMap(Config.OldCluster))
+	NewTsdbNodeRing = NewConsistentHashRing(int32(Config.Replicas), str.KeysOfMap(Config.NewCluster))
 }
 
 func initConnPools() {
 	// tsdb
 	tsdbInstances := set.NewSafeSet()
-	for _, addr := range Config.Migrate.OldCluster {
+	for _, addr := range Config.OldCluster {
 		tsdbInstances.Add(addr)
 	}
-	TsdbConnPools = CreateConnPools(Config.Migrate.MaxConns, Config.Migrate.MaxIdle,
-		Config.Migrate.ConnTimeout, Config.Migrate.CallTimeout, tsdbInstances.ToSlice())
+	TsdbConnPools = CreateConnPools(Config.MaxConns, Config.MaxIdle,
+		Config.ConnTimeout, Config.CallTimeout, tsdbInstances.ToSlice())
 
 	// tsdb
 	newTsdbInstances := set.NewSafeSet()
-	for _, addr := range Config.Migrate.NewCluster {
+	for _, addr := range Config.NewCluster {
 		newTsdbInstances.Add(addr)
 	}
-	NewTsdbConnPools = CreateConnPools(Config.Migrate.MaxConns, Config.Migrate.MaxIdle,
-		Config.Migrate.ConnTimeout, Config.Migrate.CallTimeout, newTsdbInstances.ToSlice())
+	NewTsdbConnPools = CreateConnPools(Config.MaxConns, Config.MaxIdle,
+		Config.ConnTimeout, Config.CallTimeout, newTsdbInstances.ToSlice())
 }
 
 func initQueues() {
-	for node := range Config.Migrate.OldCluster {
+	for node := range Config.OldCluster {
 		RRDFileQueues[node] = list.NewSafeListLimited(DefaultSendQueueMaxSize)
 	}
 
-	for node := range Config.Migrate.OldCluster {
+	for node := range Config.OldCluster {
 		TsdbQueues[node] = list.NewSafeListLimited(DefaultSendQueueMaxSize)
 	}
 
-	for node := range Config.Migrate.NewCluster {
+	for node := range Config.NewCluster {
 		NewTsdbQueues[node] = list.NewSafeListLimited(DefaultSendQueueMaxSize)
 	}
 }

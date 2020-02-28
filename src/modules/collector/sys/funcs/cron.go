@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/config"
+	"github.com/didi/nightingale/src/modules/collector/sys"
+	"github.com/didi/nightingale/src/toolkits/identity"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -24,7 +25,7 @@ func collect(sec int64, fn func() []*dataobj.MetricValue) {
 	t := time.NewTicker(time.Second * time.Duration(sec))
 	defer t.Stop()
 
-	ignoreMetrics := config.Config.IgnoreMetricsMap
+	ignoreMetrics := sys.Config.IgnoreMetricsMap
 
 	for {
 		<-t.C
@@ -43,7 +44,7 @@ func collect(sec int64, fn func() []*dataobj.MetricValue) {
 			}
 
 			item.Step = sec
-			item.Endpoint = config.Endpoint
+			item.Endpoint = identity.Identity
 			item.Timestamp = now
 			logger.Debug("push item: ", item)
 			metricValues = append(metricValues, item)

@@ -2,8 +2,11 @@ package routes
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/didi/nightingale/src/modules/index/cache"
+	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/http/render"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
@@ -14,69 +17,27 @@ type EndpointsRecv struct {
 	Endpoints []string `json:"endpoints"`
 }
 
-type EndpointMetricList struct {
+type MetricList struct {
 	Metrics []string `json:"metrics"`
 }
 
-func GetMetricsByEndpoint(c *gin.Context) {
+func GetMetrics(c *gin.Context) {
 	recv := EndpointsRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
 	m := make(map[string]struct{})
-	resp := EndpointMetricList{}
+	resp := MetricList{}
 	for _, endpoint := range recv.Endpoints {
-		metrics := cache.EndpointDBObj.GetMetricsBy(endpoint)
+		metrics := cache.IndexDB.GetMetricsBy(endpoint)
 		for _, metric := range metrics {
-			if _, exists := m[metric]; exists {
-				continue
-			}
-			m[metric] = struct{}{}
-			resp.Metrics = append(resp.Metrics, metric)
-		}
-	}
-
-	renderData(c, resp, nil)
-}
-
-func DeleteMetrics(c *gin.Context) {
-	recv := EndpointMetricRecv{}
-	errors.Dangerous(c.ShouldBindJSON(&recv))
-
-	for _, endpoint := range recv.Endpoints {
-		metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
-		if !exists {
-			continue
-		}
-		for _, metric := range recv.Metrics {
-			metricsItem.CleanMetric(metric)
-		}
-	}
-
-	renderData(c, "ok", nil)
-}
-
-func DeleteCounter(c *gin.Context) {
-	recv := EndpointTagkvResp{}
-	errors.Dangerous(c.ShouldBindJSON(&recv))
-
-	for _, endpoint := range recv.Endpoints {
-		metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
-		if !exists {
-			continue
-		}
-
-		tagkv, exists := metricsItem.GetTagksStruct(recv.Metric)
-		if !exists {
-			continue
-		}
-		for _, kv := range recv.Tagkv {
-			for _, v := range kv.TagV {
-				tagkv.CleanTagkv(kv.TagK, v)
+			if _, exists := m[metric]; !exists {
+				m[metric] = struct{}{}
+				resp.Metrics = append(resp.Metrics, metric)
 			}
 		}
 	}
 
-	renderData(c, "ok", nil)
+	render.Data(c, resp, nil)
 }
 
 type EndpointMetricRecv struct {
@@ -84,46 +45,79 @@ type EndpointMetricRecv struct {
 	Metrics   []string `json:"metrics"`
 }
 
-type EndpointTagkvResp struct {
-	Endpoints []string             `json:"endpoints"`
-	Metric    string               `json:"metric"`
-	Tagkv     []*cache.TagkvStruct `json:"tagkv"`
-}
-
-func GetTagkvByEndpoint(c *gin.Context) {
+func DelMetrics(c *gin.Context) {
 	recv := EndpointMetricRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
-	resp := []*EndpointTagkvResp{}
+
+	for _, endpoint := range recv.Endpoints {
+		if metricIndexMap, exists := cache.IndexDB.GetMetricIndexMap(endpoint); exists {
+			for _, metric := range recv.Metrics {
+				metricIndexMap.DelMetric(metric)
+			}
+		}
+	}
+
+	render.Data(c, "ok", nil)
+}
+
+type IndexTagkvResp struct {
+	Endpoints []string         `json:"endpoints"`
+	Metric    string           `json:"metric"`
+	Tagkv     []*cache.TagPair `json:"tagkv"`
+}
+
+func DelCounter(c *gin.Context) {
+	recv := IndexTagkvResp{}
+	errors.Dangerous(c.ShouldBindJSON(&recv))
+
+	for _, endpoint := range recv.Endpoints {
+		metricIndex, exists := cache.IndexDB.GetMetricIndex(endpoint, recv.Metric)
+		if !exists {
+			continue
+		}
+
+		for _, tagPair := range recv.Tagkv {
+			for _, v := range tagPair.Values {
+				metricIndex.TagkvMap.DelTag(tagPair.Key, v)
+			}
+		}
+	}
+
+	render.Data(c, "ok", nil)
+}
+
+func GetTagPairs(c *gin.Context) {
+	recv := EndpointMetricRecv{}
+	errors.Dangerous(c.ShouldBindJSON(&recv))
+
+	resp := []*IndexTagkvResp{}
+
 	tagkvFilter := make(map[string]map[string]struct{})
+
 	for _, metric := range recv.Metrics {
-		tagkvs := []*cache.TagkvStruct{}
+		tagkvs := []*cache.TagPair{}
 
 		for _, endpoint := range recv.Endpoints {
-			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+			metricIndex, exists := cache.IndexDB.GetMetricIndex(endpoint, metric)
 			if !exists {
-				logger.Warningf("metrics not found by %s", endpoint)
+				logger.Debugf("index not found by %s %s", endpoint, metric)
 				continue
 			}
 
-			tagks, exists := metricsItem.GetTagksStruct(metric)
-			if !exists {
-				logger.Warningf("tagkStruct not found by %s %s", endpoint, metric)
-				continue
-			}
-			tagvs := tagks.GetTagkv()
-			for _, kv := range tagvs {
-				tagvFilter, exists := tagkvFilter[kv.TagK]
+			tagkvMap := metricIndex.TagkvMap.GetTagkvMap()
+			for tagk, tagvs := range tagkvMap {
+				tagvFilter, exists := tagkvFilter[tagk]
 				if !exists {
 					tagvFilter = make(map[string]struct{})
 				}
 
-				for _, tagv := range kv.TagV {
-					if _, exists := tagvFilter[tagv]; exists {
-						continue
+				for _, tagv := range tagvs {
+					if _, exists := tagvFilter[tagv]; !exists {
+						tagvFilter[tagv] = struct{}{}
 					}
-					tagvFilter[tagv] = struct{}{}
 				}
-				tagkvFilter[kv.TagK] = tagvFilter
+
+				tagkvFilter[tagk] = tagvFilter
 			}
 		}
 
@@ -132,30 +126,30 @@ func GetTagkvByEndpoint(c *gin.Context) {
 			for v, _ := range tagvFilter {
 				tagvs = append(tagvs, v)
 			}
-			tagkv := &cache.TagkvStruct{
-				TagK: tagk,
-				TagV: tagvs,
+			tagkv := &cache.TagPair{
+				Key:    tagk,
+				Values: tagvs,
 			}
 			tagkvs = append(tagkvs, tagkv)
 		}
 
-		TagkvResp := EndpointTagkvResp{
+		TagkvResp := IndexTagkvResp{
 			Endpoints: recv.Endpoints,
 			Metric:    metric,
 			Tagkv:     tagkvs,
 		}
 		resp = append(resp, &TagkvResp)
 	}
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
-type FullmatchByEndpointRecv struct {
-	Endpoints []string             `json:"endpoints"`
-	Metric    string               `json:"metric"`
-	Tagkv     []*cache.TagkvStruct `json:"tagkv"`
+type GetIndexByFullTagsRecv struct {
+	Endpoints []string         `json:"endpoints"`
+	Metric    string           `json:"metric"`
+	Tagkv     []*cache.TagPair `json:"tagkv"`
 }
 
-type FullmatchByEndpointResp struct {
+type GetIndexByFullTagsResp struct {
 	Endpoints []string `json:"endpoints"`
 	Metric    string   `json:"metric"`
 	Tags      []string `json:"tags"`
@@ -163,22 +157,14 @@ type FullmatchByEndpointResp struct {
 	DsType    string   `json:"dstype"`
 }
 
-type XcludeResp struct {
-	Endpoint string   `json:"endpoint"`
-	Metric   string   `json:"metric"`
-	Tags     []string `json:"tags"`
-	Step     int      `json:"step"`
-	DsType   string   `json:"dstype"`
-}
-
-func FullmatchByEndpoint(c *gin.Context) {
-	recv := []FullmatchByEndpointRecv{}
+func GetIndexByFullTags(c *gin.Context) {
+	recv := []GetIndexByFullTagsRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
 	tagFilter := make(map[string]struct{})
 	tagsList := []string{}
 
-	var resp []FullmatchByEndpointResp
+	var resp []GetIndexByFullTagsResp
 
 	for _, r := range recv {
 		metric := r.Metric
@@ -187,50 +173,37 @@ func FullmatchByEndpoint(c *gin.Context) {
 		dsType := ""
 
 		for _, endpoint := range r.Endpoints {
-
 			if endpoint == "" {
-				logger.Warningf("非法请求: endpoint字段缺失:%v", r)
+				logger.Debugf("非法请求: endpoint字段缺失:%v", r)
 				continue
 			}
 			if metric == "" {
-				logger.Warningf("非法请求: metric字段缺失:%v", r)
+				logger.Debugf("非法请求: metric字段缺失:%v", r)
 				continue
 			}
-			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+
+			metricIndex, exists := cache.IndexDB.GetMetricIndex(endpoint, metric)
 			if !exists {
-				logger.Warningf("not found metrics by endpoint:%s", endpoint)
+				logger.Debugf("not found index by endpoint:%s metric:%v", endpoint, metric)
 				continue
 			}
+
 			if step == 0 || dsType == "" {
-				step, dsType, exists = metricsItem.GetMetricStepAndDstype(metric)
-				if !exists {
-					logger.Warningf("not found step by endpoint:%s metric:%v\n", endpoint, metric)
-					continue
-				}
+				step = metricIndex.Step
+				dsType = metricIndex.DsType
 			}
 
-			countersItem, exists := metricsItem.GetMetricStructCounters(metric)
-			if !exists {
-				logger.Warningf("not found counters by endpoint:%s metric:%v\n", endpoint, metric)
-				continue
-			}
+			countersMap := metricIndex.CounterMap.GetCounters()
+			tagPairs := cache.TagPairs{}
+			tagPairs = tagkv
+			sort.Sort(tagPairs)
 
-			counters := countersItem.GetCounters()
-			countersMap := make(map[string]struct{})
-			for _, counter := range counters {
-				countersMap[counter] = struct{}{}
-			}
-
-			tags, err := cache.EndpointDBObj.QueryCountersFullMatchByTags(endpoint, metric, tagkv)
-			if err != nil {
-				logger.Warning(err)
-				continue
-			}
+			tags := cache.GetAllCounter(tagPairs)
 
 			for _, tag := range tags {
 				//校验和tag有关的counter是否存在，如果一个指标，比如port.listen有name=uic,port=8056和name=hsp,port=8002。避免产生4个曲线
 				if _, exists := countersMap[tag]; !exists {
-					logger.Warningf("not found counters byendpoint:%s metric:%v tags:%v\n", endpoint, metric, tag)
+					logger.Debugf("not found counters byendpoint:%s metric:%v tags:%v\n", endpoint, metric, tag)
 					continue
 				}
 
@@ -241,7 +214,7 @@ func FullmatchByEndpoint(c *gin.Context) {
 			}
 		}
 
-		resp = append(resp, FullmatchByEndpointResp{
+		resp = append(resp, GetIndexByFullTagsResp{
 			Endpoints: r.Endpoints,
 			Metric:    r.Metric,
 			Tags:      tagsList,
@@ -250,22 +223,28 @@ func FullmatchByEndpoint(c *gin.Context) {
 		})
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
-type CludeByEndpointRecv struct {
+type CludeRecv struct {
 	Endpoints []string         `json:"endpoints"`
 	Metric    string           `json:"metric"`
-	Include   cache.XCludeList `json:"include"`
-	Exclude   cache.XCludeList `json:"exclude"`
+	Include   []*cache.TagPair `json:"include"`
+	Exclude   []*cache.TagPair `json:"exclude"`
 }
 
-func CludeByEndpoint(c *gin.Context) {
-	recv := []CludeByEndpointRecv{}
+type XcludeResp struct {
+	Endpoint string   `json:"endpoint"`
+	Metric   string   `json:"metric"`
+	Tags     []string `json:"tags"`
+	Step     int      `json:"step"`
+	DsType   string   `json:"dstype"`
+}
+
+func GetIndexByClude(c *gin.Context) {
+	recv := []CludeRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
-	tagFilter := make(map[string]struct{})
-	tagList := []string{}
 	var resp []XcludeResp
 
 	for _, r := range recv {
@@ -274,19 +253,22 @@ func CludeByEndpoint(c *gin.Context) {
 		excludeList := r.Exclude
 		step := 0
 		dsType := ""
+		tagList := []string{}
+		tagFilter := make(map[string]struct{})
 
 		for _, endpoint := range r.Endpoints {
 			if endpoint == "" {
-				logger.Warningf("非法请求: endpoint字段缺失:%v", r)
+				logger.Debugf("非法请求: endpoint字段缺失:%v", r)
 				continue
 			}
 			if metric == "" {
-				logger.Warningf("非法请求: metric字段缺失:%v", r)
+				logger.Debugf("非法请求: metric字段缺失:%v", r)
 				continue
 			}
 
-			metricsItem, exists := cache.EndpointDBObj.GetMetrics(endpoint)
+			metricIndex, exists := cache.IndexDB.GetMetricIndex(endpoint, metric)
 			if !exists {
+
 				resp = append(resp, XcludeResp{
 					Endpoint: endpoint,
 					Metric:   metric,
@@ -294,34 +276,48 @@ func CludeByEndpoint(c *gin.Context) {
 					Step:     step,
 					DsType:   dsType,
 				})
-				logger.Warningf("not found metrics by endpoint:%s", endpoint)
+				logger.Debugf("not found index by endpoint:%s metric:%v\n", endpoint, metric)
 				continue
 			}
 
 			if step == 0 || dsType == "" {
-				step, dsType, exists = metricsItem.GetMetricStepAndDstype(metric)
-				if !exists {
-					resp = append(resp, XcludeResp{
-						Endpoint: endpoint,
-						Metric:   metric,
-						Tags:     tagList,
-						Step:     step,
-						DsType:   dsType,
-					})
+				step = metricIndex.Step
+				dsType = metricIndex.DsType
+			}
 
-					logger.Warningf("not found step by endpoint:%s metric:%v\n", endpoint, metric)
+			//校验实际tag组合成的counter是否存在，如果一个指标，比如port.listen有name=uic,port=8056和name=hsp,port=8002。避免产生4个曲线
+			counterMap := metricIndex.CounterMap.GetCounters()
+
+			var err error
+			var tags []string
+			if len(includeList) == 0 && len(excludeList) == 0 {
+				for counter, _ := range counterMap {
+					tagList = append(tagList, counter)
+				}
+				resp = append(resp, XcludeResp{
+					Endpoint: endpoint,
+					Metric:   metric,
+					Tags:     tagList,
+					Step:     step,
+					DsType:   dsType,
+				})
+				continue
+			} else {
+				tags, err = cache.IndexDB.GetIndexByClude(endpoint, metric, includeList, excludeList, config.Config.Limit.MaxQueryCount)
+				if err != nil {
+					logger.Warning(err)
 					continue
 				}
 			}
 
-			tags, err := cache.EndpointDBObj.QueryCountersByNsMetricXclude(endpoint, metric, includeList, excludeList)
-			if err != nil {
-				logger.Warning(err)
-				continue
-			}
-
 			for _, tag := range tags {
 				if tag == "" { //过滤掉空字符串
+					continue
+				}
+
+				//校验实际tag组合成的counter是否存在，如果一个指标，比如port.listen有name=uic,port=8056和name=hsp,port=8002。避免产生4个曲线
+				if _, exists := counterMap[tag]; !exists {
+					logger.Debugf("not found counters by endpoint:%s metric:%v tags:%v\n", endpoint, metric, tag)
 					continue
 				}
 
@@ -330,6 +326,7 @@ func CludeByEndpoint(c *gin.Context) {
 					tagFilter[tag] = struct{}{}
 				}
 			}
+
 			resp = append(resp, XcludeResp{
 				Endpoint: endpoint,
 				Metric:   metric,
@@ -340,20 +337,20 @@ func CludeByEndpoint(c *gin.Context) {
 		}
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 func DumpIndex(c *gin.Context) {
-	err := cache.EndpointDBObj.Persist("normal")
+	err := cache.Persist("normal")
 	errors.Dangerous(err)
 
-	renderData(c, "ok", nil)
+	render.Data(c, "ok", nil)
 }
 
-func DumpFile(c *gin.Context) {
-	err := cache.EndpointDBObj.Persist("download")
+func GetIdxFile(c *gin.Context) {
+	err := cache.Persist("download")
 	errors.Dangerous(err)
 
-	traGz := fmt.Sprintf("%s%s", cache.PERMANENCE_DIR, "db.tar.gz")
+	traGz := fmt.Sprintf("%s/%s", cache.Config.PersistDir, "db.tar.gz")
 	c.File(traGz)
 }

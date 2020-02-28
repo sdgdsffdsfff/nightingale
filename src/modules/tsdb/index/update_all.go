@@ -7,7 +7,7 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
-	. "github.com/didi/nightingale/src/modules/tsdb/config"
+	"github.com/didi/nightingale/src/modules/tsdb/stats"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
@@ -18,30 +18,33 @@ var (
 )
 
 func StartUpdateIndexTask() {
-	if Config.Index.MaxConns != 0 {
-		semaUpdateIndexAll = semaphore.NewSemaphore(Config.Index.MaxConns / 2)
+	if Config.MaxConns != 0 {
+		semaUpdateIndexAll = semaphore.NewSemaphore(Config.MaxConns / 2)
 	} else {
 		semaUpdateIndexAll = semaphore.NewSemaphore(10)
 	}
 
-	t1 := time.NewTicker(time.Duration(Config.Index.RebuildInterval) * time.Second)
+	t1 := time.NewTicker(time.Duration(Config.RebuildInterval) * time.Second)
 	for {
 		<-t1.C
 
-		RebuildAllIndex()
+		RebuildAllIndex([]string{})
 	}
 }
 
-func RebuildAllIndex() error {
+func RebuildAllIndex(addrs []string) error {
+	if len(addrs) == 0 {
+		addrs = IndexList.Get()
+	}
 	//postTms := time.Now().Unix()
 	start := time.Now().Unix()
-	lastTs := start - Config.Index.ActiveDuration
+	lastTs := start - Config.ActiveDuration
 	aggrNum := 200
 
-	if !UpdateIndexToNSQLock.TryAcquire() {
+	if !UpdateIndexLock.TryAcquire() {
 		return fmt.Errorf("RebuildAllIndex already Rebuiding..")
 	} else {
-		defer UpdateIndexToNSQLock.Release()
+		defer UpdateIndexLock.Release()
 		var pushCnt = 0
 		var oldCnt = 0
 		for idx, _ := range IndexedItemCacheBigMap {
@@ -71,7 +74,7 @@ func RebuildAllIndex() error {
 					semaUpdateIndexAll.Acquire()
 					go func(items []*dataobj.TsdbItem) {
 						defer semaUpdateIndexAll.Release()
-						rpc.Push2Index(rpc.ALLINDEX, items)
+						rpc.Push2Index(rpc.ALLINDEX, items, addrs)
 					}(tmpList)
 
 					i = 0
@@ -82,13 +85,13 @@ func RebuildAllIndex() error {
 				semaUpdateIndexAll.Acquire()
 				go func(items []*dataobj.TsdbItem) {
 					defer semaUpdateIndexAll.Release()
-					rpc.Push2Index(rpc.ALLINDEX, items)
+					rpc.Push2Index(rpc.ALLINDEX, items, addrs)
 				}(tmpList[:i])
 			}
 		}
 
-		atomic.AddInt64(&PushIndex, int64(pushCnt))
-		atomic.AddInt64(&OldIndex, int64(oldCnt))
+		atomic.AddInt64(&stats.PushIndex, int64(pushCnt))
+		atomic.AddInt64(&stats.OldIndex, int64(oldCnt))
 
 		end := time.Now().Unix()
 		logger.Infof("RebuildAllIndex end : start_ts[%d] latency[%d] old/success/all[%d/%d/%d]", start, end-start, oldCnt, pushCnt, oldCnt+pushCnt)

@@ -11,9 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/didi/nightingale/src/modules/monapi/config"
-	"github.com/didi/nightingale/src/modules/monapi/http/middleware"
 	"github.com/didi/nightingale/src/modules/monapi/http/routes"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/http/middleware"
 )
 
 var srv = &http.Server{

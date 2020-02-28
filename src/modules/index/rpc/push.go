@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -37,18 +36,8 @@ func push(args []*dataobj.IndexModel, reply *dataobj.IndexResp) {
 	reply.Invalid = 0
 	now := time.Now().Unix()
 	for _, item := range args {
-		logger.Debugf("<index %v", item)
-		err := cache.EndpointDBObj.Push(*item, now)
-		if err != nil {
-			logger.Errorf("message push failed : %v", err)
-			reply.Invalid += 1
-			reply.Msg += fmt.Sprintf("%v\n", err)
-			atomic.AddInt64(&config.IndexInErr, 1)
-		}
-	}
-
-	if reply.Invalid == 0 {
-		reply.Msg = "ok"
+		logger.Debugf("<---index %v", item)
+		cache.IndexDB.Push(*item, now)
 	}
 
 	reply.Total = len(args)

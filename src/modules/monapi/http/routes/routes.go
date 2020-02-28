@@ -12,10 +12,8 @@ func Config(r *gin.Engine) {
 
 	hbs := r.Group("/api/hbs")
 	{
-		hbs.POST("/report-judge-heartbeat", judgeHeartBeat)
-		hbs.POST("/report-index-heartbeat", indexHeartBeat)
-		hbs.GET("/judges", judgeInstanceGets)
-		hbs.GET("/indexs", indexInstanceGets)
+		hbs.POST("/heartbeat", heartBeat)
+		hbs.GET("/instances", instanceGets)
 	}
 
 	nolog := r.Group("/api/portal")
@@ -124,6 +122,11 @@ func Config(r *gin.Engine) {
 		login.DELETE("/stra", strasDel)
 		login.GET("/stra", strasGet)
 		login.GET("/stra/:sid", straGet)
+	}
+
+	v1 := r.Group("/v1/portal").Use(middleware.CheckHeaderToken())
+	{
+		v1.POST("/endpoint", endpointImport)
 	}
 
 	transferProxy := r.Group("/api/transfer")

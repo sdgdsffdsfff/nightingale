@@ -16,13 +16,14 @@ func Config(r *gin.Engine) {
 		sys.GET("/pid", pid)
 		sys.GET("/addr", addr)
 
-		sys.POST("/metrics", GetMetricsByEndpoint)
-		sys.DELETE("/metrics", DeleteMetrics)
-		sys.POST("/tagkv", GetTagkvByEndpoint)
-		sys.POST("/counter/fullmatch", FullmatchByEndpoint)
-		sys.POST("/counter/clude", CludeByEndpoint)
+		sys.POST("/metrics", GetMetrics)
+		sys.DELETE("/metrics", DelMetrics)
+		sys.DELETE("/counter", DelCounter)
+		sys.POST("/tagkv", GetTagPairs)
+		sys.POST("/counter/fullmatch", GetIndexByFullTags)
+		sys.POST("/counter/clude", GetIndexByClude)
 		sys.POST("/dump", DumpIndex)
-		sys.GET("/dumpfile", DumpFile)
+		sys.GET("/idxfile", GetIdxFile)
 	}
 
 	if config.GetCfgYml().Logger.Level == "DEBUG" {

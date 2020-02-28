@@ -9,6 +9,7 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/identity"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -34,7 +35,7 @@ func Statstic() {
 func NewMetricValue(metric string, value int64) dataobj.MetricValue {
 	item := dataobj.MetricValue{
 		Metric:       metric,
-		Endpoint:     config.Identity,
+		Endpoint:     identity.Identity,
 		Timestamp:    time.Now().Unix(),
 		ValueUntyped: value,
 		CounterType:  "GAUGE",
@@ -46,7 +47,7 @@ func NewMetricValue(metric string, value int64) dataobj.MetricValue {
 func pushToMonitor(items []dataobj.MetricValue) {
 	bs, err := json.Marshal(items)
 	if err != nil {
-		logger.Error(err)
+		logger.Warning(err)
 		return
 	}
 
@@ -54,7 +55,7 @@ func pushToMonitor(items []dataobj.MetricValue) {
 
 	resp, err := http.Post(config.GetCfgYml().PushUrl, "application/json", bf)
 	if err != nil {
-		logger.Error(err)
+		logger.Warning(err)
 		return
 	}
 

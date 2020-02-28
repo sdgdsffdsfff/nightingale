@@ -8,14 +8,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/judge/backend/query"
 	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
-	"github.com/didi/nightingale/src/modules/judge/config"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/spaolacci/murmur3"
@@ -24,6 +22,9 @@ import (
 
 var (
 	bufferPool = sync.Pool{New: func() interface{} { return new(bytes.Buffer) }}
+
+	EVENT_ALERT   = "alert"
+	EVENT_RECOVER = "recovery"
 )
 
 func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem, now int64) {
@@ -53,16 +54,15 @@ func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem,
 	if !isEnough {
 		return
 	}
-	history := []config.History{}
+	history := []dataobj.History{}
 
 	Judge(stra, stra.Exprs, historyData, val, now, history, "")
 }
 
-func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []config.History, info string) {
-	atomic.AddInt64(&config.JudgeRun, 1)
+func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string) {
 
 	if len(exps) < 1 {
-		logger.Errorf("stra:%v exp is null", stra)
+		logger.Warningf("stra:%v exp is null", stra)
 		return
 	}
 	exp := exps[0]
@@ -74,7 +74,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 	} else {
 		info += fmt.Sprintf(" %s (%s,%ds)%s%v", exp.Metric, exp.Func, stra.AlertDur, exp.Eopt, exp.Threshold)
 	}
-	h := config.History{
+	h := dataobj.History{
 		Metric:      exp.Metric,
 		Tags:        firstItem.TagsMap,
 		Granularity: int(firstItem.Step),
@@ -88,7 +88,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 			if err != nil {
 				logger.Error("Marshal history:%v err:%v", history, err)
 			}
-			event := &config.Event{
+			event := &dataobj.Event{
 				ID:        fmt.Sprintf("s_%d_%s", stra.Id, firstItem.PrimaryKey()),
 				Etime:     now,
 				Endpoint:  firstItem.Endpoint,
@@ -159,6 +159,10 @@ func judgeItemWithStrategy(stra *model.Stra, historyData []*dataobj.RRDData, exp
 	straFunc := exp.Func
 
 	straParam := []interface{}{}
+	if firstItem.Step == 0 {
+		logger.Errorf("wrong step:%v", firstItem)
+		return
+	}
 	straParam = append(straParam, stra.AlertDur/int(firstItem.Step))
 
 	switch straFunc {
@@ -364,10 +368,10 @@ func GetReqs(stra *model.Stra, metric string, endpoints []string, now int64) ([]
 	return reqs, nil
 }
 
-func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64, event *config.Event) {
+func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64, event *dataobj.Event) {
 	lastEvent, exists := cache.LastEvents.Get(event.ID)
 	if isTriggered {
-		event.EventType = config.EVENT_ALERT
+		event.EventType = EVENT_ALERT
 		if !exists || lastEvent.EventType[0] == 'r' {
 			sendEvent(event)
 			return
@@ -383,13 +387,13 @@ func sendEventIfNeed(historyData []*dataobj.RRDData, isTriggered bool, now int64
 	} else {
 		// 如果LastEvent是Problem，报OK，否则啥都不做
 		if exists && lastEvent.EventType[0] == 'a' {
-			event.EventType = config.EVENT_RECOVER
+			event.EventType = EVENT_RECOVER
 			sendEvent(event)
 		}
 	}
 }
 
-func sendEvent(event *config.Event) {
+func sendEvent(event *dataobj.Event) {
 	// update last event
 	cache.LastEvents.Set(event.ID, event)
 

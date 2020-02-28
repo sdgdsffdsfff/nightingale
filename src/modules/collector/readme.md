@@ -1,5 +1,3 @@
-falcon-ns-syscollector
-===
 linux 服务器基础资源采集agent
 
 ## 功能

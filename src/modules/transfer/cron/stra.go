@@ -65,7 +65,7 @@ func getStrategy() {
 
 		metric := stra.Exprs[0].Metric
 		for _, endpoint := range stra.Endpoints {
-			key := str.PK(metric, endpoint) //get straMap key，todo 此处需要优化
+			key := str.PK(metric, endpoint) //TODO get straMap key， 此处需要优化
 			k1 := key[0:2]                  //为了加快查找，增加一层map，key为计算出来的hash的前2位
 
 			if _, exists := straMap[k1]; !exists {

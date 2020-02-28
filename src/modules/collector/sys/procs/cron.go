@@ -2,6 +2,8 @@ package procs
 
 import (
 	"time"
+
+	"github.com/didi/nightingale/src/modules/collector/stra"
 )
 
 func Detect() {
@@ -17,7 +19,7 @@ func loopDetect() {
 }
 
 func detect() {
-	ps := ListProcs()
+	ps := stra.GetProcCollects()
 	DelNoPorcCollect(ps)
 	AddNewPorcCollect(ps)
 }

@@ -30,10 +30,10 @@ func Start() {
 
 	l, e := net.Listen("tcp", addr)
 	if e != nil {
-		logger.Fatal(0, "cannot listen ", addr, e)
+		logger.Fatal("cannot listen ", addr, e)
 		os.Exit(1)
 	}
-	logger.Info(0, "rpc listening ", addr)
+	logger.Info("rpc listening ", addr)
 
 	var mh codec.MsgpackHandle
 	mh.MapType = reflect.TypeOf(map[string]interface{}(nil))
@@ -42,7 +42,7 @@ func Start() {
 		for {
 			conn, err := l.Accept()
 			if err != nil {
-				logger.Warning(0, "listener accept error: ", err)
+				logger.Error("listener accept error: ", err)
 				time.Sleep(time.Duration(100) * time.Millisecond)
 				continue
 			}
@@ -59,7 +59,7 @@ func Start() {
 
 	select {
 	case <-Close_chan:
-		logger.Info(0, "rpc, recv sigout and exiting...")
+		logger.Info("rpc, recv sigout and exiting...")
 		l.Close()
 		Close_done_chan <- 1
 
