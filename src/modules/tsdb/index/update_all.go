@@ -28,12 +28,15 @@ func StartUpdateIndexTask() {
 	for {
 		<-t1.C
 
-		RebuildAllIndex([]string{})
+		RebuildAllIndex()
 	}
 }
 
-func RebuildAllIndex(addrs []string) error {
-	if len(addrs) == 0 {
+func RebuildAllIndex(params ...[]string) error {
+	var addrs []string
+	if len(params) > 0 {
+		addrs = params[0]
+	} else {
 		addrs = IndexList.Get()
 	}
 	//postTms := time.Now().Unix()

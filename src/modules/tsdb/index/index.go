@@ -37,7 +37,9 @@ func GetIndexLoop() {
 		<-t1.C
 		GetIndex()
 		addrs := rpc.ReNewPools(IndexList.Get())
-		RebuildAllIndex(addrs) //addrs为新增的index实例列表，重新推一遍全量索引
+		if len(addrs) > 0 {
+			RebuildAllIndex(addrs) //addrs为新增的index实例列表，重新推一遍全量索引
+		}
 	}
 }
 
