@@ -20,7 +20,6 @@ func Logined() gin.HandlerFunc {
 
 		if username == "" {
 			errors.Bomb("unauthorized")
-			c.Abort()
 		}
 
 		c.Set("username", username)
