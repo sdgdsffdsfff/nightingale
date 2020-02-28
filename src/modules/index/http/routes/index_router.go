@@ -2,7 +2,6 @@ package routes
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/didi/nightingale/src/modules/index/cache"
 	"github.com/didi/nightingale/src/modules/index/config"
@@ -194,10 +193,8 @@ func GetIndexByFullTags(c *gin.Context) {
 			}
 
 			countersMap := metricIndex.CounterMap.GetCounters()
-			tagPairs := cache.TagPairs{}
-			tagPairs = tagkv
-			sort.Sort(tagPairs)
 
+			tagPairs := cache.GetSortTags(cache.TagPairToMap(tagkv))
 			tags := cache.GetAllCounter(tagPairs)
 
 			for _, tag := range tags {

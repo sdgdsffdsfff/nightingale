@@ -125,6 +125,14 @@ func OverMaxLimit(tagMap map[string][]string, limit int) bool {
 	return false
 }
 
+func TagPairToMap(tagPairs []*TagPair) map[string][]string {
+	tagMap := make(map[string][]string)
+	for _, tagPair := range tagPairs {
+		tagMap[tagPair.Key] = tagPair.Values
+	}
+	return tagMap
+}
+
 func GetSortTags(tagMap map[string][]string) []*TagPair {
 	var keys []string
 	for key, _ := range tagMap {

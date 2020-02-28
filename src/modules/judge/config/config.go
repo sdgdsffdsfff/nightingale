@@ -60,7 +60,7 @@ func Parse(conf string) error {
 	})
 
 	viper.SetDefault("strategy", map[string]interface{}{
-		"partitionApi":   "/api/portal/stras/effective?instance=%s",
+		"partitionApi":   "/api/portal/stras/effective?instance=%s:%s",
 		"updateInterval": 9000,
 		"indexInterval":  60000,
 		"timeout":        5000,
