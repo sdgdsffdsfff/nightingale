@@ -49,7 +49,7 @@ func report(addrs []string) {
 		url := fmt.Sprintf("http://%s/api/hbs/heartbeat", addrs[perm[i]])
 
 		m := map[string]string{
-			"mod":       Config.Mod,
+			"module":    Config.Mod,
 			"identity":  identity.Identity,
 			"rpc_port":  Config.RPCPort,
 			"http_port": Config.HTTPPort,

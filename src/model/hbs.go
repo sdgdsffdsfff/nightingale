@@ -25,7 +25,7 @@ func (i *Instance) Update() error {
 
 func GetInstanceBy(mod, identity, rpcPort, httpPort string) (*Instance, error) {
 	var obj Instance
-	has, err := DB["hbs"].Where("module=? and identity=? and rpc_port=? and http_port=?", identity, rpcPort, httpPort).Get(&obj)
+	has, err := DB["hbs"].Where("module=? and identity=? and rpc_port=? and http_port=?", mod, identity, rpcPort, httpPort).Get(&obj)
 	if err != nil {
 		return nil, err
 	}
