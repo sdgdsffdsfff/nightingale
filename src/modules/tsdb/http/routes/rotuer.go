@@ -23,7 +23,7 @@ func ConfigRoutes(r *mux.Router) {
 }
 
 func rebuildIndex(w http.ResponseWriter, r *http.Request) {
-	go index.RebuildAllIndex([]string{})
+	go index.RebuildAllIndex()
 	render.Data(w, "ok", nil)
 }
 

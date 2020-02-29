@@ -37,14 +37,16 @@ func GetIndexLoop() {
 		<-t1.C
 		GetIndex()
 		addrs := rpc.ReNewPools(IndexList.Get())
-		RebuildAllIndex(addrs) //addrs为新增的index实例列表，重新推一遍全量索引
+		if len(addrs) > 0 {
+			RebuildAllIndex(addrs) //addrs为新增的index实例列表，重新推一遍全量索引
+		}
 	}
 }
 
 func GetIndex() {
-	instances := report.GetAlive("index", "monapi")
-	if len(instances) < 1 {
-		logger.Warningf("instances is null")
+	instances, err := report.GetAlive("index", "monapi")
+	if err != nil {
+		logger.Warningf("get index list err:%v", err)
 		return
 	}
 

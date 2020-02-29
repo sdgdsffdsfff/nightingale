@@ -5,12 +5,12 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/toolkits/pkg/logger"
-	"github.com/toolkits/pkg/net/httplib"
-
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/identity"
+
+	"github.com/toolkits/pkg/logger"
+	"github.com/toolkits/pkg/net/httplib"
 )
 
 type ReportSection struct {
@@ -77,7 +77,7 @@ type instanceRes struct {
 	Dat []*model.Instance `json:"dat"`
 }
 
-func GetAlive(wantedMod, serverMod string) []*model.Instance {
+func GetAlive(wantedMod, serverMod string) ([]*model.Instance, error) {
 	addrs := address.GetHTTPAddresses(serverMod)
 	perm := rand.Perm(len(addrs))
 
@@ -87,9 +87,10 @@ func GetAlive(wantedMod, serverMod string) []*model.Instance {
 	}
 
 	var body instanceRes
+	var err error
 	for i := range perm {
 		url := fmt.Sprintf("http://%s/api/hbs/instances?mod=%s&alive=1", addrs[perm[i]], wantedMod)
-		err := httplib.Get(url).SetTimeout(time.Duration(timeout) * time.Millisecond).ToJSON(&body)
+		err = httplib.Get(url).SetTimeout(time.Duration(timeout) * time.Millisecond).ToJSON(&body)
 
 		if err != nil {
 			logger.Warningf("curl %s fail: %v", url, err)
@@ -97,9 +98,10 @@ func GetAlive(wantedMod, serverMod string) []*model.Instance {
 		}
 
 		if body.Err != "" {
-			logger.Warningf("curl %s fail: %v", url, body.Err)
+			err = fmt.Errorf("curl %s fail: %v", url, body.Err)
+			logger.Warning(err)
 			continue
 		}
 	}
-	return body.Dat
+	return body.Dat, err
 }

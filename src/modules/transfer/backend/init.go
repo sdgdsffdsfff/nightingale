@@ -95,7 +95,7 @@ func initSendQueues() {
 
 func GetJudges() []string {
 	var judgeInstances []string
-	instances := report.GetAlive("judge", "monapi")
+	instances, _ := report.GetAlive("judge", "monapi")
 	for _, instance := range instances {
 		judgeInstance := instance.Identity + ":" + instance.RPCPort
 		judgeInstances = append(judgeInstances, judgeInstance)

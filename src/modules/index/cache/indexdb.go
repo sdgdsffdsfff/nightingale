@@ -15,7 +15,9 @@ import (
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 
+	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/toolkits/compress"
+	"github.com/didi/nightingale/src/toolkits/identity"
 	"github.com/didi/nightingale/src/toolkits/report"
 )
 
@@ -72,16 +74,20 @@ func StartPersist(interval int) {
 
 func Rebuild(persistenceDir string, concurrency int) {
 	var dbDir string
-	err := getIndexFromRemote()
-	if err == nil {
-		dbDir = fmt.Sprintf("%s/%s", persistenceDir, "download")
-	} else {
-		logger.Errorf("build from remote err:%v, rebuild from local", err)
+	indexList := IndexList()
+	if len(indexList) > 0 {
+		err := getIndexFromRemote(indexList)
+		if err == nil {
+			dbDir = fmt.Sprintf("%s/%s", persistenceDir, "download")
+		}
+	}
 
+	if dbDir == "" { //dbDir为空说明从远端下载索引失败，从本地读取
+		logger.Debug("rebuild from local")
 		dbDir = fmt.Sprintf("%s/%s", persistenceDir, "db")
 	}
 
-	err = RebuildFromDisk(dbDir, concurrency)
+	err := RebuildFromDisk(dbDir, concurrency)
 	if err != nil {
 		logger.Error(err)
 	}
@@ -117,6 +123,10 @@ func RebuildFromDisk(indexFileDir string, concurrency int) error {
 				return
 			}
 
+			if !metricIndexMap.IsReported() {
+				NewEndpoints.PushFront(endpoint) //没有标记上报过的endpoint，重新上报给monapi
+			}
+
 			IndexDB.Lock()
 			IndexDB.M[endpoint] = metricIndexMap
 			IndexDB.Unlock()
@@ -132,10 +142,12 @@ func Persist(mode string) error {
 	if mode == "end" {
 		semaPermanence.Acquire()
 		defer semaPermanence.Release()
+
 	} else if mode == "normal" || mode == "download" {
 		if !semaPermanence.TryAcquire() {
 			return fmt.Errorf("permanence operate is Already running...")
 		}
+		defer semaPermanence.Release()
 	} else {
 		return fmt.Errorf("wrong mode:%v", mode)
 	}
@@ -215,14 +227,25 @@ func ReadIndexFromFile(indexDir, endpoint string) (*MetricIndexMap, error) {
 	return metricIndexMap, err
 }
 
-func getIndexFromRemote() error {
+func IndexList() []*model.Instance {
+	var instances []*model.Instance
+	activeIndexs, _ := report.GetAlive("index", "monapi")
+	for _, instance := range activeIndexs {
+		if instance.Identity != identity.Identity {
+			instances = append(instances, instance)
+		}
+	}
+	return instances
+}
+
+func getIndexFromRemote(instances []*model.Instance) error {
 	filepath := fmt.Sprintf("db.tar.gz")
 	var err error
 	// Get the data
-	activeIndexs := report.GetAlive("index", "monapi")
-	perm := rand.Perm(len(activeIndexs))
+
+	perm := rand.Perm(len(instances))
 	for i := range perm {
-		url := fmt.Sprintf("http://%s:%s/api/index/idxfile", activeIndexs[perm[i]].Identity, activeIndexs[perm[i]].HTTPPort)
+		url := fmt.Sprintf("http://%s:%s/api/index/idxfile", instances[perm[i]].Identity, instances[perm[i]].HTTPPort)
 		resp, err := http.Get(url)
 		if err != nil {
 			return err

@@ -35,27 +35,38 @@ type reportRes struct {
 }
 
 func reportEndpoint(endpoints []interface{}) {
-	addrs := address.GetHTTPAddresses("monapi")
-	perm := rand.Perm(len(addrs))
-	for i := range perm {
-		url := fmt.Sprintf("http://%s/v1/portal/endpoint", addrs[perm[i]])
+	for {
+		addrs := address.GetHTTPAddresses("monapi")
+		perm := rand.Perm(len(addrs))
+		for i := range perm {
+			url := fmt.Sprintf("http://%s/v1/portal/endpoint", addrs[perm[i]])
 
-		m := map[string][]interface{}{
-			"endpoints": endpoints,
+			m := map[string][]interface{}{
+				"endpoints": endpoints,
+			}
+
+			var body reportRes
+			err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(3*time.Second).Header("x-srv-token", "monapi-builtin-token").ToJSON(&body)
+			if err != nil {
+				logger.Warningf("curl %s fail: %v. retry", url, err)
+				continue
+			}
+
+			if body.Err != "" {
+				logger.Warningf("curl %s fail: %s. retry", url, body.Err)
+				continue
+			}
+
+			//推送成功，将endpoint状态标记为已上报，避免下次index重启时再重新上报
+			for _, endpoint := range endpoints {
+				metricIndexMap, _ := IndexDB.GetMetricIndexMap(endpoint.(string))
+				metricIndexMap.SetReported()
+			}
+			return
+
 		}
-
-		var body reportRes
-		err := httplib.Post(url).JSONBodyQuiet(m).SetTimeout(3 * time.Second).ToJSON(&body)
-		if err != nil {
-			logger.Warningf("curl %s fail: %v", url, err)
-			continue
-		}
-
-		if body.Err != "" {
-			logger.Warningf("curl %s fail: %s", url, body.Err)
-			continue
-		}
-
-		return
+		time.Sleep(100 * time.Millisecond)
 	}
+
+	return
 }

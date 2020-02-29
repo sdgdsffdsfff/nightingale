@@ -113,10 +113,17 @@ func (this *ConnPools) Get(address string) (*pool.ConnPool, bool) {
 func (c *ConnPools) UpdatePools(addrs []string) []string {
 	c.Lock()
 	defer c.Unlock()
-
 	newAddrs := []string{}
+
+	if len(addrs) == 0 {
+		c.M = make(map[string]*pool.ConnPool)
+		return newAddrs
+	}
+	addrMap := make(map[string]struct{})
+
 	ct := time.Duration(c.ConnTimeout) * time.Millisecond
 	for _, addr := range addrs {
+		addrMap[addr] = struct{}{}
 		_, exists := c.M[addr]
 		if exists {
 			continue
@@ -124,6 +131,13 @@ func (c *ConnPools) UpdatePools(addrs []string) []string {
 		newAddrs = append(newAddrs, addr)
 		c.M[addr] = createOnePool(addr, addr, ct, c.MaxConns, c.MaxIdle)
 	}
+
+	for addr, _ := range c.M { //删除旧的地址
+		if _, exists := addrMap[addr]; !exists {
+			delete(c.M, addr)
+		}
+	}
+
 	return newAddrs
 
 }
