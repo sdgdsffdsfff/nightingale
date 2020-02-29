@@ -3,7 +3,7 @@ salt: "PLACE_SALT"
 
 logger:
   dir: "logs/monapi"
-  level: "INFO"
+  level: "WARNING"
   keepHours: 24
 
 http:
