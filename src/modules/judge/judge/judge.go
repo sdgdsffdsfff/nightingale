@@ -56,10 +56,10 @@ func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem,
 	}
 	history := []dataobj.History{}
 
-	Judge(stra, stra.Exprs, historyData, val, now, history, "")
+	Judge(stra, stra.Exprs, historyData, val, now, history, "", "")
 }
 
-func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string) {
+func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string, value string) {
 
 	if len(exps) < 1 {
 		logger.Warningf("stra:%v exp is null", stra)
@@ -74,6 +74,13 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 	} else {
 		info += fmt.Sprintf(" %s (%s,%ds)%s%v", exp.Metric, exp.Func, stra.AlertDur, exp.Eopt, exp.Threshold)
 	}
+
+	if value == "" {
+		value = fmt.Sprintf("%s:%v", exp.Metric, leftValue)
+	} else {
+		value += fmt.Sprintf(";%s:%v", exp.Metric, leftValue)
+	}
+
 	h := dataobj.History{
 		Metric:      exp.Metric,
 		Tags:        firstItem.TagsMap,
@@ -94,7 +101,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 				Endpoint:  firstItem.Endpoint,
 				Info:      info,
 				Detail:    string(bytes),
-				Value:     fmt.Sprintf("%s:%v", exp.Metric, leftValue),
+				Value:     value,
 				Partition: "/n9e/event/p" + strconv.Itoa(stra.Priority),
 				Sid:       stra.Id,
 				Hashid:    getHashId(stra.Id, firstItem),
@@ -122,7 +129,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 					Tags:     "",
 					DsType:   "GAUGE",
 				}
-				Judge(stra, exps[1:], []*dataobj.RRDData{}, judgeItem, now, history, info)
+				Judge(stra, exps[1:], []*dataobj.RRDData{}, judgeItem, now, history, info, value)
 				return
 			}
 
@@ -130,7 +137,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 				firstItem.Endpoint = respData[i].Endpoint
 				firstItem.Tags = getTags(respData[i].Counter)
 				firstItem.Step = respData[i].Step
-				Judge(stra, exps[1:], respData[i].Values, firstItem, now, history, info)
+				Judge(stra, exps[1:], respData[i].Values, firstItem, now, history, info, value)
 			}
 
 		} else {
@@ -149,7 +156,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 				firstItem.Endpoint = respData[i].Endpoint
 				firstItem.Tags = getTags(respData[i].Counter)
 				firstItem.Step = respData[i].Step
-				Judge(stra, exps[1:], respData[i].Values, firstItem, now, history, info)
+				Judge(stra, exps[1:], respData[i].Values, firstItem, now, history, info, value)
 			}
 		}
 	}
