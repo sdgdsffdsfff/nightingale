@@ -96,7 +96,7 @@ func Rebuild(persistenceDir string, concurrency int) {
 func RebuildFromDisk(indexFileDir string, concurrency int) error {
 	logger.Info("Try to rebuild index from disk")
 	if !file.IsExist(indexFileDir) {
-		return fmt.Errorf("index persistence dir not exists.")
+		return fmt.Errorf("index persistence dir %s not exists.", indexFileDir)
 	}
 
 	//遍历目录

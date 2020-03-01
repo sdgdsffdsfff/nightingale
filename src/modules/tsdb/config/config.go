@@ -88,9 +88,8 @@ func Parse(conf string) error {
 	})
 
 	viper.SetDefault("cache", map[string]int{
+		"keepMinutes":      120, //时序数据在内存中保存的时长
 		"spanInSeconds":    900, //每个数据块保存数据的时间范围，单位秒
-		"numOfChunks":      16,  //使用数据块的个数，此配置表示内存会存4小时的数据
-		"expiresInMinutes": 135, //内存中旧数据过期时间，单位分钟
 		"doCleanInMinutes": 10,  //清理过期数据的周期，单位分钟
 		"flushDiskStepMs":  1000,
 	})
@@ -104,6 +103,7 @@ func Parse(conf string) error {
 		"maxConns":    32,   //查询和推送数据的并发个数
 		"maxIdle":     32,   //建立的连接池的最大空闲数
 	})
+	viper.SetDefault("migrate.enabled", false)
 
 	viper.SetDefault("index", map[string]int{
 		"activeDuration":  90000, //索引最大的保留时间，超过此数值，索引不会被重建，默认是1天+1小时

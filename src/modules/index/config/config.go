@@ -76,7 +76,7 @@ func Parse(conf string) error {
 
 	viper.SetDefault("cache", map[string]interface{}{
 		"cacheDuration":   90000,
-		"cleanInterval":   4500,       //清理周期，单位秒
+		"cleanInterval":   3600,       //清理周期，单位秒
 		"persistInterval": 900,        //数据落盘周期，单位秒
 		"persistDir":      "./.index", //索引落盘目录
 		"rebuildWorker":   20,         //从磁盘读取所以的数据的并发个数
@@ -93,7 +93,7 @@ func Parse(conf string) error {
 
 	err = viper.Unmarshal(&Config)
 	if err != nil {
-		return fmt.Errorf("Unmarshal %v", err)
+		return fmt.Errorf("unmarshal %v", err)
 	}
 
 	Config.Report.HTTPPort = strconv.Itoa(address.GetHTTPPort("index"))

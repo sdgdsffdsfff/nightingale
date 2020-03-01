@@ -13,9 +13,9 @@ import (
 )
 
 type CacheSection struct {
+	KeepMinutes      int `yaml:"keepMinutes"`
 	SpanInSeconds    int `yaml:"spanInSeconds"`
 	NumOfChunks      int `yaml:"numOfChunks"`
-	ExpiresInMinutes int `yaml:"expiresInMinutes"`
 	DoCleanInMinutes int `yaml:"doCleanInMinutes"`
 	FlushDiskStepMs  int `yaml:"flushDiskStepMs"`
 }
@@ -43,6 +43,11 @@ type cache struct {
 
 func Init(cfg CacheSection) {
 	Config = cfg
+
+	//根据内存保存曲线的时长，计算出需要几个chunk
+	//如果内存保留2个小时数据，+1为了查询2个小时内的数据一定落在内存中
+	Config.NumOfChunks = Config.KeepMinutes*60/Config.SpanInSeconds + 1
+
 	InitCaches()
 	go StartCleanup()
 }
@@ -83,7 +88,7 @@ func StartCleanup() {
 		select {
 		case <-t.C:
 			if !cleaning {
-				go Caches.Cleanup(cfg.ExpiresInMinutes)
+				go Caches.Cleanup(cfg.KeepMinutes)
 			} else {
 				logger.Warning("cleanup() is working, may be it's too slow")
 			}
