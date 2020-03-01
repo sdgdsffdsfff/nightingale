@@ -9,13 +9,13 @@ import (
 
 	"github.com/didi/nightingale/src/modules/index/cache"
 	"github.com/didi/nightingale/src/modules/index/config"
-	"github.com/didi/nightingale/src/modules/index/cron"
 	"github.com/didi/nightingale/src/modules/index/http/routes"
 	"github.com/didi/nightingale/src/modules/index/rpc"
 	"github.com/didi/nightingale/src/toolkits/http"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	tlogger "github.com/didi/nightingale/src/toolkits/logger"
 	"github.com/didi/nightingale/src/toolkits/report"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
@@ -60,7 +60,7 @@ func main() {
 	identity.Init(cfg.Identity)
 
 	go report.Init(cfg.Report, "monapi")
-	go cron.Statstic()
+	go stats.Init("n9e.index")
 	go rpc.Start()
 
 	r := gin.New()

@@ -65,8 +65,6 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
-
 	viper.SetDefault("http.enabled", true)
 	viper.SetDefault("rpc.enabled", true)
 
