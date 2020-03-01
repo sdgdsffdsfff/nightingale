@@ -16,7 +16,6 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
-	"github.com/didi/nightingale/src/modules/judge/cron"
 	"github.com/didi/nightingale/src/modules/judge/http/routes"
 	"github.com/didi/nightingale/src/modules/judge/judge"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
@@ -25,6 +24,7 @@ import (
 	"github.com/didi/nightingale/src/toolkits/identity"
 	tlogger "github.com/didi/nightingale/src/toolkits/logger"
 	"github.com/didi/nightingale/src/toolkits/report"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 const version = 1
@@ -70,7 +70,7 @@ func main() {
 	cache.SeriesMap = cache.NewIndexMap()
 
 	go rpc.Start()
-	go cron.Statstic()
+	go stats.Init("n9e.judge")
 
 	go stra.GetStrategy(cfg.Strategy)
 	go judge.NodataJudge(cfg.NodataConcurrency)

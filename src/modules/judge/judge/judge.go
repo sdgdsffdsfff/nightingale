@@ -14,6 +14,7 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/backend/query"
 	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
+	"github.com/didi/nightingale/src/toolkits/stats"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/spaolacci/murmur3"
@@ -60,6 +61,7 @@ func ToJudge(historyMap *cache.JudgeItemMap, key string, val *dataobj.JudgeItem,
 }
 
 func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, firstItem *dataobj.JudgeItem, now int64, history []dataobj.History, info string, value string) {
+	stats.Counter.Set("running", 1)
 
 	if len(exps) < 1 {
 		logger.Warningf("stra:%v exp is null", stra)
@@ -404,6 +406,7 @@ func sendEvent(event *dataobj.Event) {
 	// update last event
 	cache.LastEvents.Set(event.ID, event)
 
+	stats.Counter.Set("event", 1)
 	err := redi.Push(event)
 	if err != nil {
 		logger.Errorf("push event:%v err:%v", event, err)

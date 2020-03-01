@@ -12,7 +12,8 @@ var Counter *CounterMetric
 
 func NewCounter(prefix string) *CounterMetric {
 	return &CounterMetric{
-		prefix: prefix,
+		metrics: make(map[string]int),
+		prefix:  prefix,
 	}
 }
 
@@ -31,8 +32,8 @@ func (c *CounterMetric) Dump() map[string]int {
 	defer c.Unlock()
 	metrics := make(map[string]int)
 	for key, value := range c.metrics {
-		key = c.prefix + "." + key
-		metrics[key] = value
+		newKey := c.prefix + "." + key
+		metrics[newKey] = value
 		c.metrics[key] = 0
 	}
 

@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"math"
-	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
@@ -12,6 +11,7 @@ import (
 	"github.com/didi/nightingale/src/modules/tsdb/migrate"
 	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
+	"github.com/didi/nightingale/src/toolkits/stats"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/toolkits/pkg/file"
@@ -27,12 +27,15 @@ func (t *Tsdb) Ping(req dataobj.NullRpcRequest, resp *dataobj.SimpleRpcResponse)
 }
 
 func (t *Tsdb) Send(items []*dataobj.TsdbItem, resp *dataobj.SimpleRpcResponse) error {
+	stats.Counter.Set("push.qp10s", 1)
+
 	go handleItems(items)
 	return nil
 }
 
 // 供外部调用、处理接收到的数据 的接口
 func HandleItems(items []*dataobj.TsdbItem) error {
+
 	handleItems(items)
 	return nil
 }
@@ -50,11 +53,14 @@ func handleItems(items []*dataobj.TsdbItem) {
 		if items[i] == nil {
 			continue
 		}
+		stats.Counter.Set("points.in", 1)
 
 		item := convert2CacheServerItem(items[i])
 		//todo 是否校验 是不是比上一个时间点时间旧
 		//todo hash冲突问题需要解决
 		if err := cache.Caches.Push(item.Key, item.Timestamp, item.Value); err != nil {
+			stats.Counter.Set("points.in.err", 1)
+
 			logger.Warningf("push obj error, obj: %v, error: %v\n", items[i], err)
 			fail++
 		}
@@ -93,8 +99,6 @@ func handleItems(items []*dataobj.TsdbItem) {
 			}
 		}
 	}
-	atomic.AddInt64(&config.PointIn, cnt)
-	atomic.AddInt64(&config.PointInErr, fail)
 }
 
 func convert2CacheServerItem(d *dataobj.TsdbItem) cache.Point {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -54,6 +55,7 @@ func (e *EndpointIndexMap) Clean(timeDuration int64) {
 		if metricIndexMap.Len() < 1 {
 			e.Lock()
 			delete(e.M, endpoint)
+			stats.Counter.Set("endpoint.clean", 1)
 			e.Unlock()
 			logger.Debug("clean index endpoint: ", endpoint)
 		}

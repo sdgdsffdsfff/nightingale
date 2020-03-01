@@ -6,6 +6,7 @@ import (
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/judge"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -22,6 +23,8 @@ func (j *Judge) Send(items []*dataobj.JudgeItem, resp *dataobj.SimpleRpcResponse
 	for _, item := range items {
 		pk := item.MD5()
 		logger.Debug("recv-->", item)
+		stats.Counter.Set("push.in", 1)
+
 		judge.ToJudge(cache.HistoryBigMap[pk[0:2]], pk, item, now)
 	}
 

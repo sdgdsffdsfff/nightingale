@@ -14,6 +14,7 @@ import (
 	"github.com/didi/nightingale/src/modules/transfer/rpc"
 	"github.com/didi/nightingale/src/toolkits/http"
 	tlogger "github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
@@ -56,6 +57,7 @@ func main() {
 	tlogger.Init(cfg.Logger)
 	backend.Init(cfg.Backend)
 	cron.Init()
+	go stats.Init("n9e.transfer")
 
 	go rpc.Start()
 

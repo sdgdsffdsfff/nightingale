@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -52,8 +53,10 @@ func push(mode int, addr string, tsdbItems []*dataobj.TsdbItem) {
 	for i := 0; i < 3; i++ { //最多重试3次
 		if mode == INCRINDEX {
 			err = IndexConnPools.Call(addr, "Index.IncrPush", bodyList, resp)
+			stats.Counter.Set("index.push.incr", int(itemCount))
 		} else {
 			err = IndexConnPools.Call(addr, "Index.Push", bodyList, resp)
+			stats.Counter.Set("index.push", int(itemCount))
 		}
 		if err == nil {
 			sendOk = true
@@ -66,6 +69,8 @@ func push(mode int, addr string, tsdbItems []*dataobj.TsdbItem) {
 	}
 
 	if !sendOk {
+		stats.Counter.Set("index.push.err", int(itemCount))
+
 		logger.Errorf("send %v to index %s fail: %v", bodyList, addr, err)
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/didi/nightingale/src/modules/tsdb/rpc"
 	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
 	tlogger "github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/runner"
@@ -63,6 +64,7 @@ func main() {
 
 	cache.InitChunkSlot()
 	rrdtool.Init(cfg.RRD)
+	go stats.Init("n9e.tsdb")
 
 	if cfg.Migrate.Enabled {
 		migrate.Init(cfg.Migrate) //读数据加队列

@@ -6,6 +6,7 @@ import (
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/transfer/cache"
+	"github.com/didi/nightingale/src/toolkits/stats"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
@@ -70,6 +71,7 @@ func Send2TsdbTask(Q *list.SafeListLimited, node string, addr string, concurrent
 		tsdbItems := make([]*dataobj.TsdbItem, count)
 		for i := 0; i < count; i++ {
 			tsdbItems[i] = items[i].(*dataobj.TsdbItem)
+			stats.Counter.Set("push.tsdb", 1)
 			logger.Debug("send to tsdb->: ", tsdbItems[i])
 		}
 
@@ -147,6 +149,7 @@ func Send2JudgeTask(Q *list.SafeListLimited, addr string, concurrent int) {
 		judgeItems := make([]*dataobj.JudgeItem, count)
 		for i := 0; i < count; i++ {
 			judgeItems[i] = items[i].(*dataobj.JudgeItem)
+			stats.Counter.Set("push.judge", 1)
 			logger.Debug("send to judge: ", judgeItems[i])
 		}
 

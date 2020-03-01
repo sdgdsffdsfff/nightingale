@@ -2,12 +2,11 @@ package index
 
 import (
 	"fmt"
-	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
-	"github.com/didi/nightingale/src/modules/tsdb/stats"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
@@ -93,8 +92,7 @@ func RebuildAllIndex(params ...[]string) error {
 			}
 		}
 
-		atomic.AddInt64(&stats.PushIndex, int64(pushCnt))
-		atomic.AddInt64(&stats.OldIndex, int64(oldCnt))
+		stats.Counter.Set("index.old", oldCnt)
 
 		end := time.Now().Unix()
 		logger.Infof("RebuildAllIndex end : start_ts[%d] latency[%d] old/success/all[%d/%d/%d]", start, end-start, oldCnt, pushCnt, oldCnt+pushCnt)

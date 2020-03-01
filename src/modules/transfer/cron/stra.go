@@ -11,6 +11,7 @@ import (
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/transfer/cache"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/stats"
 	"github.com/didi/nightingale/src/toolkits/str"
 )
 
@@ -54,6 +55,8 @@ func getStrategy() {
 
 	straMap := make(map[string]map[string][]*model.Stra)
 	for _, stra := range stras.Data {
+		stats.Counter.Set("stra.count", 1)
+
 		//var metric string
 		if len(stra.Exprs) < 1 {
 			continue
@@ -74,6 +77,8 @@ func getStrategy() {
 
 			if _, exists := straMap[k1][key]; !exists {
 				straMap[k1][key] = []*model.Stra{stra}
+				stats.Counter.Set("stra.key", 1)
+
 			} else {
 				straMap[k1][key] = append(straMap[k1][key], stra)
 			}

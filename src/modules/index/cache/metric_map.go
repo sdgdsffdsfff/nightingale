@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/didi/nightingale/src/dataobj"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 type MetricIndex struct {
@@ -63,6 +64,7 @@ func (m *MetricIndexMap) Clean(now, timeDuration int64, endpoint string) {
 	for metric, metricIndex := range m.Data {
 		//清理tagkv
 		if now-metricIndex.Ts > timeDuration {
+			stats.Counter.Set("metric.clean", 1)
 			delete(m.Data, metric)
 			continue
 		}

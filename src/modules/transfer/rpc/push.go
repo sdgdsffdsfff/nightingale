@@ -6,6 +6,7 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/backend"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -22,8 +23,11 @@ func (t *Transfer) Push(args []*dataobj.MetricValue, reply *dataobj.TransferResp
 	items := []*dataobj.MetricValue{}
 	for _, v := range args {
 		logger.Debug("->recv: ", v)
+		stats.Counter.Set("points.in", 1)
 		err := v.CheckValidity()
 		if err != nil {
+			stats.Counter.Set("points.in.err", 1)
+
 			logger.Warningf("item is illegal item:%s err:%v", v, err)
 			reply.Invalid += 1
 			reply.Msg += fmt.Sprintf("%v\n", err)

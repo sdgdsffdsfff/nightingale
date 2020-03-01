@@ -3,6 +3,8 @@ package cache
 import (
 	"sync"
 
+	"github.com/didi/nightingale/src/toolkits/stats"
+
 	"github.com/toolkits/pkg/logger"
 )
 
@@ -27,6 +29,8 @@ func (c *CounterTsMap) Clean(now, timeDuration int64, endpoint, metric string) {
 	for counter, ts := range c.M {
 		if now-ts > timeDuration {
 			delete(c.M, counter)
+			stats.Counter.Set("counter.clean", 1)
+
 			logger.Debugf("clean index endpoint:%s metric:%s counter:%s", endpoint, metric, counter)
 		}
 	}

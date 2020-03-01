@@ -16,6 +16,7 @@ import (
 	"github.com/didi/nightingale/src/modules/transfer/config"
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/http/render"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 type QueryDataReq struct {
@@ -57,6 +58,8 @@ func QueryDataForJudge(c *gin.Context) {
 }
 
 func QueryData(c *gin.Context) {
+	stats.Counter.Set("data.api.qp10s", 1)
+
 	var input QueryDataReq
 
 	errors.Dangerous(c.ShouldBindJSON(&input))
@@ -73,6 +76,8 @@ func QueryData(c *gin.Context) {
 }
 
 func QueryDataForUI(c *gin.Context) {
+	stats.Counter.Set("data.ui.qp10s", 1)
+
 	var input dataobj.QueryDataForUI
 
 	errors.Dangerous(c.ShouldBindJSON(&input))

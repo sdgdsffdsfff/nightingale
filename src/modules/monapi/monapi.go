@@ -21,6 +21,7 @@ import (
 	"github.com/didi/nightingale/src/modules/monapi/mcache"
 	"github.com/didi/nightingale/src/modules/monapi/redisc"
 	"github.com/didi/nightingale/src/modules/monapi/scache"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 var (
@@ -83,6 +84,7 @@ func main() {
 	go cron.CallbackConsumer()
 	go cron.CleanEventLoop()
 	go cron.CheckJudgeLoop()
+	go stats.Init("n9e.monapi")
 
 	http.Start()
 	ending()

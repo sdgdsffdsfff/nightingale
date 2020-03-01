@@ -8,6 +8,7 @@ import (
 
 	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/monapi/mcache"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 func SyncStraLoop() {
@@ -33,6 +34,7 @@ func SyncStra() error {
 	smap := make(map[int64]*model.Stra)
 	size := len(list)
 	for i := 0; i < size; i++ {
+		stats.Counter.Set("stra.count", 1)
 		smap[list[i].Id] = list[i]
 	}
 

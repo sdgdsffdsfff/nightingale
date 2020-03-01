@@ -13,6 +13,7 @@ import (
 	"github.com/didi/nightingale/src/toolkits/address"
 	"github.com/didi/nightingale/src/toolkits/identity"
 	"github.com/didi/nightingale/src/toolkits/report"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 type StrategySection struct {
@@ -73,8 +74,10 @@ func getStrategy(opts StrategySection) {
 		}
 
 		if stra.Exprs[0].Func == "nodata" {
+			stats.Counter.Set("stra.nodata", 1)
 			cache.NodataStra.Set(stra.Id, stra)
 		} else {
+			stats.Counter.Set("stra.common", 1)
 			cache.Strategy.Set(stra.Id, stra)
 		}
 	}

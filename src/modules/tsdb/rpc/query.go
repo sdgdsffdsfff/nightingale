@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"math"
-	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
@@ -12,6 +11,7 @@ import (
 	"github.com/didi/nightingale/src/modules/tsdb/migrate"
 	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
+	"github.com/didi/nightingale/src/toolkits/stats"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/toolkits/pkg/file"
@@ -19,6 +19,8 @@ import (
 )
 
 func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryResponse) error {
+	stats.Counter.Set("query.qp10s", 1)
+
 	var (
 		rrdDatas        []*dataobj.RRDData
 		datasSize       int
@@ -71,7 +73,8 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 		iters, err := cache.Caches.Get(seriesID, startTs, endTs)
 		if err != nil {
 			logger.Debug("get %v cache by %v err:%v", seriesID, param, err)
-			atomic.AddInt64(&config.QueryUnHit, 1)
+			stats.Counter.Set("query.unhit", 1)
+
 			return nil
 		}
 		for _, iter := range iters {
@@ -90,6 +93,7 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 		//查询起始时间在cache范围内，直接返回结果
 		if cachePointsSize > 0 && param.Start >= cachePoints[0].Timestamp {
 			resp.Values = cachePoints
+			stats.Counter.Set("query.cache.qp10s", 1)
 			goto _RETURN_OK
 		}
 	}
@@ -116,6 +120,7 @@ func (g *Tsdb) Query(param dataobj.TsdbQueryParam, resp *dataobj.TsdbQueryRespon
 		// read data from rrd file
 		// 从RRD中获取数据不包含起始时间点
 		// 例: startTs=1484651400,step=60,则第一个数据时间为1484651460)
+		stats.Counter.Set("query.rrd.qp10s", 1)
 		rrdDatas, err = rrdtool.Fetch(rrdFile, seriesID, param.ConsolFunc, startTs-int64(step), endTs, step)
 		if err != nil {
 			logger.Warningf("fetch rrd data err:%v seriesID:%v, param:%v", err, seriesID, param)

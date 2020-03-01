@@ -5,6 +5,7 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
@@ -72,19 +73,22 @@ func ReceiveItem(item *dataobj.TsdbItem, hash interface{}) {
 		unIndexedItemCache = UnIndexedItemCacheBigMap[int(hashKey(hash.(string))%INDEX_SHARD)]
 	default:
 		logger.Error("undefined hash type", hash)
+		stats.Counter.Set("index.in.err", 1)
+
 		return
 	}
 	if indexedItemCache == nil {
+		stats.Counter.Set("index.in.err", 1)
 		logger.Error("indexedItemCache: ", reflect.TypeOf(hash), hash)
 	}
 	// 已上报过的数据
+	stats.Counter.Set("index.in", 1)
 	if indexedItemCache.ContainsKey(hash) {
 		indexedItemCache.Put(hash, item)
 		return
 	}
-
+	stats.Counter.Set("index.incr.in", 1)
 	// 缓存未命中, 放入增量更新队列
-	logger.Debug("new unIndexedItemCache put-->", hash, item)
 	unIndexedItemCache.Put(hash, item)
 	indexedItemCache.Put(hash, item)
 }

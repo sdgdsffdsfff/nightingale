@@ -6,6 +6,7 @@ import (
 	"github.com/didi/nightingale/src/modules/index/cache"
 	"github.com/didi/nightingale/src/modules/index/config"
 	"github.com/didi/nightingale/src/toolkits/http/render"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/errors"
@@ -21,6 +22,7 @@ type MetricList struct {
 }
 
 func GetMetrics(c *gin.Context) {
+	stats.Counter.Set("metric.qp10s", 1)
 	recv := EndpointsRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
@@ -86,6 +88,7 @@ func DelCounter(c *gin.Context) {
 }
 
 func GetTagPairs(c *gin.Context) {
+	stats.Counter.Set("tag.qp10s", 1)
 	recv := EndpointMetricRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
@@ -157,6 +160,8 @@ type GetIndexByFullTagsResp struct {
 }
 
 func GetIndexByFullTags(c *gin.Context) {
+	stats.Counter.Set("counter.qp10s", 1)
+
 	recv := []GetIndexByFullTagsRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
@@ -239,6 +244,8 @@ type XcludeResp struct {
 }
 
 func GetIndexByClude(c *gin.Context) {
+	stats.Counter.Set("xclude.qp10s", 1)
+
 	recv := []CludeRecv{}
 	errors.Dangerous(c.ShouldBindJSON(&recv))
 
