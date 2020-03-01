@@ -2,7 +2,7 @@
     "name": "log.sys.oom",
     "file_path": "/var/log/messages",
     "time_format": "mmm dd HH:MM:SS",
-    "pattern": "Out of Memory",
+    "pattern": "Out of memory",
     "interval": 10,
     "tags": {},
     "func": "cnt",
