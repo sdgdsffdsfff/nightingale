@@ -73,7 +73,7 @@ func main() {
 	go cron.Statstic()
 
 	go stra.GetStrategy(cfg.Strategy)
-	go judge.NodataJudge()
+	go judge.NodataJudge(cfg.NodataConcurrency)
 	go report.Init(cfg.Report, "monapi")
 
 	r := gin.New()

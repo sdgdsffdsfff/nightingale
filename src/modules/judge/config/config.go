@@ -18,13 +18,14 @@ import (
 )
 
 type ConfYaml struct {
-	Logger   logger.LoggerSection     `yaml:"logger"`
-	Query    query.SeriesQuerySection `yaml:"query"`
-	Redis    redi.RedisSection        `yaml:"redis"`
-	Strategy stra.StrategySection     `yaml:"strategy"`
-	Identity identity.IdentitySection `yaml:"identity"`
-	Report   report.ReportSection     `yaml:"report"`
-	PushUrl  string                   `yaml:"pushUrl"`
+	Logger            logger.LoggerSection     `yaml:"logger"`
+	Query             query.SeriesQuerySection `yaml:"query"`
+	Redis             redi.RedisSection        `yaml:"redis"`
+	Strategy          stra.StrategySection     `yaml:"strategy"`
+	Identity          identity.IdentitySection `yaml:"identity"`
+	Report            report.ReportSection     `yaml:"report"`
+	NodataConcurrency int                      `yaml:"nodataConcurrency"`
+	PushUrl           string                   `yaml:"pushUrl"`
 }
 
 var (
@@ -75,6 +76,7 @@ func Parse(conf string) error {
 		"remark":   "",
 	})
 
+	viper.SetDefault("nodataConcurrency", 1000)
 	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
 
 	err = viper.Unmarshal(&Config)
