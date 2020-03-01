@@ -56,6 +56,7 @@ func main() {
 	pconf()
 
 	config.InitLogger()
+	go stats.Init("n9e.monapi")
 
 	model.InitMySQL("uic", "mon", "hbs")
 	model.InitRoot()
@@ -84,7 +85,6 @@ func main() {
 	go cron.CallbackConsumer()
 	go cron.CleanEventLoop()
 	go cron.CheckJudgeLoop()
-	go stats.Init("n9e.monapi")
 
 	http.Start()
 	ending()

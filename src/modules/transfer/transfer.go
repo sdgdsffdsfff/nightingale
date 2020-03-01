@@ -55,9 +55,10 @@ func main() {
 	cfg := config.Config
 
 	tlogger.Init(cfg.Logger)
+	go stats.Init("n9e.transfer")
+
 	backend.Init(cfg.Backend)
 	cron.Init()
-	go stats.Init("n9e.transfer")
 
 	go rpc.Start()
 

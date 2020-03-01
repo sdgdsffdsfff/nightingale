@@ -56,11 +56,12 @@ func main() {
 	cfg := config.Config
 
 	tlogger.Init(cfg.Logger)
+	go stats.Init("n9e.index")
+
 	cache.InitDB(cfg.Cache)
 	identity.Init(cfg.Identity)
 
 	go report.Init(cfg.Report, "monapi")
-	go stats.Init("n9e.index")
 	go rpc.Start()
 
 	r := gin.New()

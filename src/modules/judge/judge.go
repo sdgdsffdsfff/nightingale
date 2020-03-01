@@ -60,6 +60,7 @@ func main() {
 	cfg := config.Config
 	identity.Init(cfg.Identity)
 	tlogger.Init(cfg.Logger)
+	go stats.Init("n9e.judge")
 
 	query.Init(cfg.Query)
 	redi.Init(cfg.Redis)
@@ -70,7 +71,6 @@ func main() {
 	cache.SeriesMap = cache.NewIndexMap()
 
 	go rpc.Start()
-	go stats.Init("n9e.judge")
 
 	go stra.GetStrategy(cfg.Strategy)
 	go judge.NodataJudge(cfg.NodataConcurrency)

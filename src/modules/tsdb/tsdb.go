@@ -56,6 +56,7 @@ func main() {
 	cfg := config.Config
 
 	tlogger.Init(cfg.Logger)
+	go stats.Init("n9e.tsdb")
 
 	// INIT
 	cache.Init(cfg.Cache)
@@ -64,7 +65,6 @@ func main() {
 
 	cache.InitChunkSlot()
 	rrdtool.Init(cfg.RRD)
-	go stats.Init("n9e.tsdb")
 
 	if cfg.Migrate.Enabled {
 		migrate.Init(cfg.Migrate) //读数据加队列
