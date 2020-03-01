@@ -73,37 +73,33 @@ func Parse(conf string) error {
 	viper.SetDefault("http.enabled", true)
 	viper.SetDefault("rpc.enabled", true)
 
-	viper.SetDefault("rrd", map[string]interface{}{
-		"enabled":     true,
-		"wait":        100, //每次从待落盘队列中间等待间隔，单位毫秒
-		"batch":       100, //每次从待落盘队列中获取数据的个数
-		"concurrency": 20,  //每次从待落盘队列中获取数据的个数
-		"ioWorkerNum": 64,  //同时落盘的io并发个数
-		"rra": map[int]int{ //假设原始点是 10s 一个点
-			1:    720,   // 存储720个原始点，则 10s一个点存2h
-			6:    11520, // 6点个归档为一个点，则 1min一个点存8d
-			180:  1440,  // 180个点归档为一个点，则 30min一个点存1mon
-			1080: 1440,  // 1080个点归档为一个点，则 6h一个点存6个月
-		},
+	viper.SetDefault("rrd.rra", map[int]int{
+		1:    720,   // 存储720个原始点，若 10s一个点 则 存2h
+		6:    11520, // 6点个归档为一个点，则 1min一个点存8d
+		180:  1440,  // 180个点归档为一个点，则 30min一个点存1mon
+		1080: 1440,  // 1080个点归档为一个点，则 6h一个点存6个月
 	})
 
-	viper.SetDefault("cache", map[string]int{
-		"keepMinutes":      120, //时序数据在内存中保存的时长
-		"spanInSeconds":    900, //每个数据块保存数据的时间范围，单位秒
-		"doCleanInMinutes": 10,  //清理过期数据的周期，单位分钟
-		"flushDiskStepMs":  1000,
-	})
+	viper.SetDefault("rrd.enabled", true)
+	viper.SetDefault("rrd.wait", true)
+	viper.SetDefault("rrd.enabled", 100)    //每次从待落盘队列中间等待间隔，单位毫秒
+	viper.SetDefault("rrd.batch", 100)      //每次从待落盘队列中获取数据的个数
+	viper.SetDefault("rrd.concurrency", 20) //每次从待落盘队列中获取数据的个数
+	viper.SetDefault("rrd.ioWorkerNum", 64) //同时落盘的io并发个数
 
-	viper.SetDefault("migrate", map[string]int{
-		"concurrency": 2,    //从远端拉取rrd文件的并发个数
-		"batch":       200,  //每次拉取文件的个数
-		"replicas":    500,  //一致性has虚拟节点
-		"connTimeout": 1000, //链接超时时间，单位毫秒
-		"callTimeout": 3000, //访问超时时间，单位毫秒
-		"maxConns":    32,   //查询和推送数据的并发个数
-		"maxIdle":     32,   //建立的连接池的最大空闲数
-	})
+	viper.SetDefault("cache.keepMinutes", 120)
+	viper.SetDefault("cache.spanInSeconds", 900)   //每个数据块保存数据的时间范围，单位秒
+	viper.SetDefault("cache.doCleanInMinutes", 10) //清理过期数据的周期，单位分钟
+	viper.SetDefault("cache.flushDiskStepMs", 1000)
+
 	viper.SetDefault("migrate.enabled", false)
+	viper.SetDefault("migrate.concurrency", 2)
+	viper.SetDefault("migrate.batch", 200)
+	viper.SetDefault("migrate.replicas", 500)
+	viper.SetDefault("migrate.connTimeout", 1000)
+	viper.SetDefault("migrate.callTimeout", 3000)
+	viper.SetDefault("migrate.maxConns", 32)
+	viper.SetDefault("migrate.maxIdle", 32)
 
 	viper.SetDefault("index", map[string]int{
 		"activeDuration":  90000, //索引最大的保留时间，超过此数值，索引不会被重建，默认是1天+1小时

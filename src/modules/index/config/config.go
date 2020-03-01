@@ -70,17 +70,13 @@ func Parse(conf string) error {
 	viper.SetDefault("http.enabled", true)
 	viper.SetDefault("rpc.enabled", true)
 
-	viper.SetDefault("limit", map[string]int{
-		"max_query": 1000000, //clude接口支持查询的最大曲线个数
-	})
+	viper.SetDefault("limit.max_query", 1000000) //clude接口支持查询的最大曲线个数
 
-	viper.SetDefault("cache", map[string]interface{}{
-		"cacheDuration":   90000,
-		"cleanInterval":   3600,       //清理周期，单位秒
-		"persistInterval": 900,        //数据落盘周期，单位秒
-		"persistDir":      "./.index", //索引落盘目录
-		"rebuildWorker":   20,         //从磁盘读取所以的数据的并发个数
-	})
+	viper.SetDefault("cache.cacheDuration", 90000)
+	viper.SetDefault("cache.cleanInterval", 3600)    //清理周期，单位秒
+	viper.SetDefault("cache.persistInterval", 900)   //数据落盘周期，单位秒
+	viper.SetDefault("cache.persistDir", "./.index") //索引落盘目录
+	viper.SetDefault("cache.rebuildWorker", 20)      //从磁盘读取所以的数据的并发个数
 
 	viper.SetDefault("report", map[string]interface{}{
 		"mod":      "index",
