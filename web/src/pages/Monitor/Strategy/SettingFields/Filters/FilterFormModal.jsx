@@ -119,7 +119,7 @@ class FilterFormModal extends Component {
             help={_.isEmpty(data.tkey) && '不能为空'}
           >
             <Select
-              // mode="combobox"
+              mode="combobox"
               notFoundContent=""
               placeholder="支持自定义，非叶子节点或者'与'条件时没有自动补全功能"
               defaultActiveFirstOption={false}
