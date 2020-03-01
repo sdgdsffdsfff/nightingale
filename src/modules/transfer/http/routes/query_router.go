@@ -15,6 +15,8 @@ import (
 	"github.com/didi/nightingale/src/modules/transfer/backend"
 	"github.com/didi/nightingale/src/modules/transfer/config"
 	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/toolkits/http/render"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 type QueryDataReq struct {
@@ -52,10 +54,12 @@ func QueryDataForJudge(c *gin.Context) {
 
 	errors.Dangerous(c.ShouldBindJSON(&inputs))
 	resp := backend.FetchData(inputs)
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 func QueryData(c *gin.Context) {
+	stats.Counter.Set("data.api.qp10s", 1)
+
 	var input QueryDataReq
 
 	errors.Dangerous(c.ShouldBindJSON(&input))
@@ -63,15 +67,17 @@ func QueryData(c *gin.Context) {
 	queryData, err := GetSeries(input.Start, input.End, input.Series)
 	if err != nil {
 		logger.Error(err, input)
-		renderMessage(c, "query err")
+		render.Message(c, "query err")
 		return
 	}
 
 	resp := backend.FetchData(queryData)
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 func QueryDataForUI(c *gin.Context) {
+	stats.Counter.Set("data.ui.qp10s", 1)
+
 	var input dataobj.QueryDataForUI
 
 	errors.Dangerous(c.ShouldBindJSON(&input))
@@ -86,7 +92,7 @@ func QueryDataForUI(c *gin.Context) {
 		}
 	}
 
-	renderData(c, resp, nil)
+	render.Data(c, resp, nil)
 }
 
 func GetSeries(start, end int64, req []SeriesReq) ([]dataobj.QueryData, error) {

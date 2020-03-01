@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
@@ -16,10 +16,15 @@ import (
 	"github.com/didi/nightingale/src/modules/judge/backend/redi"
 	"github.com/didi/nightingale/src/modules/judge/cache"
 	"github.com/didi/nightingale/src/modules/judge/config"
-	"github.com/didi/nightingale/src/modules/judge/cron"
-	"github.com/didi/nightingale/src/modules/judge/http"
+	"github.com/didi/nightingale/src/modules/judge/http/routes"
+	"github.com/didi/nightingale/src/modules/judge/judge"
 	"github.com/didi/nightingale/src/modules/judge/rpc"
-	"github.com/didi/nightingale/src/toolkits/address"
+	"github.com/didi/nightingale/src/modules/judge/stra"
+	"github.com/didi/nightingale/src/toolkits/http"
+	"github.com/didi/nightingale/src/toolkits/identity"
+	tlogger "github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/report"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 const version = 1
@@ -52,35 +57,28 @@ func main() {
 	pconf()
 	start()
 
-	config.InitLogger()
-
 	cfg := config.Config
-	ident, err := config.GetIdentity(cfg.Identity)
-	if err != nil {
-		log.Fatalln("[F] cannot get identity:", err)
-	}
+	identity.Init(cfg.Identity)
+	tlogger.Init(cfg.Logger)
+	go stats.Init("n9e.judge")
 
-	port, err := config.GetPort(address.GetRPCListen("judge"))
-	if err != nil {
-		log.Fatalln("[F] cannot get identity:", err)
-	}
+	query.Init(cfg.Query)
+	redi.Init(cfg.Redis)
 
-	config.Identity = ident + ":" + port
-	log.Printf("[I] identity -> %s", config.Identity)
-
-	query.InitConnPools()
 	cache.InitHistoryBigMap()
 	cache.Strategy = cache.NewStrategyMap()
 	cache.NodataStra = cache.NewStrategyMap()
 	cache.SeriesMap = cache.NewIndexMap()
-	redi.InitRedis()
 
-	go http.Start(address.GetHTTPListen("judge"), cfg.Logger.Level)
 	go rpc.Start()
-	go cron.Report(ident, port, address.GetHTTPAddresses("monapi"), cfg.Report.Interval)
-	go cron.Statstic()
-	go cron.GetStrategy()
-	go cron.NodataJudge()
+
+	go stra.GetStrategy(cfg.Strategy)
+	go judge.NodataJudge(cfg.NodataConcurrency)
+	go report.Init(cfg.Report, "monapi")
+
+	r := gin.New()
+	routes.Config(r)
+	go http.Start(r, "judge", cfg.Logger.Level)
 
 	ending()
 }

@@ -7,8 +7,8 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/judge/http/middleware"
 	"github.com/didi/nightingale/src/modules/judge/http/routes"
+	"github.com/didi/nightingale/src/toolkits/http/middleware"
 
 	"github.com/gin-gonic/gin"
 )

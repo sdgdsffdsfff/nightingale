@@ -3,7 +3,7 @@ salt: "PLACE_SALT"
 
 logger:
   dir: "logs/monapi"
-  level: "INFO"
+  level: "WARNING"
   keepHours: 24
 
 http:
@@ -45,3 +45,8 @@ link:
 redis:
   addr: "127.0.0.1:6379"
   pass: ""
+  # in ms
+  # timeout:
+  #   conn: 500
+  #   read: 3000
+  #   write: 3000

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/config"
+	"github.com/didi/nightingale/src/modules/collector/sys"
 
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/nux"
@@ -13,7 +13,7 @@ import (
 var ntpServer string
 
 func NtpOffsetMetrics() (L []*dataobj.MetricValue) {
-	ntpServers := config.Config.NtpServers
+	ntpServers := sys.Config.NtpServers
 	if len(ntpServers) <= 0 {
 		return
 	}

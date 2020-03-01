@@ -9,8 +9,8 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/collector/config"
 	"github.com/didi/nightingale/src/modules/collector/sys/funcs"
+	"github.com/didi/nightingale/src/toolkits/identity"
 )
 
 type ProcScheduler struct {
@@ -62,7 +62,7 @@ func ProcCollect(p *model.ProcCollect) {
 	item := funcs.GaugeValue("proc.num", cnt, p.Tags)
 	item.Step = int64(p.Step)
 	item.Timestamp = time.Now().Unix()
-	item.Endpoint = config.Endpoint
+	item.Endpoint = identity.Identity
 
 	funcs.Push([]*dataobj.MetricValue{item})
 }

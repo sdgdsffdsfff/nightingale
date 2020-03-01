@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/config"
-	"github.com/didi/nightingale/src/modules/collector/log/schema"
+	"github.com/didi/nightingale/src/modules/collector/stra"
 	"github.com/didi/nightingale/src/modules/collector/sys/funcs"
+	"github.com/didi/nightingale/src/toolkits/identity"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -79,7 +79,7 @@ func PusherLoop() {
 			filePath := stCount.Strategy.FilePath
 			tmsList := stCount.GetTmsList()
 			for _, tms := range tmsList {
-				if tmsNeedPush(tms, filePath, step) {
+				if tmsNeedPush(tms, filePath, step, WorkerConfig.WaitPush) {
 					pointsCount, err := stCount.GetByTms(tms)
 					if err == nil {
 						ToPushQueue(stCount.Strategy, tms, pointsCount.TagstringMap)
@@ -90,11 +90,11 @@ func PusherLoop() {
 				}
 			}
 		}
-		time.Sleep(time.Second * time.Duration(config.Config.Worker.PushInterval))
+		time.Sleep(time.Second * time.Duration(WorkerConfig.PushInterval))
 	}
 }
 
-func tmsNeedPush(tms int64, filePath string, step int64) bool {
+func tmsNeedPush(tms int64, filePath string, step int64, waitPush int) bool {
 
 	latest, delay, found := GetLatestTmsAndDelay(filePath)
 	logger.Debugf("filepath:%s tms:%d latest tms:%d delay:%d", filePath, tms, latest, delay)
@@ -120,8 +120,8 @@ func tmsNeedPush(tms int64, filePath string, step int64) bool {
 	}
 
 	waitTime := step
-	if config.Config.Worker.WaitPush != 0 {
-		waitTime = int64(config.Config.Worker.WaitPush)
+	if waitPush != 0 {
+		waitTime = int64(waitPush)
 	}
 
 	//如果日志文件更新时间晚于一个采集周期，则进行补零
@@ -138,7 +138,7 @@ func tmsNeedPush(tms int64, filePath string, step int64) bool {
 
 // 这个参数是为了最大限度的对接
 // pointMap的key，是打平了的tagkv
-func ToPushQueue(strategy *schema.Strategy, tms int64, pointMap map[string]*PointCounter) error {
+func ToPushQueue(strategy *stra.Strategy, tms int64, pointMap map[string]*PointCounter) error {
 	for tagstring, PointCounter := range pointMap {
 		var value float64 = 0
 		switch strategy.Func {
@@ -176,7 +176,7 @@ func ToPushQueue(strategy *schema.Strategy, tms int64, pointMap map[string]*Poin
 
 		tmpPoint := &dataobj.MetricValue{
 			Metric:       strategy.Name,
-			Endpoint:     config.Endpoint,
+			Endpoint:     identity.Identity,
 			ValueUntyped: value,
 			Timestamp:    tms,
 			Step:         strategy.Interval,

@@ -7,14 +7,14 @@ import (
 	_ "net/http/pprof"
 	"time"
 
+	"github.com/didi/nightingale/src/modules/tsdb/http/middleware"
+	"github.com/didi/nightingale/src/modules/tsdb/http/render"
+	"github.com/didi/nightingale/src/modules/tsdb/http/routes"
+	"github.com/didi/nightingale/src/toolkits/address"
+
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/toolkits/pkg/logger"
-
-	"github.com/didi/nightingale/src/modules/tsdb/http/middleware"
-	"github.com/didi/nightingale/src/modules/tsdb/http/render"
-	"github.com/didi/nightingale/src/modules/tsdb/http/router"
-	"github.com/didi/nightingale/src/toolkits/address"
 )
 
 var Close_chan, Close_done_chan chan int
@@ -46,9 +46,10 @@ func Start() {
 	render.Init()
 
 	r := mux.NewRouter().StrictSlash(false)
-	router.ConfigRoutes(r)
+	routes.ConfigRoutes(r)
 
 	n := negroni.New()
+	n.Use(middleware.NewLogger())
 	n.Use(middleware.NewRecovery())
 
 	n.UseHandler(r)

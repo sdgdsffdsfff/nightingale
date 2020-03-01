@@ -1,12 +1,10 @@
 package index
 
 import (
-	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/toolkits/str"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
@@ -23,8 +21,8 @@ var (
 
 // 启动索引的 异步、增量更新 任务, 每隔一定时间，刷新cache中的数据到数据库中
 func StartIndexUpdateIncrTask() {
-	if config.Config.Index.MaxConns != 0 {
-		semaUpdateIndexIncr = semaphore.NewSemaphore(config.Config.Index.MaxConns / 2)
+	if Config.MaxConns != 0 {
+		semaUpdateIndexIncr = semaphore.NewSemaphore(Config.MaxConns / 2)
 	} else {
 		semaUpdateIndexIncr = semaphore.NewSemaphore(10)
 	}
@@ -69,7 +67,7 @@ func updateIndexIncr() int {
 				semaUpdateIndexIncr.Acquire()
 				go func(items []*dataobj.TsdbItem) {
 					defer semaUpdateIndexIncr.Release()
-					rpc.Push2Index(rpc.INCRINDEX, items)
+					rpc.Push2Index(rpc.INCRINDEX, items, IndexList.Get())
 				}(tmpList)
 				i = 0
 			}
@@ -79,12 +77,11 @@ func updateIndexIncr() int {
 			semaUpdateIndexIncr.Acquire()
 			go func(items []*dataobj.TsdbItem) {
 				defer semaUpdateIndexIncr.Release()
-				rpc.Push2Index(rpc.INCRINDEX, items)
+				rpc.Push2Index(rpc.INCRINDEX, items, IndexList.Get())
 			}(tmpList[:i])
 		}
 
 	}
-	atomic.AddInt64(&config.PushIncrIndex, int64(ret))
 
 	return ret
 }

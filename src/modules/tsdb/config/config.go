@@ -5,6 +5,13 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/didi/nightingale/src/modules/tsdb/backend/rpc"
+	"github.com/didi/nightingale/src/modules/tsdb/cache"
+	"github.com/didi/nightingale/src/modules/tsdb/index"
+	"github.com/didi/nightingale/src/modules/tsdb/migrate"
+	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
+	"github.com/didi/nightingale/src/toolkits/logger"
+
 	"github.com/spf13/viper"
 	"github.com/toolkits/pkg/file"
 )
@@ -15,48 +22,18 @@ type File struct {
 }
 
 type ConfYaml struct {
-	Http           *HttpSection    `yaml:"http"`
-	Rpc            *RpcSection     `yaml:"rpc"`
-	RRD            *RRDSection     `yaml:"rrd"`
-	Logger         *LoggerSection  `yaml:"logger"`
-	Migrate        *MigrateSection `yaml:"migrate"`
-	Index          *IndexSection   `yaml:"index"`
-	Cache          *CacheSection   `yaml:"cache"`
-	CallTimeout    int             `yaml:"callTimeout"`
-	IOWorkerNum    int             `yaml:"ioWorkerNum"`
-	FirstBytesSize int             `yaml:"firstBytesSize"`
-	PushUrl        string          `yaml:"pushUrl"`
-}
-
-type CacheSection struct {
-	SpanInSeconds    int `yaml:"spanInSeconds"`
-	NumOfChunks      int `yaml:"numOfChunks"`
-	ExpiresInMinutes int `yaml:"expiresInMinutes"`
-	DoCleanInMinutes int `yaml:"doCleanInMinutes"`
-	FlushDiskStepMs  int `yaml:"flushDiskStepMs"`
-}
-
-type IndexSection struct {
-	ActiveDuration  int64    `yaml:"activeDuration"`  //内存索引保留时间
-	RebuildInterval int64    `yaml:"rebuildInterval"` //索引重建周期
-	Addrs           []string `yaml:"addrs"`
-	MaxConns        int      `yaml:"maxConns"`
-	MaxIdle         int      `yaml:"maxIdle"`
-	ConnTimeout     int      `yaml:"connTimeout"`
-	CallTimeout     int      `yaml:"callTimeout"`
-}
-
-type MigrateSection struct {
-	Batch       int               `yaml:"batch"`
-	Concurrency int               `yaml:"concurrency"` //number of multiple worker per node
-	Enabled     bool              `yaml:"enabled"`
-	Replicas    int               `yaml:"replicas"`
-	OldCluster  map[string]string `yaml:"oldCluster"`
-	NewCluster  map[string]string `yaml:"newCluster"`
-	MaxConns    int               `yaml:"maxConns"`
-	MaxIdle     int               `yaml:"maxIdle"`
-	ConnTimeout int               `yaml:"connTimeout"`
-	CallTimeout int               `yaml:"callTimeout"`
+	Http           *HttpSection           `yaml:"http"`
+	Rpc            *RpcSection            `yaml:"rpc"`
+	RRD            rrdtool.RRDSection     `yaml:"rrd"`
+	Logger         logger.LoggerSection   `yaml:"logger"`
+	Migrate        migrate.MigrateSection `yaml:"migrate"`
+	Index          index.IndexSection     `yaml:"index"`
+	RpcClient      rpc.RpcClientSection   `yaml:"rpcClient"`
+	Cache          cache.CacheSection     `yaml:"cache"`
+	CallTimeout    int                    `yaml:"callTimeout"`
+	IOWorkerNum    int                    `yaml:"ioWorkerNum"`
+	FirstBytesSize int                    `yaml:"firstBytesSize"`
+	PushUrl        string                 `yaml:"pushUrl"`
 }
 
 type HttpSection struct {
@@ -65,21 +42,6 @@ type HttpSection struct {
 
 type RpcSection struct {
 	Enabled bool `yaml:"enabled"`
-}
-
-type RRDSection struct {
-	Enabled     bool        `yaml:"enabled"`
-	Storage     string      `yaml:"storage"`
-	Batch       int         `yaml:"batch"`
-	Concurrency int         `yaml:"concurrency"`
-	Wait        int         `yaml:"wait"`
-	RRA         map[int]int `yaml:"rra"`
-}
-
-type LoggerSection struct {
-	Dir       string `yaml:"dir"`
-	Level     string `yaml:"level"`
-	KeepHours uint   `yaml:"keepHours"`
 }
 
 var (
@@ -108,52 +70,48 @@ func Parse(conf string) error {
 		return fmt.Errorf("cannot read yml[%s]: %v", conf, err)
 	}
 
-	viper.SetDefault("ioWorkerNum", 64) //同时落盘的io并发个数
-
 	viper.SetDefault("http.enabled", true)
 	viper.SetDefault("rpc.enabled", true)
 
-	viper.SetDefault("rrd", map[string]interface{}{
-		"enabled":     true,
-		"wait":        100, //每次从待落盘队列中间等待间隔，单位毫秒
-		"batch":       100, //每次从待落盘队列中获取数据的个数
-		"concurrency": 20,  //每次从待落盘队列中获取数据的个数
-		"rra": map[int]int{ //假设原始点是 10s 一个点
-			1:    720,   // 存储720个原始点，则 10s一个点存2h
-			6:    11520, // 6点个归档为一个点，则 1min一个点存8d
-			180:  1440,  // 180个点归档为一个点，则 30min一个点存1mon
-			1080: 1440,  // 1080个点归档为一个点，则 6h一个点存6个月
-		},
+	viper.SetDefault("rrd.rra", map[int]int{
+		1:    720,   // 存储720个原始点，若 10s一个点 则 存2h
+		6:    11520, // 6点个归档为一个点，则 1min一个点存8d
+		180:  1440,  // 180个点归档为一个点，则 30min一个点存1mon
+		1080: 1440,  // 1080个点归档为一个点，则 6h一个点存6个月
 	})
 
-	viper.SetDefault("cache", map[string]int{
-		"spanInSeconds":    900, //每个数据块保存数据的时间范围，单位秒
-		"numOfChunks":      16,  //使用数据块的个数，此配置表示内存会存4小时的数据
-		"expiresInMinutes": 135, //内存中旧数据过期时间，单位分钟
-		"doCleanInMinutes": 10,  //清理过期数据的周期，单位分钟
-		"flushDiskStepMs":  1000,
-	})
+	viper.SetDefault("rrd.enabled", true)
+	viper.SetDefault("rrd.wait", true)
+	viper.SetDefault("rrd.enabled", 100)    //每次从待落盘队列中间等待间隔，单位毫秒
+	viper.SetDefault("rrd.batch", 100)      //每次从待落盘队列中获取数据的个数
+	viper.SetDefault("rrd.concurrency", 20) //每次从待落盘队列中获取数据的个数
+	viper.SetDefault("rrd.ioWorkerNum", 64) //同时落盘的io并发个数
 
-	viper.SetDefault("migrate", map[string]int{
-		"concurrency": 2,    //从远端拉取rrd文件的并发个数
-		"batch":       200,  //每次拉取文件的个数
-		"replicas":    500,  //一致性has虚拟节点
-		"connTimeout": 1000, //链接超时时间，单位毫秒
-		"callTimeout": 3000, //访问超时时间，单位毫秒
-		"maxConns":    32,   //查询和推送数据的并发个数
-		"maxIdle":     32,   //建立的连接池的最大空闲数
-	})
+	viper.SetDefault("cache.keepMinutes", 120)
+	viper.SetDefault("cache.spanInSeconds", 900)   //每个数据块保存数据的时间范围，单位秒
+	viper.SetDefault("cache.doCleanInMinutes", 10) //清理过期数据的周期，单位分钟
+	viper.SetDefault("cache.flushDiskStepMs", 1000)
+
+	viper.SetDefault("migrate.enabled", false)
+	viper.SetDefault("migrate.concurrency", 2)
+	viper.SetDefault("migrate.batch", 200)
+	viper.SetDefault("migrate.replicas", 500)
+	viper.SetDefault("migrate.connTimeout", 1000)
+	viper.SetDefault("migrate.callTimeout", 3000)
+	viper.SetDefault("migrate.maxConns", 32)
+	viper.SetDefault("migrate.maxIdle", 32)
 
 	viper.SetDefault("index", map[string]int{
 		"activeDuration":  90000, //索引最大的保留时间，超过此数值，索引不会被重建，默认是1天+1小时
 		"rebuildInterval": 86400, //重建索引的周期，单位为秒，默认是1天
-		"maxConns":        320,   //查询和推送数据的并发个数
-		"maxIdle":         320,   //建立的连接池的最大空闲数
-		"connTimeout":     1000,  //链接超时时间，单位毫秒
-		"callTimeout":     3000,  //访问超时时间，单位毫秒
 	})
 
-	viper.SetDefault("pushUrl", "http://127.0.0.1:2058/api/collector/push")
+	viper.SetDefault("rpcClient", map[string]int{
+		"maxConns":    320,  //查询和推送数据的并发个数
+		"maxIdle":     320,  //建立的连接池的最大空闲数
+		"connTimeout": 1000, //链接超时时间，单位毫秒
+		"callTimeout": 3000, //访问超时时间，单位毫秒
+	})
 
 	err = viper.Unmarshal(&Config)
 	if err != nil {

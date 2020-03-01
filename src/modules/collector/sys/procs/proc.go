@@ -1,16 +1,7 @@
 package procs
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/toolkits/pkg/file"
-	"github.com/toolkits/pkg/logger"
-
 	"github.com/didi/nightingale/src/model"
-	"github.com/didi/nightingale/src/modules/collector/config"
-	"github.com/didi/nightingale/src/modules/collector/sys/utils"
 )
 
 var (
@@ -47,73 +38,4 @@ func deleteProc(key string) {
 		delete(ProcsWithScheduler, key)
 	}
 	delete(Procs, key)
-}
-
-func NewProcCollect(method, name, tags string, step int) *model.ProcCollect {
-	return &model.ProcCollect{
-		CollectType:   "proc",
-		CollectMethod: method,
-		Target:        name,
-		Step:          step,
-		Tags:          tags,
-	}
-}
-
-func ListProcs() map[string]*model.ProcCollect {
-	procs := make(map[string]*model.ProcCollect)
-
-	if config.Config.Collector.SyncCollect {
-		procs = config.Collect.GetProcs()
-		for _, p := range procs {
-			tagsMap := utils.DictedTagstring(p.Tags)
-			tagsMap["target"] = p.Target
-			p.Tags = utils.SortedTags(tagsMap)
-		}
-	}
-
-	files, err := file.FilesUnder(config.Config.ProcPath)
-	if err != nil {
-		logger.Error(err)
-		return procs
-	}
-
-	//扫描文件采集配置
-	for _, f := range files {
-		method, name, step, err := parseName(f)
-		if err != nil {
-			logger.Warning(err)
-			continue
-		}
-
-		service, err := file.ToTrimString(config.Config.ProcPath + "/" + f)
-		if err != nil {
-			logger.Warning(err)
-			continue
-		}
-
-		tags := fmt.Sprintf("target=%s,service=%s", name, service)
-		p := NewProcCollect(method, name, tags, step)
-		procs[p.Name] = p
-	}
-
-	return procs
-}
-
-func parseName(fname string) (method string, name string, step int, err error) {
-	arr := strings.Split(fname, "_")
-	if len(arr) < 3 {
-		err = fmt.Errorf("name is illegal %s, split _ < 3", fname)
-		return
-	}
-
-	step, err = strconv.Atoi(arr[0])
-	if err != nil {
-		err = fmt.Errorf("name is illegal %s %v", fname, err)
-		return
-	}
-
-	method = arr[1]
-
-	name = strings.Join(arr[2:len(arr)], "_")
-	return
 }

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/modules/transfer/backend"
-	"github.com/didi/nightingale/src/modules/transfer/config"
 
 	"github.com/toolkits/pkg/container/list"
 )
@@ -25,9 +24,9 @@ func updateJudgeQueue() {
 
 	for _, instance := range instances {
 		if !backend.JudgeQueues.Exists(instance) {
-			q := list.NewSafeListLimited(config.DefaultSendQueueMaxSize)
+			q := list.NewSafeListLimited(backend.DefaultSendQueueMaxSize)
 			backend.JudgeQueues.Set(instance, q)
-			go backend.Send2JudgeTask(q, instance, config.Config.Judge.WorkerNum)
+			go backend.Send2JudgeTask(q, instance, backend.Config.WorkerNum)
 		} else {
 			backend.JudgeQueues.UpdateTS(instance)
 		}

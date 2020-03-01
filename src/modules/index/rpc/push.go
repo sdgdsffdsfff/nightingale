@@ -1,13 +1,11 @@
 package rpc
 
 import (
-	"fmt"
-	"sync/atomic"
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/index/cache"
-	"github.com/didi/nightingale/src/modules/index/config"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
 	"github.com/toolkits/pkg/concurrent/semaphore"
 	"github.com/toolkits/pkg/logger"
@@ -22,13 +20,14 @@ func (this *Index) Ping(args string, reply *string) error {
 
 func (this *Index) IncrPush(args []*dataobj.IndexModel, reply *dataobj.IndexResp) error {
 	push(args, reply)
-	atomic.AddInt64(&config.IncrIndexIn, int64(len(args)))
+	stats.Counter.Set("index.incr.in", len(args))
 	return nil
 }
 
 func (this *Index) Push(args []*dataobj.IndexModel, reply *dataobj.IndexResp) error {
 	push(args, reply)
-	atomic.AddInt64(&config.IndexIn, int64(len(args)))
+	stats.Counter.Set("index.all.in", len(args))
+
 	return nil
 }
 
@@ -37,18 +36,8 @@ func push(args []*dataobj.IndexModel, reply *dataobj.IndexResp) {
 	reply.Invalid = 0
 	now := time.Now().Unix()
 	for _, item := range args {
-		logger.Debugf("<index %v", item)
-		err := cache.EndpointDBObj.Push(*item, now)
-		if err != nil {
-			logger.Errorf("message push failed : %v", err)
-			reply.Invalid += 1
-			reply.Msg += fmt.Sprintf("%v\n", err)
-			atomic.AddInt64(&config.IndexInErr, 1)
-		}
-	}
-
-	if reply.Invalid == 0 {
-		reply.Msg = "ok"
+		logger.Debugf("<---index %v", item)
+		cache.IndexDB.Push(*item, now)
 	}
 
 	reply.Total = len(args)

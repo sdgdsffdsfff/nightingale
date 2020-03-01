@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/didi/nightingale/src/modules/judge/config"
+	"github.com/didi/nightingale/src/dataobj"
 
 	"github.com/toolkits/pkg/logger"
 )
 
-func Push(event *config.Event) error {
+func Push(event *dataobj.Event) error {
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		err = fmt.Errorf("redis publish failed, error:%v", err)

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/collector/config"
+	"github.com/didi/nightingale/src/modules/collector/sys"
 
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/nux"
@@ -24,7 +24,7 @@ func FsRWMetrics() (L []*dataobj.MetricValue) {
 
 	fsFileFilter := make(map[string]struct{}) //过滤 /proc/mounts 出现重复的fsFile
 
-	ignoreMountPointsPrefix := config.Config.Collector.MountIgnorePrefix
+	ignoreMountPointsPrefix := sys.Config.MountIgnorePrefix
 
 	for idx := range mountPoints {
 		var du *nux.DeviceUsage

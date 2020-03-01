@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/didi/nightingale/src/dataobj"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
 	"github.com/didi/nightingale/src/modules/tsdb/index"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
 
@@ -27,7 +26,7 @@ func create(filename string, item *dataobj.TsdbItem) error {
 	// 设置各种归档策略
 	// 10s一个点存 12小时
 
-	for archive, cnt := range config.Config.RRD.RRA {
+	for archive, cnt := range Config.RRA {
 		if archive == 1 {
 			c.RRA("AVERAGE", 0, archive, cnt)
 		} else {
@@ -48,11 +47,7 @@ func update(filename string, items []*dataobj.TsdbItem) error {
 		if v > 1e+300 || (v < 1e-300 && v > 0) {
 			continue
 		}
-		if item.DsType == "DERIVE" || item.DsType == "COUNTER" {
-			u.Cache(item.Timestamp, int(item.Value))
-		} else {
-			u.Cache(item.Timestamp, item.Value)
-		}
+		u.Cache(item.Timestamp, int(item.Value))
 	}
 
 	return u.Update()
@@ -66,7 +61,7 @@ func Flushrrd(seriesID interface{}, items []*dataobj.TsdbItem) error {
 		return errors.New("empty items")
 	}
 
-	filename := utils.RrdFileName(config.Config.RRD.Storage, seriesID, item.DsType, item.Step)
+	filename := utils.RrdFileName(Config.Storage, seriesID, item.DsType, item.Step)
 	if !file.IsExist(filename) {
 		baseDir := file.Dir(filename)
 

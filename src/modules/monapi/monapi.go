@@ -21,6 +21,7 @@ import (
 	"github.com/didi/nightingale/src/modules/monapi/mcache"
 	"github.com/didi/nightingale/src/modules/monapi/redisc"
 	"github.com/didi/nightingale/src/modules/monapi/scache"
+	"github.com/didi/nightingale/src/toolkits/stats"
 )
 
 var (
@@ -55,6 +56,7 @@ func main() {
 	pconf()
 
 	config.InitLogger()
+	go stats.Init("n9e.monapi")
 
 	model.InitMySQL("uic", "mon", "hbs")
 	model.InitRoot()

@@ -10,7 +10,6 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/transfer/calc"
-	. "github.com/didi/nightingale/src/modules/transfer/config"
 
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/pool"
@@ -42,7 +41,6 @@ func FetchData(inputs []dataobj.QueryData) []*dataobj.TsdbQueryResponse {
 		if !ok {
 			break
 		}
-		logger.Debugf("aggr data:%v ", d)
 		resp = append(resp, d)
 	}
 
@@ -59,7 +57,7 @@ func FetchDataForUI(input dataobj.QueryDataForUI) []*dataobj.TsdbQueryResponse {
 		if len(input.Tags) == 0 {
 			counter, err := getCounter(input.Metric, "", nil)
 			if err != nil {
-				logger.Error(err)
+				logger.Warning(err)
 				continue
 			}
 			worker <- struct{}{}
@@ -68,7 +66,7 @@ func FetchDataForUI(input dataobj.QueryDataForUI) []*dataobj.TsdbQueryResponse {
 			for _, tag := range input.Tags {
 				counter, err := getCounter(input.Metric, tag, nil)
 				if err != nil {
-					logger.Error(err)
+					logger.Warning(err)
 					continue
 				}
 				worker <- struct{}{}
@@ -88,7 +86,6 @@ func FetchDataForUI(input dataobj.QueryDataForUI) []*dataobj.TsdbQueryResponse {
 		if !ok {
 			break
 		}
-		logger.Debugf("aggr data:%v ", d)
 		resp = append(resp, d)
 	}
 
@@ -235,7 +232,7 @@ func QueryOne(para dataobj.TsdbQueryParam) (resp *dataobj.TsdbQueryResponse, err
 
 		conn, err := pool.Fetch()
 		if err != nil {
-			logger.Warning(err)
+			logger.Error(err)
 			continue
 		}
 
@@ -244,7 +241,7 @@ func QueryOne(para dataobj.TsdbQueryParam) (resp *dataobj.TsdbQueryResponse, err
 			pool.ForceClose(conn)
 
 			err = errors.New("conn closed")
-			logger.Warning(err)
+			logger.Error(err)
 			continue
 		}
 
@@ -263,12 +260,12 @@ func QueryOne(para dataobj.TsdbQueryParam) (resp *dataobj.TsdbQueryResponse, err
 		select {
 		case <-time.After(time.Duration(callTimeout) * time.Millisecond):
 			pool.ForceClose(conn)
-			logger.Warningf("%s, call timeout. proc: %s", addr, pool.Proc())
+			logger.Errorf("%s, call timeout. proc: %s", addr, pool.Proc())
 			break
 		case r := <-ch:
 			if r.Err != nil {
 				pool.ForceClose(conn)
-				logger.Warningf("%s, call failed, err %v. proc: %s", addr, r.Err, pool.Proc())
+				logger.Errorf("%s, call failed, err %v. proc: %s", addr, r.Err, pool.Proc())
 				break
 
 			} else {
@@ -307,7 +304,7 @@ func selectPoolByPK(pk string) ([]Pool, error) {
 		return []Pool{}, err
 	}
 
-	nodeAddrs, found := Config.Tsdb.ClusterList[node]
+	nodeAddrs, found := Config.ClusterList[node]
 	if !found {
 		return []Pool{}, errors.New("node not found")
 	}

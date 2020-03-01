@@ -3,7 +3,7 @@ package plugins
 import (
 	"time"
 
-	"github.com/didi/nightingale/src/modules/collector/config"
+	"github.com/didi/nightingale/src/modules/collector/sys"
 )
 
 func Detect() {
@@ -19,7 +19,7 @@ func loopDetect() {
 }
 
 func detect() {
-	ps := ListPlugins(config.Config.Plugin)
+	ps := ListPlugins(sys.Config.Plugin)
 	DelNoUsePlugins(ps)
 	AddNewPlugins(ps)
 }

@@ -8,16 +8,20 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/didi/nightingale/src/model"
 	"github.com/didi/nightingale/src/modules/collector/config"
-	"github.com/didi/nightingale/src/modules/collector/http"
+	"github.com/didi/nightingale/src/modules/collector/http/routes"
 	"github.com/didi/nightingale/src/modules/collector/log/worker"
-	"github.com/didi/nightingale/src/modules/collector/sys/cron"
+	"github.com/didi/nightingale/src/modules/collector/stra"
+	"github.com/didi/nightingale/src/modules/collector/sys"
 	"github.com/didi/nightingale/src/modules/collector/sys/funcs"
 	"github.com/didi/nightingale/src/modules/collector/sys/plugins"
 	"github.com/didi/nightingale/src/modules/collector/sys/ports"
 	"github.com/didi/nightingale/src/modules/collector/sys/procs"
+	"github.com/didi/nightingale/src/toolkits/http"
+	"github.com/didi/nightingale/src/toolkits/identity"
+	tlogger "github.com/didi/nightingale/src/toolkits/logger"
 
+	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
@@ -52,25 +56,21 @@ func main() {
 	aconf()
 	pconf()
 	start()
+	cfg := config.Get()
 
-	var err error
-	config.InitLogger()
+	tlogger.Init(cfg.Logger)
 
-	config.Endpoint, err = config.GetEndpoint()
-	if err != nil {
-		logger.Fatal("cannot get endpoint:", err)
-	} else {
-		logger.Info("endpoint ->", config.Endpoint)
-	}
-
-	if config.Endpoint == "127.0.0.1" {
+	identity.Init(cfg.Identity)
+	if identity.Identity == "127.0.0.1" {
 		log.Fatalln("endpoint: 127.0.0.1, cannot work")
 	}
 
-	config.Collect = *model.NewCollect()
+	sys.Init(cfg.Sys)
+	stra.Init(cfg.Stra)
+
 	funcs.BuildMappers()
 	funcs.Collect()
-	cron.GetCollects()
+	stra.GetCollects()
 
 	//插件采集
 	plugins.Detect()
@@ -82,11 +82,14 @@ func main() {
 	ports.Detect()
 
 	//日志采集
-	go worker.UpdateConfigsLoop() // step2, step1和step2有顺序依赖
+	worker.Init(config.Config.Worker)
+	go worker.UpdateConfigsLoop()
 	go worker.PusherStart()
 	go worker.Zeroize()
 
-	http.Start()
+	r := gin.New()
+	routes.Config(r)
+	http.Start(r, "collector", cfg.Logger.Level)
 	ending()
 }
 

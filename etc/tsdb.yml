@@ -1,5 +1,7 @@
 rrd:
   storage: data/5821
+cache:
+  keepMinutes: 120
 logger:
   dir: logs/tsdb
   level: WARNING

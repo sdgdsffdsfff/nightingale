@@ -6,7 +6,7 @@ import (
 
 	"github.com/didi/nightingale/src/dataobj"
 	"github.com/didi/nightingale/src/modules/tsdb/cache"
-	"github.com/didi/nightingale/src/modules/tsdb/config"
+	"github.com/didi/nightingale/src/modules/tsdb/rrdtool"
 	"github.com/didi/nightingale/src/modules/tsdb/utils"
 	"github.com/didi/nightingale/src/toolkits/str"
 
@@ -21,21 +21,21 @@ const (
 )
 
 func StartMigrate() {
-	for node, addr := range config.Config.Migrate.OldCluster {
-		go pullRRD(node, addr, config.Config.Migrate.Concurrency)
+	for node, addr := range Config.OldCluster {
+		go pullRRD(node, addr, Config.Concurrency)
 	}
 
-	for node, addr := range config.Config.Migrate.NewCluster {
-		go send2NewTsdbTask(node, addr, config.Config.Migrate.Concurrency)
+	for node, addr := range Config.NewCluster {
+		go send2NewTsdbTask(node, addr, Config.Concurrency)
 	}
 
-	for node, addr := range config.Config.Migrate.OldCluster {
-		go send2OldTsdbTask(node, addr, config.Config.Migrate.Concurrency)
+	for node, addr := range Config.OldCluster {
+		go send2OldTsdbTask(node, addr, Config.Concurrency)
 	}
 }
 
 func pullRRD(node string, addr string, concurrent int) {
-	batch := config.Config.Migrate.Batch // 一次发送,最多batch条数据
+	batch := Config.Batch // 一次发送,最多batch条数据
 	Q := RRDFileQueues[node]
 
 	sema := semaphore.NewSemaphore(concurrent)
@@ -51,7 +51,7 @@ func pullRRD(node string, addr string, concurrent int) {
 		filenames := make([]dataobj.RRDFile, count)
 		for i := 0; i < count; i++ {
 			filenames[i] = fnames[i].(dataobj.RRDFile)
-			cache.Caches.SetFlag(str.GetKey(filenames[i].Filename), config.ITEM_TO_PULLRRD)
+			cache.Caches.SetFlag(str.GetKey(filenames[i].Filename), rrdtool.ITEM_TO_PULLRRD)
 		}
 
 		//控制并发
@@ -72,14 +72,14 @@ func pullRRD(node string, addr string, concurrent int) {
 				time.Sleep(time.Millisecond * 10)
 			}
 			for _, f := range resp.Files {
-				filePath := config.Config.RRD.Storage + "/" + f.Filename
+				filePath := rrdtool.Config.Storage + "/" + f.Filename
 
 				paths := strings.Split(f.Filename, "/")
 				if len(paths) != 2 {
 					logger.Errorf("write rrd file err %v filename:%s", err, f.Filename)
 					continue
 				}
-				file.EnsureDir(config.Config.RRD.Storage + "/" + paths[0])
+				file.EnsureDir(rrdtool.Config.Storage + "/" + paths[0])
 				err = utils.WriteFile(filePath, f.Body, 0644)
 				if err != nil {
 					logger.Errorf("write rrd file err %v filename:%s", err, f.Filename)
@@ -99,7 +99,7 @@ func pullRRD(node string, addr string, concurrent int) {
 }
 
 func send2OldTsdbTask(node string, addr string, concurrent int) {
-	batch := config.Config.Migrate.Batch // 一次发送,最多batch条数据
+	batch := Config.Batch // 一次发送,最多batch条数据
 	Q := TsdbQueues[node]
 
 	sema := semaphore.NewSemaphore(concurrent)
@@ -149,7 +149,7 @@ func send2OldTsdbTask(node string, addr string, concurrent int) {
 }
 
 func send2NewTsdbTask(node string, addr string, concurrent int) {
-	batch := config.Config.Migrate.Batch // 一次发送,最多batch条数据
+	batch := Config.Batch // 一次发送,最多batch条数据
 	Q := NewTsdbQueues[node]
 
 	sema := semaphore.NewSemaphore(concurrent)

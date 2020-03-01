@@ -6,7 +6,7 @@ Nightingale是一套衍生自Open-Falcon的互联网监控解决方案，融入�
 
 ## 文档
 
-使用手册请参考：[夜莺使用手册](https://n9e.didiyun.com/zh_1.0/)
+使用手册请参考：[夜莺使用手册](https://n9e.didiyun.com/)
 
 ## 编译
 

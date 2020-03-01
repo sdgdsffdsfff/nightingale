@@ -4,10 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/didi/nightingale/src/modules/collector/config"
 	"github.com/didi/nightingale/src/modules/collector/log/reader"
-	"github.com/didi/nightingale/src/modules/collector/log/schema"
 	"github.com/didi/nightingale/src/modules/collector/log/strategy"
+	"github.com/didi/nightingale/src/modules/collector/stra"
 
 	"github.com/toolkits/pkg/logger"
 )
@@ -44,7 +43,7 @@ func UpdateConfigsLoop() {
 				Id:       id,
 				FilePath: st.FilePath,
 			}
-			cache := make(chan string, config.Config.Worker.QueueSize)
+			cache := make(chan string, WorkerConfig.QueueSize)
 			if err := createJob(cfg, cache, st); err != nil {
 				logger.Errorf("create job fail [id:%d][filePath:%s][err:%v]", cfg.Id, cfg.FilePath, err)
 			}
@@ -63,7 +62,7 @@ func UpdateConfigsLoop() {
 
 		//更新counter
 		GlobalCount.UpdateByStrategy(strategyMap)
-		time.Sleep(time.Second * time.Duration(config.Config.Collector.SyncInterval))
+		time.Sleep(time.Second * 10)
 	}
 }
 
@@ -80,7 +79,7 @@ func GetLatestTmsAndDelay(filepath string) (int64, int64, bool) {
 }
 
 //添加任务到管理map( managerjob managerconfig) 启动reader和worker
-func createJob(config *ConfigInfo, cache chan string, st *schema.Strategy) error {
+func createJob(config *ConfigInfo, cache chan string, st *stra.Strategy) error {
 	if _, ok := ManagerJob[config.FilePath]; ok {
 		if _, ok := ManagerConfig[config.Id]; !ok {
 			ManagerConfig[config.Id] = config

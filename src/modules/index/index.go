@@ -9,10 +9,15 @@ import (
 
 	"github.com/didi/nightingale/src/modules/index/cache"
 	"github.com/didi/nightingale/src/modules/index/config"
-	"github.com/didi/nightingale/src/modules/index/cron"
-	"github.com/didi/nightingale/src/modules/index/http"
+	"github.com/didi/nightingale/src/modules/index/http/routes"
 	"github.com/didi/nightingale/src/modules/index/rpc"
+	"github.com/didi/nightingale/src/toolkits/http"
+	"github.com/didi/nightingale/src/toolkits/identity"
+	tlogger "github.com/didi/nightingale/src/toolkits/logger"
+	"github.com/didi/nightingale/src/toolkits/report"
+	"github.com/didi/nightingale/src/toolkits/stats"
 
+	"github.com/gin-gonic/gin"
 	"github.com/toolkits/pkg/file"
 	"github.com/toolkits/pkg/logger"
 	"github.com/toolkits/pkg/runner"
@@ -48,18 +53,20 @@ func main() {
 	pconf()
 	start()
 
-	config.InitLogger()
+	cfg := config.Config
 
-	cache.InitDB()
-	cache.Rebuild()
+	tlogger.Init(cfg.Logger)
+	go stats.Init("n9e.index")
 
-	go cron.StartCleaner()
-	go cron.StartPersist()
-	go cron.Report()
-	go cron.Statstic()
+	cache.InitDB(cfg.Cache)
+	identity.Init(cfg.Identity)
 
+	go report.Init(cfg.Report, "monapi")
 	go rpc.Start()
-	http.Start()
+
+	r := gin.New()
+	routes.Config(r)
+	http.Start(r, "index", cfg.Logger.Level)
 	ending()
 }
 
