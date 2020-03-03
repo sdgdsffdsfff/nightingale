@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Form, Input, Icon } from 'antd';
-import BaseComponent from '@path/BaseComponent';
+import { FormProps } from 'antd/lib/form';
 
 const FormItem = Form.Item;
 
-class index extends BaseComponent {
+class index extends Component<FormProps> {
   validateFields() {
-    return this.props.form.validateFields;
+    return this.props.form!.validateFields;
   }
 
   render() {
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
     return (
       <Form layout="vertical">
         <FormItem label="旧密码" required>

@@ -1,17 +1,17 @@
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
+import React, { Component, Fragment } from 'react';
 import { Form, Input, Switch, Icon } from 'antd';
-import BaseComponent from '@path/BaseComponent';
+import { FormProps } from 'antd/lib/form';
+import { UserProfile } from '@interface';
+
+interface Props {
+  type: string,
+  isrootVsible: boolean,
+  initialValue: UserProfile,
+}
 
 const FormItem = Form.Item;
 
-class ProfileForm extends BaseComponent {
-  static propTypes = {
-    type: PropTypes.string,
-    isrootVsible: PropTypes.bool,
-    initialValue: PropTypes.object,
-  };
-
+class ProfileForm extends Component<Props & FormProps> {
   static defaultProps = {
     type: 'post',
     isrootVsible: false,
@@ -19,10 +19,10 @@ class ProfileForm extends BaseComponent {
   };
 
   validateFields() {
-    return this.props.form.validateFields;
+    return this.props.form!.validateFields;
   }
 
-  renderLabel(name) {
+  renderLabel(name: string) {
     const { type } = this.props;
     if (type === 'register') {
       return '';
@@ -32,7 +32,7 @@ class ProfileForm extends BaseComponent {
 
   render() {
     const { type, isrootVsible, initialValue } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
     return (
       <Form layout="vertical">
         {
@@ -102,4 +102,4 @@ class ProfileForm extends BaseComponent {
   }
 }
 
-export default Form.create()(ProfileForm);
+export default Form.create()(ProfileForm as any);

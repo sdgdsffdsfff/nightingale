@@ -51,6 +51,7 @@ export interface UserProfile {
   phone: string,
   im: string,
   isroot: boolean,
+  is_root: 0 | 1,
 }
 
 export interface Team {
