@@ -1,22 +1,23 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, Form, Input, Icon, message } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import request from '@common/request';
+import api from '@common/api';
+
+interface Props {
+  id: number,
+  title: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
 const FormItem = Form.Item;
 
-class PutPassword extends BaseComponent {
-  static propTypes = {
-    id: PropTypes.number.isRequired,
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
-
+class PutPassword extends Component<Props & FormProps> {
   static defaultProps = {
     title: '修改密码',
     visible: true,
@@ -26,12 +27,11 @@ class PutPassword extends BaseComponent {
   };
 
   handleOk = () => {
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
-        this.request({
-          url: `${this.api.user}/${this.props.id}/password`,
-          type: 'PUT',
-          data: JSON.stringify(values),
+        request(`${api.user}/${this.props.id}/password`, {
+          method: 'PUT',
+          body: JSON.stringify(values),
         }).then(() => {
           message.success('密码修改成功！');
           this.props.onOk();
@@ -47,7 +47,7 @@ class PutPassword extends BaseComponent {
 
   render() {
     const { title, visible } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
 
     return (
       <Modal
@@ -55,8 +55,6 @@ class PutPassword extends BaseComponent {
         visible={visible}
         onOk={this.handleOk}
         onCancel={this.handleCancel}
-        // okText="确认"
-        // cancelText="取消"
       >
         <Form layout="vertical">
           <FormItem label="新密码" required>
@@ -75,4 +73,4 @@ class PutPassword extends BaseComponent {
   }
 }
 
-export default ModalControl(Form.create()(PutPassword));
+export default ModalControl(Form.create()(PutPassword as any));

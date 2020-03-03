@@ -1,30 +1,32 @@
-/* eslint-disable react/no-access-state-in-setstate */
-import React from 'react';
+import React, { Component } from 'react';
 import { Row, Col, Input, Divider, Popconfirm, Button, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import CreateIncludeNsTree from '@path/Layout/CreateIncludeNsTree';
+import CreateIncludeNsTree from '@cpts/Layout/CreateIncludeNsTree';
+import request from '@common/request';
+import api from '@common/api';
+import FetchTable from '@cpts/FetchTable';
+import { Team } from '@interface';
 import PutTeam from './PutTeam';
 import AddTeam from './AddTeam';
 
-class UserTeam extends BaseComponent {
-  componentDidMount() {
-    this.fetchData();
-  }
+interface State {
+  searchValue: string,
+}
 
-  getFetchDataUrl() {
-    return this.api.team;
-  }
+class UserTeam extends Component<null, State> {
+  fetchtable: any;
+
+  state = {} as State;
 
   handleAddBtnClick = () => {
     AddTeam({
       onOk: () => {
-        this.fetchData();
+        this.fetchtable.reload();
       },
     });
   }
 
-  handlePutBtnClick = (record) => {
+  handlePutBtnClick = (record: Team) => {
     PutTeam({
       data: {
         ...record,
@@ -32,17 +34,16 @@ class UserTeam extends BaseComponent {
         members: _.map(record.member_objs, n => n.id),
       },
       onOk: () => {
-        this.fetchData();
+        this.fetchtable.reload();
       },
     });
   }
 
-  handleDelBtnClick = (id) => {
-    this.request({
-      url: `${this.api.team}/${id}`,
-      type: 'DELETE',
+  handleDelBtnClick = (id: number) => {
+    request(`${api.team}/${id}`, {
+      method: 'DELETE',
     }).then(() => {
-      this.fetchData();
+      this.fetchtable.reload();
       message.success('团队删除成功！');
     });
   }
@@ -54,15 +55,21 @@ class UserTeam extends BaseComponent {
           <Col span={8}>
             <Input.Search
               style={{ width: 200 }}
-              onSearch={this.handleSearchChange}
+              onSearch={(val) => {
+                this.setState({ searchValue: val });
+              }}
             />
           </Col>
           <Col span={16} className="textAlignRight">
             <Button onClick={this.handleAddBtnClick} icon="plus">新建团队</Button>
           </Col>
         </Row>
-        {
-          this.renderTable({
+        <FetchTable
+          ref={(ref) => { this.fetchtable = ref; }}
+          backendPagingEnabled={true}
+          url={api.team}
+          query={{ query: this.state.searchValue }}
+          tableProps={{
             columns: [
               {
                 title: '英文标识',
@@ -102,8 +109,8 @@ class UserTeam extends BaseComponent {
                 },
               },
             ],
-          })
-        }
+          }}
+        />
       </div>
     );
   }

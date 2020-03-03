@@ -53,6 +53,18 @@ export interface UserProfile {
   isroot: boolean,
 }
 
+export interface Team {
+  id: number,
+  ident: string,
+  name: string,
+  note: string,
+  mgmt: number,
+  admin_objs: UserProfile[],
+  member_objs: UserProfile[],
+  admins?: string[],
+  members?: string[],
+}
+
 export interface Endpoint {
   id: number,
   ident: string,

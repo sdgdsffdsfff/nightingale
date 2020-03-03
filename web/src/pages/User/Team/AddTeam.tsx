@@ -1,20 +1,21 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import request from '@common/request';
+import api from '@common/api';
 import TeamForm from './TeamForm';
 
-class AddTeam extends BaseComponent {
-  static propTypes = {
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
+interface Props {
+  title: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
+class AddTeam extends Component<Props> {
+  teamFormRef: any;
   static defaultProps = {
     title: '编辑团队',
     visible: true,
@@ -24,12 +25,11 @@ class AddTeam extends BaseComponent {
   };
 
   handleOk = () => {
-    this.teamFormRef.validateFields((err, values) => {
+    this.teamFormRef.validateFields((err: any, values: any) => {
       if (!err) {
-        this.request({
-          url: this.api.team,
-          type: 'POST',
-          data: JSON.stringify(values),
+        request(api.team, {
+          method: 'POST',
+          body: JSON.stringify(values),
         }).then(() => {
           message.success('团队创建成功！');
           this.props.onOk();
@@ -54,7 +54,7 @@ class AddTeam extends BaseComponent {
         onCancel={this.handleCancel}
       >
         <TeamForm
-          ref={(ref) => { this.teamFormRef = ref; }}
+          ref={(ref: any) => { this.teamFormRef = ref; }}
         />
       </Modal>
     );

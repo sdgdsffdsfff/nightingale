@@ -1,12 +1,24 @@
-import React from 'react';
+import React, { Component }from 'react';
 import PropTypes from 'prop-types';
 import { Modal, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import { Team } from '@interface';
+import request from '@common/request';
+import api from '@common/api';
 import TeamForm from './TeamForm';
 
-class PutTeam extends BaseComponent {
+interface Props {
+  data: Team,
+  title: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
+
+class PutTeam extends Component<Props> {
+  teamFormRef: any;
   static propTypes = {
     data: PropTypes.object.isRequired,
     title: PropTypes.string,
@@ -26,12 +38,11 @@ class PutTeam extends BaseComponent {
 
   handleOk = () => {
     const { data } = this.props;
-    this.teamFormRef.validateFields((err, values) => {
+    this.teamFormRef.validateFields((err: any, values: any) => {
       if (!err) {
-        this.request({
-          url: `${this.api.team}/${data.id}`,
-          type: 'PUT',
-          data: JSON.stringify({
+        request(`${api.team}/${data.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
             ...values,
           }),
         }).then(() => {
@@ -59,7 +70,7 @@ class PutTeam extends BaseComponent {
       >
         <TeamForm
           initialValue={data}
-          ref={(ref) => { this.teamFormRef = ref; }}
+          ref={(ref: any) => { this.teamFormRef = ref; }}
         />
       </Modal>
     );

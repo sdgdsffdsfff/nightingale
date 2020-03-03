@@ -1,25 +1,34 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component }from 'react';
 import { Form, Input, Radio, Select, Spin } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
+import { Team, UserProfile } from '@interface';
+import request from '@common/request';
+import api from '@common/api';
+
+interface Props {
+  initialValue: Team,
+}
+
+interface State {
+  users: UserProfile[],
+  value: string,
+  fetching: boolean,
+}
 
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 const { Option } = Select;
 
-class TeamForm extends BaseComponent {
-  static propTypes = {
-    initialValue: PropTypes.object,
-  };
-
+class TeamForm extends Component<Props & FormProps, State> {
   static defaultProps = {
     initialValue: {},
   };
 
-  constructor(props) {
+  lastFetchId = 0;
+
+  constructor(props: Props) {
     super(props);
-    this.lastFetchId = 0;
     this.fetchUser = _.debounce(this.fetchUser, 500);
   }
 
@@ -27,23 +36,17 @@ class TeamForm extends BaseComponent {
     users: [],
     value: '',
     fetching: false,
-  };
+  } as State;
 
   componentDidMount() {
     this.fetchUser();
   }
 
-  fetchUser = (value) => {
+  fetchUser = () => {
     this.lastFetchId += 1;
     const fetchId = this.lastFetchId;
     this.setState({ users: [], fetching: true });
-    this.request({
-      url: this.api.user,
-      data: {
-        query: value,
-        limit: 1000,
-      },
-    }).then((res) => {
+    request(`${api.user}?limit=1000`).then((res) => {
       if (fetchId !== this.lastFetchId) {
         // for fetch callback order
         return;
@@ -53,7 +56,7 @@ class TeamForm extends BaseComponent {
   };
 
   validateFields() {
-    return this.props.form.validateFields;
+    return this.props.form!.validateFields;
   }
 
   renderUserSelect() {
@@ -83,7 +86,7 @@ class TeamForm extends BaseComponent {
 
   render() {
     const { initialValue } = this.props;
-    const { getFieldDecorator, getFieldValue } = this.props.form;
+    const { getFieldDecorator, getFieldValue } = this.props.form!;
     return (
       <Form layout="vertical">
         <FormItem label="英文标识" required>
@@ -139,4 +142,4 @@ class TeamForm extends BaseComponent {
   }
 }
 
-export default Form.create()(TeamForm);
+export default Form.create()(TeamForm as any);

@@ -1,21 +1,22 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
-import ProfileForm from '@path/components/ProfileForm';
-import { auth } from '@path/Auth';
+import ModalControl from '@cpts/ModalControl';
+import ProfileForm from '@cpts/ProfileForm';
+import { auth } from '@cpts/Auth';
+import request from '@common/request';
+import api from '@common/api';
 
-class CreateUser extends BaseComponent {
-  static propTypes = {
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
+interface Props {
+  title: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
+class CreateUser extends Component<Props> {
+  profileFormRef: any;
   static defaultProps = {
     title: '新建用户',
     visible: true,
@@ -25,12 +26,11 @@ class CreateUser extends BaseComponent {
   };
 
   handleOk = () => {
-    this.profileFormRef.validateFields((err, values) => {
+    this.profileFormRef.validateFields((err: any, values: any) => {
       if (!err) {
-        this.request({
-          url: this.api.user,
-          type: 'POST',
-          data: JSON.stringify({
+        request(api.user, {
+          method: 'POST',
+          body: JSON.stringify({
             ...values,
             is_root: values.is_root ? 1 : 0,
           }),
@@ -60,7 +60,7 @@ class CreateUser extends BaseComponent {
       >
         <ProfileForm
           isrootVsible={isroot}
-          ref={(ref) => { this.profileFormRef = ref; }} />
+          ref={(ref: any) => { this.profileFormRef = ref; }} />
       </Modal>
     );
   }

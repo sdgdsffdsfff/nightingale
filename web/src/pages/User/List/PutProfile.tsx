@@ -1,21 +1,24 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
-import ProfileForm from '@path/components/ProfileForm';
-import { auth } from '@path/Auth';
+import ModalControl from '@cpts/ModalControl';
+import ProfileForm from '@cpts/ProfileForm';
+import { auth } from '@cpts/Auth';
+import request from '@common/request';
+import api from '@common/api';
+import { UserProfile } from '@interface';
 
-class PutProfile extends BaseComponent {
-  static propTypes = {
-    data: PropTypes.object.isRequired,
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
+interface Props {
+  data: UserProfile,
+  title: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
+
+class PutProfile extends Component<Props> {
+  profileForm: any;
 
   static defaultProps = {
     title: '',
@@ -26,12 +29,11 @@ class PutProfile extends BaseComponent {
   };
 
   handleOk = () => {
-    this.profileForm.validateFields((err, values) => {
+    this.profileForm.validateFields((err: any, values: any) => {
       if (!err) {
-        this.request({
-          url: `${this.api.user}/${this.props.data.id}/profile`,
-          type: 'PUT',
-          data: JSON.stringify({
+        request(`${api.user}/${this.props.data.id}/profile`, {
+          method: 'PUT',
+          body: JSON.stringify({
             ...values,
             is_root: values.is_root ? 1 : 0,
           }),
@@ -63,7 +65,7 @@ class PutProfile extends BaseComponent {
           type="put"
           isrootVsible={isroot}
           initialValue={data}
-          ref={(ref) => { this.profileForm = ref; }}
+          ref={(ref: any) => { this.profileForm = ref; }}
         />
       </Modal>
     );

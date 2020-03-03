@@ -1,40 +1,38 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Row, Col, Input, Button, Divider, Popover, Popconfirm, message, Tooltip, Alert } from 'antd';
-import BaseComponent from '@path/BaseComponent';
+import { ColumnProps } from 'antd/lib/table';
+import { UserProfile } from '@interface';
 import clipboard from '@common/clipboard';
-import CreateIncludeNsTree from '@path/Layout/CreateIncludeNsTree';
-import { auth } from '@path/Auth';
+import CreateIncludeNsTree from '@cpts/Layout/CreateIncludeNsTree';
+import { auth } from '@cpts/Auth';
+import request from '@common/request';
+import api from '@common/api';
+import FetchTable from '@cpts/FetchTable';
 import CreateUser from './CreateUser';
 import PutPassword from './PutPassword';
 import PutProfile from './PutProfile';
 
+interface State {
+  searchValue: string,
+  inviteTooltipVisible: boolean,
+  invitePopoverVisible: boolean,
+  inviteLink: string,
+  copySucceeded: boolean,
+}
+
 const ButtonGroup = Button.Group;
 
-class User extends BaseComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ...this.state,
-      inviteTooltipVisible: false,
-      invitePopoverVisible: false,
-      inviteLink: '',
-      copySucceeded: false,
-    };
-  }
-
-  componentDidMount() {
-    this.fetchData();
-  }
-
-  getFetchDataUrl() {
-    return this.api.user;
-  }
+class User extends Component<null, State> {
+  fetchtable: any;
+  state = {
+    inviteTooltipVisible: false,
+    invitePopoverVisible: false,
+    inviteLink: '',
+    copySucceeded: false,
+  } as State;
 
   handleInviteBtnClick = () => {
-    this.request({
-      url: `${this.api.users}/invite`,
-      async: false,
-    }).then((res) => {
+    request(`${api.users}/invite`).then((res) => {
       const { origin, pathname } = window.location;
       const inviteLink = `${origin}${pathname}#/register?token=${res}`;
       const copySucceeded = clipboard(inviteLink);
@@ -51,35 +49,34 @@ class User extends BaseComponent {
   handleAddBtnClick = () => {
     CreateUser({
       onOk: () => {
-        this.fetchData();
+        this.fetchtable.reload();
       },
     });
   }
 
-  handlePutBtnClick = (record) => {
+  handlePutBtnClick = (record: UserProfile) => {
     PutProfile({
       data: record,
       onOk: () => {
-        this.fetchData();
+        this.fetchtable.reload();
       },
     });
   }
 
-  handlePutPassBtnClick = (id) => {
+  handlePutPassBtnClick = (id: number) => {
     PutPassword({
       id,
       onOk: () => {
-        this.fetchData();
+        this.fetchtable.reload();
       },
     });
   }
 
-  handleDelBtnClick(id) {
-    this.request({
-      url: `${this.api.user}/${id}`,
-      type: 'DELETE',
+  handleDelBtnClick(id: number) {
+    request(`${api.user}/${id}`, {
+      method: 'DELETE',
     }).then(() => {
-      this.fetchData();
+      this.fetchtable.reload();
       message.success('用户删除成功！');
     });
   }
@@ -92,7 +89,7 @@ class User extends BaseComponent {
       inviteLink,
     } = this.state;
     const { isroot } = auth.getSelftProfile();
-    const columns = [
+    const columns: ColumnProps<UserProfile>[] = [
       {
         title: '登录名',
         dataIndex: 'username',
@@ -144,7 +141,9 @@ class User extends BaseComponent {
           <Col span={8} className="mb10">
             <Input.Search
               style={{ width: 200 }}
-              onSearch={this.handleSearchChange}
+              onSearch={(val) => {
+                this.setState({ searchValue: val });
+              }}
             />
           </Col>
           <Col span={16} className="textAlignRight">
@@ -184,11 +183,15 @@ class User extends BaseComponent {
             </ButtonGroup>
           </Col>
         </Row>
-        {
-          this.renderTable({
+        <FetchTable
+          ref={(ref) => { this.fetchtable = ref; }}
+          backendPagingEnabled={true}
+          url={api.user}
+          query={{ query: this.state.searchValue }}
+          tableProps={{
             columns,
-          })
-        }
+          }}
+        />
       </div>
     );
   }
