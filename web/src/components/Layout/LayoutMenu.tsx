@@ -1,56 +1,39 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { Link, matchPath, withRouter } from 'react-router-dom';
+import { Link, matchPath, withRouter, RouteComponentProps, LinkProps } from 'react-router-dom';
 import queryString from 'query-string';
 import { Menu, Icon } from 'antd';
 import _ from 'lodash';
+import { MenuConfItem } from '@interface';
 import * as utils from './utils';
 
+interface Props {
+  className?: string,
+  defaultOpenAllNavs?: boolean,
+  isroot: boolean,
+  menuMode?: 'inline' | 'vertical' | 'vertical-left' | 'vertical-right' | 'horizontal' | undefined,
+  menuTheme?: 'dark' | 'light' | undefined,
+  menuStyle?: any,
+  menuConf: MenuConfItem[],
+}
+
 const { Item: MenuItem, Divider: MenuDivider, SubMenu } = Menu;
-const menuItemConf = {
-  name: PropTypes.string.isRequired,
-  path: PropTypes.string.isRequired,
-  icon: PropTypes.string,
-  target: PropTypes.string,
-};
-const menuConfPropTypes = PropTypes.oneOfType([
-  PropTypes.arrayOf(PropTypes.shape({
-    ...menuItemConf,
-    children: PropTypes.arrayOf(PropTypes.shape({
-      ...menuItemConf,
-      getQuery: PropTypes.func,
-    })),
-  })),
-  PropTypes.func,
-]);
 
-class LayoutMenu extends Component {
-  static propTypes = {
-    isroot: PropTypes.bool.isRequired,
-    menuMode: PropTypes.string,
-    menuTheme: PropTypes.string,
-    menuStyle: PropTypes.object,
-    menuConf: menuConfPropTypes.isRequired,
-  };
-
+class LayoutMenu extends Component<Props & RouteComponentProps> {
   static defaultProps = {
     menuMode: 'inline',
     menuTheme: 'dark',
     menuStyle: undefined,
-  };
+  } as Props;
 
-  constructor(props) {
-    super(props);
-    this.defaultOpenKeys = [];
-    this.selectedKeys = [];
-  }
+  defaultOpenKeys: string[] = [];
+  selectedKeys: string[] = [];
 
   componentWillReceiveProps() {
     this.selectedKeys = [];
   }
 
-  getNavMenuItems(navs) {
-    const { location = {}, menuMode, defaultOpenAllNavs } = this.props;
+  getNavMenuItems(navs: MenuConfItem[]) {
+    const { location, menuMode, defaultOpenAllNavs } = this.props;
 
     return _.map(_.filter(navs, (nav) => {
       if (!this.props.isroot && nav.rootVisible) {
@@ -63,15 +46,15 @@ class LayoutMenu extends Component {
       }
 
       const icon = nav.icon ? <Icon className={`Linear ${nav.icon}`} type={nav.icon} /> : null;
-      const linkProps = {};
+      const linkProps = {} as LinkProps;
       let link;
 
       if (_.isArray(nav.children) && utils.hasRealChildren(nav.children)) {
         const menuKey = nav.key || nav.to;
 
         if (defaultOpenAllNavs) {
-          this.defaultOpenKeys.push(menuKey);
-        } else if (this.isActive(nav.to) && menuMode === 'inline') {
+          if (menuKey) this.defaultOpenKeys.push(menuKey);
+        } else if (nav.to && this.isActive(nav.to) && menuMode === 'inline') {
           this.defaultOpenKeys = _.union(this.defaultOpenKeys, [nav.to]);
         }
 
@@ -85,7 +68,7 @@ class LayoutMenu extends Component {
               </span>
             }
           >
-            {this.getNavMenuItems(nav.children, nav)}
+            {this.getNavMenuItems(nav.children)}
           </SubMenu>
         );
       }
@@ -94,7 +77,7 @@ class LayoutMenu extends Component {
         linkProps.target = nav.target;
       }
 
-      if (utils.isAbsolutePath(nav.to)) {
+      if (nav.to && utils.isAbsolutePath(nav.to)) {
         linkProps.href = nav.to;
         link = (
           <a {...linkProps}>
@@ -103,7 +86,7 @@ class LayoutMenu extends Component {
           </a>
         );
       } else {
-        if (this.isActive(nav.to)) this.selectedKeys = [nav.to];
+        if (nav.to && this.isActive(nav.to)) this.selectedKeys = [nav.to];
 
         linkProps.to = {
           pathname: nav.to,
@@ -132,8 +115,8 @@ class LayoutMenu extends Component {
     });
   }
 
-  isActive(path) {
-    const { location = {} } = this.props;
+  isActive(path: string) {
+    const { location } = this.props;
     return !!matchPath(location.pathname, { path });
   }
 

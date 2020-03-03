@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Component } from 'react';
+import { RouteComponentProps } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Link, withRouter } from 'react-router-dom';
 import { Layout, Dropdown, Menu, Icon } from 'antd';
@@ -6,23 +7,38 @@ import classNames from 'classnames';
 import PubSub from 'pubsub-js';
 import _ from 'lodash';
 import queryString from 'query-string';
-import BaseComponent from '@path/BaseComponent';
-import { auth } from '@path/Auth';
+import { auth } from '@cpts/Auth';
+import { MenuConfItem, TreeNode } from '@interface';
+import request from '@common/request';
+import api from '@common/api';
+import { appname } from '@common/config';
 import LayoutMenu from './LayoutMenu';
 import NsTree from './NsTree';
 import { normalizeTreeData } from './utils';
 import './style.less';
 
+interface Props {
+  habitsId: string,
+  appName: string,
+  menuConf: MenuConfItem[],
+  children: React.ReactNode,
+}
+
+interface State {
+  checkAuthenticateLoading: boolean,
+  nsTreeVisible: boolean,
+  selectedNode: TreeNode | undefined,
+  treeData: TreeNode[],
+  originTreeData: TreeNode[],
+  treeLoading: boolean,
+  treeSearchValue: string,
+  expandedKeys: string[],
+  collapsed: boolean,
+}
+
 const { Header, Content, Sider } = Layout;
 
-class NILayout extends BaseComponent {
-  static propTypes = {
-    habitsId: PropTypes.string.isRequired,
-    appName: PropTypes.string.isRequired,
-    menuConf: PropTypes.array.isRequired,
-    children: PropTypes.element.isRequired,
-  };
-
+class NILayout extends Component<Props & RouteComponentProps, State> {
   static childContextTypes = {
     nsTreeVisibleChange: PropTypes.func.isRequired,
     getNodes: PropTypes.func.isRequired,
@@ -34,12 +50,14 @@ class NILayout extends BaseComponent {
     habitsId: PropTypes.string.isRequired,
   };
 
-  constructor(props) {
+  constructor(props: Props & RouteComponentProps) {
     super(props);
     let selectedNode;
     try {
-      selectedNode = window.localStorage.getItem('selectedNode');
-      selectedNode = JSON.parse(selectedNode);
+      const selectedNodeStr = window.localStorage.getItem('selectedNode');
+      if (selectedNodeStr) {
+        selectedNode = JSON.parse(selectedNodeStr);
+      }
     } catch (e) {
       console.log(e);
     }
@@ -58,7 +76,7 @@ class NILayout extends BaseComponent {
 
   componentDidMount = () => {
     this.checkAuthenticate();
-    this.fetchTreeData((treeData) => {
+    this.fetchTreeData((treeData: TreeNode[]) => {
       this.getDefaultKeys(treeData);
     });
   }
@@ -69,12 +87,12 @@ class NILayout extends BaseComponent {
     });
   }
 
-  fetchTreeData(cbk) {
+  fetchTreeData(cbk?: (treeData: TreeNode[]) => void) {
     const { treeSearchValue } = this.state;
-    const url = treeSearchValue ? this.api.treeSearch : this.api.tree;
+    const url = treeSearchValue ? api.treeSearch : api.tree;
     const searchQuery = treeSearchValue ? { query: treeSearchValue } : undefined;
     this.setState({ treeLoading: true });
-    this.request(`${url}?${queryString.stringify(searchQuery)}`).then((res) => {
+    request(`${url}?${searchQuery ? queryString.stringify(searchQuery) : ''}`).then((res) => {
       const treeData = normalizeTreeData(_.cloneDeep(res));
       this.setState({ treeData, originTreeData: res });
       if (treeSearchValue) {
@@ -86,12 +104,12 @@ class NILayout extends BaseComponent {
     });
   }
 
-  getDefaultKeys(treeData) {
+  getDefaultKeys(treeData: TreeNode[]) {
     const { selectedNode } = this.state;
     const selectedNodeId = _.get(selectedNode, 'id');
-    const defaultExpandedKeys = [];
+    const defaultExpandedKeys: string[] = [];
 
-    function realFind(nid) {
+    function realFind(nid: number) {
       const node = _.find(treeData, { id: nid });
       if (node) {
         defaultExpandedKeys.push(_.toString(node.pid));
@@ -101,13 +119,13 @@ class NILayout extends BaseComponent {
       }
     }
 
-    realFind(selectedNodeId);
+    if (selectedNodeId) realFind(selectedNodeId);
     this.setState({ expandedKeys: defaultExpandedKeys });
   }
 
   getChildContext() {
     return {
-      nsTreeVisibleChange: (visible) => {
+      nsTreeVisibleChange: (visible: boolean) => {
         this.setState({
           nsTreeVisible: visible,
         });
@@ -115,7 +133,7 @@ class NILayout extends BaseComponent {
       getNodes: () => {
         return _.cloneDeep(this.state.originTreeData);
       },
-      selecteNode: (node) => {
+      selecteNode: (node: TreeNode) => {
         if (node) {
           try {
             window.localStorage.setItem('selectedNode', JSON.stringify(node));
@@ -125,10 +143,10 @@ class NILayout extends BaseComponent {
           this.setState({ selectedNode: node });
         }
       },
-      getSelectedNode: (key) => {
+      getSelectedNode: (key: string) => {
         const { originTreeData, selectedNode } = this.state;
 
-        if (_.isPlainObject(selectedNode)) {
+        if (selectedNode && _.isPlainObject(selectedNode)) {
           if (_.find(originTreeData, { id: selectedNode.id })) {
             if (!key) {
               return { ...selectedNode };
@@ -139,7 +157,7 @@ class NILayout extends BaseComponent {
         }
         return undefined;
       },
-      updateSelectedNode: (node) => {
+      updateSelectedNode: (node: TreeNode) => {
         try {
           window.localStorage.setItem('selectedNode', JSON.stringify(node));
         } catch (e) {
@@ -170,12 +188,12 @@ class NILayout extends BaseComponent {
     });
   }
 
-  handleNsTreeVisibleChange = (visible) => {
+  handleNsTreeVisibleChange = (visible: boolean) => {
     this.setState({ nsTreeVisible: visible });
   }
 
   renderContent() {
-    const prefixCls = `${this.prefixCls}-layout`;
+    const prefixCls = `${appname}-layout`;
     const { nsTreeVisible } = this.state;
     const layoutCls = classNames({
       [`${prefixCls}-container`]: true,
@@ -192,7 +210,6 @@ class NILayout extends BaseComponent {
             loading={this.state.treeLoading}
             treeData={this.state.treeData}
             originTreeData={this.state.originTreeData}
-            searchValue={this.state.treeSearchValue}
             expandedKeys={this.state.expandedKeys}
             onSearchValue={(val) => {
               this.setState({
@@ -218,7 +235,7 @@ class NILayout extends BaseComponent {
   render() {
     const { menuConf } = this.props;
     const { checkAuthenticateLoading, collapsed, selectedNode, nsTreeVisible } = this.state;
-    const prefixCls = `${this.prefixCls}-layout`;
+    const prefixCls = `${appname}-layout`;
     const { dispname, isroot } = auth.getSelftProfile();
     const logoSrc = collapsed ? require('../../assets/logo-s.png') : require('../../assets/logo-l.png');
     const userIconSrc = require('../../assets/favicon.ico');
@@ -237,7 +254,7 @@ class NILayout extends BaseComponent {
           collapsed={collapsed}
           onCollapse={(newCollapsed) => {
             this.setState({ collapsed: newCollapsed }, () => {
-              PubSub.publish('sider-collapse');
+              PubSub.publish('sider-collapse', true);
             });
           }}
         >
@@ -260,7 +277,6 @@ class NILayout extends BaseComponent {
           </div>
           <LayoutMenu
             isroot={isroot}
-            collapsed={collapsed}
             menuConf={menuConf}
             className={`${prefixCls}-menu`}
           />
@@ -301,9 +317,7 @@ class NILayout extends BaseComponent {
               </Dropdown>
             </div>
           </Header>
-          <Content
-            // style={{ height: '100%' }}
-          >
+          <Content>
             {this.renderContent()}
           </Content>
         </Layout>

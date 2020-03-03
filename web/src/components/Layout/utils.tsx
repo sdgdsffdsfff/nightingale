@@ -1,43 +1,26 @@
 import React from 'react';
 import _ from 'lodash';
 import { Tree } from 'antd';
+import { MenuConfItem, TreeNode } from '@interface';
 
-const { TreeNode } = Tree;
-
-export function isAbsolutePath(url) {
+export function isAbsolutePath(url: string) {
   return /^https?:\/\//.test(url);
 }
 
-/**
- * hasRealChildren
- * @param  {Array}   children [description]
- * @return {Boolean}          [description]
- */
-export function hasRealChildren(children) {
+export function hasRealChildren(children: { visible?: boolean }[]) {
   if (_.isArray(children)) {
     return !_.every(children, item => item.visible === false);
   }
   return false;
 }
 
-/**
- * getNsTreeVisible
- * @param  {Array}   activeRoutes 当前路由的路径数组
- * @return {Boolean}              [description]
- */
-export function getNsTreeVisible(activeRoutes) {
+export function getNsTreeVisible(activeRoutes: { nsTreeVisible?: boolean}[]) {
   return _.every(activeRoutes, route => route.nsTreeVisible === undefined ||
     route.nsTreeVisible === true);
 }
 
-/**
- * normalizeMenuConf
- * @param  {Array}  children   [description]
- * @param  {String} parentNav  [description]
- * @return {Array}             [description]
- */
-export function normalizeMenuConf(children, parentNav) {
-  const navs = [];
+export function normalizeMenuConf(children: MenuConfItem[], parentNav?: MenuConfItem) {
+  const navs: MenuConfItem[] = [];
 
   _.each(children, (nav) => {
     if (nav.visible === undefined || nav.visible === true) {
@@ -72,16 +55,13 @@ export function normalizeMenuConf(children, parentNav) {
   return navs;
 }
 
-export function findNode(treeData, node) {
-  let findedNode;
-  // eslint-disable-next-line no-shadow
-  function findNodeReal(treeData, node) {
-    // eslint-disable-next-line consistent-return
+export function findNode(treeData: TreeNode[], node: TreeNode) {
+  let findedNode: TreeNode | undefined;;
+  function findNodeReal(treeData: TreeNode[], node: TreeNode) {
     _.each(treeData, (item) => {
       if (item.id === node.pid) {
         findedNode = item;
         return false;
-      // eslint-disable-next-line no-else-return
       } else if (_.isArray(item.children)) {
         findNodeReal(item.children, node);
       }
@@ -91,8 +71,8 @@ export function findNode(treeData, node) {
   return findedNode;
 }
 
-export function normalizeTreeData(data) {
-  const treeData = [];
+export function normalizeTreeData(data: TreeNode[]) {
+  const treeData: TreeNode[] = [];
   _.each(data, (node) => {
     node = _.cloneDeep(node);
     if (node.pid === 0) {
@@ -110,24 +90,24 @@ export function normalizeTreeData(data) {
   return treeData;
 }
 
-export function renderTreeNodes(nodes) {
+export function renderTreeNodes(nodes: TreeNode[]) {
   return _.map(nodes, (node) => {
     if (_.isArray(node.children)) {
       return (
-        <TreeNode
+        <Tree.TreeNode
           title={node.name}
-          key={node.id}
+          key={String(node.id)}
           value={node.id}
           path={node.path}
         >
           {renderTreeNodes(node.children)}
-        </TreeNode>
+        </Tree.TreeNode>
       );
     }
     return (
-      <TreeNode
+      <Tree.TreeNode
         title={node.name}
-        key={node.id}
+        key={String(node.id)}
         value={node.id}
         path={node.path}
         isLeaf={node.leaf === 1}
@@ -136,28 +116,28 @@ export function renderTreeNodes(nodes) {
   });
 }
 
-export function filterTreeNodes(nodes, id) {
-  let newNodes = [];
-  function makeFilter(sNodes) {
+export function filterTreeNodes(nodes: TreeNode[], id: number) {
+  let newNodes: TreeNode[] = [];
+  function makeFilter(sNodes: TreeNode[]) {
     _.each(sNodes, (node) => {
       if (node.children) {
         if (node.id === id) {
           newNodes = node.children;
         } else {
-          makeFilter(node.children, id);
+          makeFilter(node.children);
         }
       }
     });
   }
-  makeFilter(nodes, id);
+  makeFilter(nodes);
   return newNodes;
 }
 
-export function getLeafNodes(nodes, nids) {
-  let leafNodes = [];
-  function make(cnids) {
-    const n = [];
-    _.each(nodes, (node) => {
+export function getLeafNodes(nodes: TreeNode[], nids: number[]) {
+  let leafNodes: TreeNode[] = [];
+  function make(cnids: number[]) {
+    const n: number[] = [];
+    _.each(nodes, (node: TreeNode) => {
       if (_.includes(cnids, node.pid)) {
         if (node.leaf === 1) {
           leafNodes = _.concat(leafNodes, node.id);

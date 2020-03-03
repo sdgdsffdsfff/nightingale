@@ -2,19 +2,20 @@ import React, { Component } from 'react';
 import { Tree, Spin, Input } from 'antd';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import * as config from '@path/common/config';
+import * as config from '@common/config';
+import { TreeNode } from '@interface';
 import { renderTreeNodes } from './utils';
 
-export default class NsTree extends Component {
-  static propTypes = {
-    treeData: PropTypes.array,
-    originTreeData: PropTypes.array,
-    loading: PropTypes.bool.isRequired,
-    expandedKeys: PropTypes.array.isRequired,
-    onSearchValue: PropTypes.func.isRequired,
-    onExpandedKeys: PropTypes.func.isRequired,
-  };
+interface Props {
+  treeData: TreeNode[],
+  originTreeData: TreeNode[],
+  loading: boolean,
+  expandedKeys: string[],
+  onSearchValue: (val: string) => void,
+  onExpandedKeys: (expandedKeys: string[]) => void,
+}
 
+export default class NsTree extends Component<Props> {
   static defaultProps = {
     treeData: [],
     originTreeData: [],
@@ -25,7 +26,7 @@ export default class NsTree extends Component {
     getSelectedNode: PropTypes.func,
   };
 
-  handleNodeSelect = (selectedKeys) => {
+  handleNodeSelect = (selectedKeys: string[]) => {
     const { originTreeData } = this.props;
     const { selecteNode } = this.context;
     const currentNode = _.find(originTreeData, { id: _.toNumber(selectedKeys[0]) });

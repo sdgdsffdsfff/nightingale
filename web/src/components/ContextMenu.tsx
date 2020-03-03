@@ -1,16 +1,21 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import _ from 'lodash';
 
-export default class ContextMenu extends Component {
-  static propTypes = {
-    children: PropTypes.element.isRequired,
-    visible: PropTypes.bool,
-    top: PropTypes.number,
-    left: PropTypes.number,
-    onVisibleChang: PropTypes.func,
-  };
+interface Props {
+  children: React.ReactNode,
+  visible: boolean,
+  top: number,
+  left: number,
+  onVisibleChang: () => void,
+}
 
+interface State {
+  visible: boolean,
+  top: number,
+  left: number,
+}
+
+export default class ContextMenu extends Component<Props, State> {
   static defaultProps = {
     visible: false,
     top: 0,
@@ -18,7 +23,7 @@ export default class ContextMenu extends Component {
     onVisibleChang: _.noop,
   };
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     const { visible, top, left } = props;
     this.state = {
@@ -30,7 +35,7 @@ export default class ContextMenu extends Component {
     document.addEventListener('click', this.handleDocumentContextMenuClick);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: Props) {
     const { visible, top, left } = nextProps;
     this.setState({
       visible, top, left,

@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-export default function ModalControlWrap(Component) {
-  return function ModalControl(config) {
+export default function ModalControlWrap(Component: typeof React.Component) {
+  return function ModalControl(config: any) {
     const div = document.createElement('div');
     document.body.appendChild(div);
 
@@ -13,7 +13,7 @@ export default function ModalControlWrap(Component) {
       }
     }
 
-    function render(props) {
+    function render(props: any) {
       ReactDOM.render(<Component {...props} />, div);
     }
 
