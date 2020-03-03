@@ -1,9 +1,13 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { Route, Redirect } from 'react-router-dom';
+import { Route, Redirect, RouteProps } from 'react-router-dom';
 import auth from './auth';
 
-export default function PrivateRoute({ component: Component, rootVisible, ...rest }) {
+interface Props extends RouteProps{
+  component: typeof React.Component,
+  rootVisible?: boolean,
+}
+
+export default function PrivateRoute({ component: Component, rootVisible = false, ...rest }: Props) {
   const { isroot } = auth.getSelftProfile();
   const isAuthenticated = auth.getIsAuthenticated();
   return (
@@ -34,12 +38,3 @@ export default function PrivateRoute({ component: Component, rootVisible, ...res
     />
   );
 }
-
-PrivateRoute.propTypes = {
-  rootVisible: PropTypes.bool,
-  component: PropTypes.func.isRequired,
-};
-
-PrivateRoute.defaultProps = {
-  rootVisible: false,
-};

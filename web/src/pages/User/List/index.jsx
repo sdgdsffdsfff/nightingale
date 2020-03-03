@@ -1,7 +1,7 @@
 import React from 'react';
 import { Row, Col, Input, Button, Divider, Popover, Popconfirm, message, Tooltip, Alert } from 'antd';
 import BaseComponent from '@path/BaseComponent';
-import clipboard from '@path/clipboard';
+import clipboard from '@common/clipboard';
 import CreateIncludeNsTree from '@path/Layout/CreateIncludeNsTree';
 import { auth } from '@path/Auth';
 import CreateUser from './CreateUser';

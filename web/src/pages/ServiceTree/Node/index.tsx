@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col, Input, Button, Checkbox, Popconfirm, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import CreateIncludeNsTree from '@path/Layout/CreateIncludeNsTree';
+import CreateIncludeNsTree from '@cpts/Layout/CreateIncludeNsTree';
+import request from '@common/request';
+import api from '@common/api';
+import * as config from '@common/config';
+import { TreeNode } from '@interface';
 
-function updatePathByName(path, name) {
+interface State {
+  selectedNode: TreeNode | undefined,
+  selectedNodeName: string | undefined,
+  newNodeName: string | undefined,
+  newNodeLeaf: boolean,
+}
+
+function updatePathByName(path: string, name: string) {
   if (_.includes(path, '.')) {
     const pathArr = _.split(path, '.');
     pathArr[pathArr.length - 1] = name;
@@ -14,7 +24,7 @@ function updatePathByName(path, name) {
   return path;
 }
 
-class index extends BaseComponent {
+class index extends Component<null, State> {
   static contextTypes = {
     getSelectedNode: PropTypes.func,
     updateSelectedNode: PropTypes.func,
@@ -22,15 +32,12 @@ class index extends BaseComponent {
     reloadNsTree: PropTypes.func,
   };
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedNode: undefined,
-      selectedNodeName: undefined,
-      newNodeName: undefined,
-      newNodeLeaf: false,
-    };
-  }
+  state = {
+    selectedNode: undefined,
+    selectedNodeName: undefined,
+    newNodeName: undefined,
+    newNodeLeaf: false,
+  } as State;
 
   componentWillMount = () => {
     const selectedNode = this.getSelectedNode();
@@ -56,34 +63,35 @@ class index extends BaseComponent {
     return getSelectedNode();
   }
 
-  handlePutNodeChange = (e) => {
+  handlePutNodeChange = (e: any) => {
     const { value } = e.target;
     this.setState({ selectedNodeName: value });
   }
 
-  handleNewNodeLeafChange = (e) => {
+  handleNewNodeLeafChange = (e: any) => {
     this.setState({ newNodeLeaf: e.target.checked });
   }
 
   handlePutNode = () => {
     const { reloadNsTree, updateSelectedNode } = this.context;
     const { selectedNode, selectedNodeName } = this.state;
-    this.request({
-      url: `${this.api.node}/${selectedNode.id}/name`,
-      type: 'PUT',
-      data: JSON.stringify({ name: selectedNodeName }),
-    }).then(() => {
-      reloadNsTree();
-      updateSelectedNode({
-        ...selectedNode,
-        name: selectedNodeName,
-        path: updatePathByName(selectedNode.path, selectedNodeName),
+    if (selectedNode && selectedNodeName) {
+      request(`${api.node}/${selectedNode.id}/name`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: selectedNodeName }),
+      }).then(() => {
+        reloadNsTree();
+        updateSelectedNode({
+          ...selectedNode,
+          name: selectedNodeName,
+          path: updatePathByName(selectedNode.path, selectedNodeName),
+        });
+        message.success('节点重命名成功！');
       });
-      message.success('节点重命名成功！');
-    });
+    }
   }
 
-  handleNewNodeNameChange = (e) => {
+  handleNewNodeNameChange = (e: any) => {
     const { value } = e.target;
     this.setState({ newNodeName: value });
   }
@@ -91,31 +99,33 @@ class index extends BaseComponent {
   handlePostNode = () => {
     const { reloadNsTree } = this.context;
     const { selectedNode, newNodeName, newNodeLeaf } = this.state;
-    this.request({
-      url: this.api.node,
-      type: 'POST',
-      data: JSON.stringify({
-        pid: selectedNode.id,
-        name: newNodeName,
-        leaf: newNodeLeaf ? 1 : 0,
-      }),
-    }).then(() => {
-      reloadNsTree();
-      message.success('创建子节点成功！');
-    });
+    if (selectedNode) {
+      request(api.node, {
+        method: 'POST',
+        body: JSON.stringify({
+          pid: selectedNode.id,
+          name: newNodeName,
+          leaf: newNodeLeaf ? 1 : 0,
+        }),
+      }).then(() => {
+        reloadNsTree();
+        message.success('创建子节点成功！');
+      });
+    }
   }
 
   handleDelNode = () => {
     const { reloadNsTree, deleteSelectedNode } = this.context;
     const { selectedNode } = this.state;
-    this.request({
-      url: `${this.api.node}/${selectedNode.id}`,
-      type: 'DELETE',
-    }).then(() => {
-      reloadNsTree();
-      deleteSelectedNode();
-      message.success('节点删除成功！');
-    });
+    if (selectedNode) {
+      request(`${api.node}/${selectedNode.id}`, {
+        method: 'DELETE',
+      }).then(() => {
+        reloadNsTree();
+        deleteSelectedNode();
+        message.success('节点删除成功！');
+      });
+    }
   }
 
   render() {
@@ -178,7 +188,7 @@ class index extends BaseComponent {
               <Button disabled={isPdlNode}>删除</Button>
             </Popconfirm>
             {
-              isPdlNode ? <p className="fc50 mt10">{this.config.aliasMap.dept}节点不能删除</p> : null
+              isPdlNode ? <p className="fc50 mt10">{config.aliasMap.dept}节点不能删除</p> : null
             }
           </Col>
         </Row>

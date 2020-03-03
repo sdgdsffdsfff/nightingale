@@ -1,4 +1,4 @@
-function getApi(path) {
+function getApi(path: string) {
   const prefix = '/api/portal';
   return `${prefix}${path}`;
 }

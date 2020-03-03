@@ -33,7 +33,7 @@ export default class NsTree extends Component {
   }
 
   render() {
-    const prefixCls = `${config.prefixCls}-layout`;
+    const prefixCls = `${config.appname}-layout`;
     const { treeData, loading, expandedKeys } = this.props;
     const { getSelectedNode } = this.context;
     const selectedNode = getSelectedNode();

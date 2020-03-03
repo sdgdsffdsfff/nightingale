@@ -1,23 +1,21 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Menu, Divider, Popconfirm, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import CreateIncludeNsTree from '@path/Layout/CreateIncludeNsTree';
-import exportXlsx from '@path/common/exportXlsx';
-import EndpointList from '@path/components/EndpointList';
-import EditEndpoint from '@path/components/EndpointList/Edit';
+import CreateIncludeNsTree from '@cpts/Layout/CreateIncludeNsTree';
+import exportXlsx from '@common/exportXlsx';
+import request from '@common/request';
+import api from '@common/api';
+import EndpointList from '@cpts/EndpointList';
+import EditEndpoint from '@cpts/EndpointList/Edit';
+import { Endpoint } from '@interface';
 import BatchDel from './BatchDel';
 import BatchImport from './BatchImport';
 
-class Endpoint extends BaseComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-    };
-  }
+class index extends Component {
+  endpointList: any;
+  state = {};
 
-  // eslint-disable-next-line class-methods-use-this
-  async exportEndpoints(endpoints) {
+  async exportEndpoints(endpoints: Endpoint[]) {
     const data = _.map(endpoints, (item) => {
       return {
         ...item,
@@ -27,7 +25,7 @@ class Endpoint extends BaseComponent {
     exportXlsx(data);
   }
 
-  handleModifyBtnClick(record) {
+  handleModifyBtnClick(record: Endpoint) {
     EditEndpoint({
       title: '修改信息',
       type: 'admin',
@@ -38,11 +36,10 @@ class Endpoint extends BaseComponent {
     });
   }
 
-  handleDeleteBtnClick(ident) {
-    this.request({
-      url: this.api.endpoint,
-      type: 'DELETE',
-      data: JSON.stringify({
+  handleDeleteBtnClick(ident: string) {
+    request(api.endpoint, {
+      method: 'DELETE',
+      body: JSON.stringify({
         idents: [ident],
       }),
     }).then(() => {
@@ -59,7 +56,7 @@ class Endpoint extends BaseComponent {
     });
   }
 
-  handleBatchDel(selectedIdents) {
+  handleBatchDel(selectedIdents: string[]) {
     BatchDel({
       selectedIdents,
       onOk: () => {
@@ -78,11 +75,8 @@ class Endpoint extends BaseComponent {
         <EndpointList
           ref={(ref) => { this.endpointList = ref; }}
           type="mgmt"
-          otherParamsKey={['field', 'batch']}
+          fetchUrl={api.endpoint}
           columnKeys={['ident', 'alias', 'nodes']}
-          getFetchDataUrl={() => {
-            return this.api.endpoint;
-          }}
           exportEndpoints={this.exportEndpoints}
           renderOper={(record) => {
             return (
@@ -110,4 +104,4 @@ class Endpoint extends BaseComponent {
     );
   }
 }
-export default CreateIncludeNsTree(Endpoint);
+export default CreateIncludeNsTree(index);

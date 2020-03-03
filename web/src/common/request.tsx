@@ -1,39 +1,40 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import { Icon, Progress } from 'antd';
 import Notification from 'rc-notification';
-import $ from 'jquery';
-import _ from 'lodash';
 import 'rc-notification/assets/index.css';
-import { prefixCls } from './config';
+import _ from 'lodash';
+import * as config from '@common/config';
+import { Response, RequestOption } from '@interface';
 
-let notification = null;
+const controller = new AbortController();
+const { signal } = controller;
+let notification: any;
 Notification.newInstance({
   style: {
     top: 24,
     right: 0,
     zIndex: 1001,
   },
-}, (n) => { notification = n; });
+}, (n: any) => { notification = n; });
 
 /**
  * 后端接口非 5xx 都会返回 2xx
  * 异常都是通过 res.err 来判断，res.err 有值则请求失败。res.err 是具体的错误信息
+ * res.err 为 'unauthorized' 约定的未授权状态
 */
 
-class ErrNotifyContent extends Component {
-  static propTypes = {
-    duration: PropTypes.number.isRequired,
-    msg: PropTypes.string.isRequired,
-    onClose: PropTypes.func.isRequired,
-  };
+interface Props {
+  duration: number,
+  msg: string,
+  onClose: () => void,
+}
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      percent: 0,
-    };
-  }
+class ErrNotifyContent extends Component<Props> {
+  timerId = 0;
+
+  state = {
+    percent: 0,
+  };
 
   componentDidMount = () => {
     this.setUpTimer();
@@ -79,7 +80,7 @@ class ErrNotifyContent extends Component {
         onBlur={() => {}}
       >
         <Progress
-          className={`${prefixCls}-errNotify-progress`}
+          className={`${config.appname}-errNotify-progress`}
           percent={this.state.percent}
           showInfo={false}
           style={{
@@ -119,7 +120,7 @@ class ErrNotifyContent extends Component {
   }
 }
 
-function errNotify(errMsg) {
+function errNotify(errMsg: string) {
   const notifyId = _.uniqueId('notifyId_');
 
   notification.notice({
@@ -141,41 +142,36 @@ function errNotify(errMsg) {
   });
 }
 
-export function transferXhrToPromise(xhr, isUseDefaultErrNotify) {
-  return new Promise((resolve, reject) => {
-    xhr.done((res) => {
-      if (_.isPlainObject(res) && res.err === '') {
-        resolve(res.dat);
-      } else {
-        const err = _.get(res, 'err', '接口异常，请联系管理员');
-        if (err === 'unauthorized') {
-          window.location.href = '/#/login';
-        } else {
-          if (isUseDefaultErrNotify) errNotify(err);
-          reject(res);
-        }
-      }
-    }).fail((res) => {
-      errNotify(res.responseText);
-      reject(res.responseText);
-    });
-  });
-}
-
-export default function request(options, p2, p3) {
-  const xhr = $.ajax({
-    contentType: 'application/json',
+export default async function request(url: string, options?: RequestOption, isUseDefaultErrNotify = true) {
+  const response = await fetch(url, {
+    headers: {
+      'content-type': 'application/json',
+    },
     ...options,
+    signal,
   });
-  if (p2 !== undefined) {
-    if (_.isBoolean(p2)) {
-      if (_.isArray(p3)) p3.push(xhr);
-      return transferXhrToPromise(xhr, p2);
-    }
-    if (_.isArray(p2)) {
-      p2.push(xhr);
-      return transferXhrToPromise(xhr, p3 !== undefined ? !!p3 : true);
+
+  if (
+    response.status < 200
+    || response.status >= 300
+  ) {
+    errNotify(response.statusText);
+    const error = new Error(response.statusText);
+    throw error;
+  }
+
+  const data: Response = await response.json();
+
+  if (typeof data === 'object' && data.err !== '') {
+    if (data.err === 'unauthorized') {
+      window.location.href = config.loginPath;
+      throw 'unauthorized';
+    } else {
+      if (isUseDefaultErrNotify) errNotify(data.err);
+      const error = new Error(data.err);
+      throw error;
     }
   }
-  return transferXhrToPromise(xhr, true);
+
+  return data.dat;
 }

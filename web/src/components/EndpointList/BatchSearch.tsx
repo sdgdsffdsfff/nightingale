@@ -1,24 +1,23 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, Form, Input, Radio } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+
+interface Props {
+  field: string,
+  batch: string,
+  title: string,
+  visible: boolean,
+  onOk: (field: string, batch: string) => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
 const FormItem = Form.Item;
 const RadioGroup = Radio.Group;
 
-class BatchSearch extends BaseComponent {
-  static propTypes = {
-    field: PropTypes.string,
-    batch: PropTypes.string,
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
-
+class BatchSearch extends Component<Props & FormProps> {
   static defaultProps = {
     field: 'ident',
     batch: '',
@@ -30,7 +29,7 @@ class BatchSearch extends BaseComponent {
   };
 
   handleOk = () => {
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
         const batch = _.replace(values.batch, /\n/g, ',');
         this.props.onOk(values.field, batch);
@@ -45,7 +44,7 @@ class BatchSearch extends BaseComponent {
 
   render() {
     const { title, visible, field, batch } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
 
     return (
       <Modal

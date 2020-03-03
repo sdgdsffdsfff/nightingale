@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Dropdown, Menu, Modal, Input, Icon, message } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import clipboard from '@path/clipboard';
+import clipboard from '@common/clipboard';
+import request from '@common/request';
+import api from '@common/api';
 
-export default class CopyTitle extends BaseComponent {
+interface Props {
+  type?: 'mgmt';
+  data: any[];
+  selected: any[];
+  dataIndex: string;
+  hasSelected: boolean;
+}
+
+export default class CopyTitle extends Component<Props> {
   static contextTypes = {
     getSelectedNode: PropTypes.func,
   };
@@ -23,7 +32,7 @@ export default class CopyTitle extends BaseComponent {
     hasSelected: true,
   };
 
-  handleCopyBtnClick = async (dataIndex, copyType) => {
+  handleCopyBtnClick = async (dataIndex: string, copyType: string) => {
     const { getSelectedNode } = this.context;
     const { data, selected } = this.props;
     let tobeCopy = [];
@@ -31,20 +40,10 @@ export default class CopyTitle extends BaseComponent {
     if (copyType === 'all') {
       let allData = [];
       if (this.props.type === 'mgmt') {
-        allData = await this.request({
-          url: this.api.endpoint,
-          data: {
-            limit: 100000,
-          },
-        });
+        allData = await request(`${api.endpoint}?limit=100000`);
         allData = allData.list;
       } else {
-        allData = await this.request({
-          url: `${this.api.endpoint}s/bynodeids`,
-          data: {
-            ids: getSelectedNode('id'),
-          },
-        });
+        allData = await request(`${api.endpoint}s/bynodeids?ids=${getSelectedNode('id')}`);
       }
       tobeCopy = _.map(allData, item => item[dataIndex]);
     } else if (copyType === 'currentPage') {

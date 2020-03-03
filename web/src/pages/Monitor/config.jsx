@@ -1,6 +1,6 @@
-import { prefixCls as gPrefixCls } from '@path/common/config';
+import { appname } from '@common/config';
 // 报警模块样式前缀
-export const prefixCls = `${gPrefixCls}-monitor`;
+export const prefixCls = `${appname}-monitor`;
 
 // 报警级别 选项
 export const priorityOptions = [

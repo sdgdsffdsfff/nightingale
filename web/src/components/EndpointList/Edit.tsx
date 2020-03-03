@@ -1,22 +1,25 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, Form, Input, message } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import { Endpoint } from '@interface';
+import request from '@common/request';
+import api from '@common/api';
+
+interface Props {
+  title?: string,
+  data: Endpoint,
+  titile: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
 const FormItem = Form.Item;
 
-class SingleEdit extends BaseComponent {
-  static propTypes = {
-    data: PropTypes.object.isRequired,
-    titile: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
-
+class SingleEdit extends Component<FormProps & Props> {
   static defaultProps = {
     title: '',
     visible: true,
@@ -27,12 +30,11 @@ class SingleEdit extends BaseComponent {
 
   handleOk = () => {
     const { title } = this.props;
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
-        this.request({
-          url: `${this.api.endpoint}/${values.id}`,
-          type: 'PUT',
-          data: JSON.stringify({
+        request(`${api.endpoint}/${values.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
             alias: values.alias,
           }),
         }).then(() => {
@@ -50,7 +52,7 @@ class SingleEdit extends BaseComponent {
 
   render() {
     const { title, visible, data } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
 
     getFieldDecorator('id', {
       initialValue: data.id,

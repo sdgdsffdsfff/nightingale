@@ -1,22 +1,37 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col, Input, Button, Dropdown, Menu, Checkbox } from 'antd';
+import { ColumnProps } from 'antd/lib/table';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
+import FetchTable from '@cpts/FetchTable';
+import request from '@common/request';
+import api from '@common/api';
+import { Endpoint } from '@interface';
 import CopyTitle from './CopyTitle';
 import BatchSearch from './BatchSearch';
 
-class index extends BaseComponent {
-  static propTypes = {
-    otherParamsKey: PropTypes.array.isRequired,
-    columnKeys: PropTypes.array.isRequired,
-    getFetchDataUrl: PropTypes.func.isRequired,
-    exportEndpoints: PropTypes.func.isRequired,
-    renderOper: PropTypes.func.isRequired,
-    renderBatchOper: PropTypes.func.isRequired,
-    renderFilter: PropTypes.func,
-  };
+interface Props {
+  type?: 'mgmt';
+  backendPagingEnabled?: boolean;
+  columnKeys: string[];
+  fetchUrl: string;
+  exportEndpoints: (endpoints: Endpoint[]) => void;
+  renderOper: (record: Endpoint) => React.ReactNode;
+  renderBatchOper: (selectedIdents: string[]) => React.ReactNode;
+  renderFilter: () => void;
+}
 
+interface State {
+  searchValue: string;
+  selectedRowKeys: number[] | string[];
+  selectedRows: Endpoint[];
+  selectedIdents: string[];
+  field: string;
+  batch: string;
+  displayBindNode: boolean;
+}
+
+class index extends Component<Props, State> {
   static contextTypes = {
     habitsId: PropTypes.string,
   };
@@ -25,76 +40,29 @@ class index extends BaseComponent {
     renderFilter: () => {},
   };
 
-  constructor(props) {
-    super(props);
-    this.otherParamsKey = props.otherParamsKey;
-    this.state = {
-      ...this.state,
-      selectedRowKeys: [],
-      selectedRows: [],
-      selectedIdents: [],
-      field: 'ident',
-      batch: '',
-      displayBindNode: false,
-    };
-  }
+  fetchtable: any;
 
-  componentDidMount = () => {
-    this.setData();
-  }
-
-  async setData() {
-    const endpoints = await this.realFetchData();
-    this.setState({ data: endpoints });
-  }
-
-  async realFetchData() {
-    let endpoints = [];
-    try {
-      endpoints = await this.fetchData();
-      if (!_.isEmpty(endpoints)) {
-        const idents = _.map(endpoints, item => item.ident);
-        if (this.state.displayBindNode) {
-          const endpointNodes = await this.request({
-            url: `${this.api.endpoint}s/bindings`,
-            data: { idents: _.join(idents, ',') },
-          });
-          endpoints = _.map(endpoints, (item) => {
-            const current = _.find(endpointNodes, { ident: item.ident });
-            const nodes = _.get(current, 'nodes', []);
-            const nodesPath = _.map(nodes, 'path');
-            return {
-              ...item,
-              nodes: nodesPath,
-            };
-          });
-        }
-      }
-    } catch (e) {
-      console.log(e);
-    }
-    return endpoints;
-  }
-
-  reload = () => {
-    this.setData();
-  }
-
-  getFetchDataUrl() {
-    return this.props.getFetchDataUrl();
-  }
+  state = {
+    ...this.state,
+    selectedRowKeys: [],
+    selectedRows: [],
+    selectedIdents: [],
+    field: 'ident',
+    batch: '',
+    displayBindNode: false,
+  } as State;
 
   handelBatchSearchBtnClick = () => {
     BatchSearch({
       title: '批量过滤',
       field: this.state.field,
       batch: this.state.batch,
-      onOk: (field, batch) => {
+      onOk: (field: string, batch: string) => {
         this.setState({
           field,
           batch,
         }, () => {
-          this.reload();
+          this.fetchtable.reload();
         });
       },
     });
@@ -104,16 +72,55 @@ class index extends BaseComponent {
     this.setState({ selectedRowKeys: [], selectedIdents: [], selectedRows: [] });
   }
 
+  processData = async (endpoints: Endpoint[]) => {
+    if (this.state.displayBindNode) {
+      const idents = _.map(endpoints, item => item.ident);
+      const endpointNodes = await request(`${api.endpoint}s/bindings?idents=${_.join(idents, ',')}`);
+      const newEndpoints = _.map(endpoints, (item) => {
+        const current = _.find(endpointNodes, { ident: item.ident });
+        const nodes = _.get(current, 'nodes', []);
+        const nodesPath = _.map(nodes, 'path');
+        return {
+          ...item,
+          nodes: nodesPath,
+        };
+      });
+      return newEndpoints;
+    }
+    return endpoints;
+  }
+
+  reload = () => {
+    this.fetchtable.reload();
+  }
+
+  getQuery = () => {
+    const { batch, field, searchValue } = this.state;
+    const query: { [index: string]: string | number | undefined } = {};
+
+    if (batch) {
+      query.batch = _.replace(batch, /\n/g, ',');
+    }
+    if (field) {
+      query.field = field;
+    }
+    if (searchValue) {
+      query.query = searchValue;
+    }
+
+    return query;
+  }
+
   getColumns = () => {
     const { columnKeys } = this.props;
     const { displayBindNode } = this.state;
-    const fullColumns = [
+    const fullColumns: ColumnProps<Endpoint>[] = [
       {
         title: (
           <CopyTitle
             type={this.props.type}
             dataIndex="ident"
-            data={this.state.data}
+            data={_.get(this.fetchtable, 'state.data')}
             selected={this.state.selectedRows}
           >
             标识
@@ -124,11 +131,10 @@ class index extends BaseComponent {
       }, {
         title: '别名',
         dataIndex: 'alias',
-        visible: true,
       }, {
         title: '操作',
         width: 100,
-        render: (text, record) => {
+        render: (_text, record) => {
           return this.props.renderOper(record);
         },
       },
@@ -146,26 +152,29 @@ class index extends BaseComponent {
         },
       });
     }
-    return _.filter(fullColumns, (item) => {
+    const columns = _.filter(fullColumns, (item) => {
       if (item.dataIndex) {
-        if (item.visible) {
-          return true;
-        }
         return _.includes(columnKeys, item.dataIndex);
       }
       return true;
     });
+    return columns;
   }
 
   render() {
     const { batch, displayBindNode } = this.state;
+    const query = this.getQuery();
     return (
       <div>
         <Row>
           <Col span={16} className="mb10">
             <Input.Search
               style={{ width: 200 }}
-              onSearch={this.handleSearchChange}
+              onSearch={(value) => {
+                this.setState({
+                  searchValue: value,
+                });
+              }}
               placeholder="快速过滤"
             />
             <Button
@@ -180,8 +189,9 @@ class index extends BaseComponent {
               className="ml10"
               checked={displayBindNode}
               onChange={(e) => {
-                this.setState({ displayBindNode: e.target.checked }, () => {
-                  this.setData();
+                const displayBindNode = e.target.checked;
+                this.setState({ displayBindNode }, async () => {
+                  this.fetchtable.reload();
                 });
               }}
             >
@@ -193,7 +203,7 @@ class index extends BaseComponent {
               overlay={
                 <Menu>
                   <Menu.Item>
-                    <a onClick={() => { this.props.exportEndpoints(this.state.data); }}>导出 Excel</a>
+                    <a onClick={() => { this.props.exportEndpoints(_.get(this.fetchtable, 'state.data')); }}>导出 Excel</a>
                   </Menu.Item>
                   {this.props.renderBatchOper(this.state.selectedIdents)}
                 </Menu>
@@ -203,11 +213,13 @@ class index extends BaseComponent {
             </Dropdown>
           </Col>
         </Row>
-        {
-          this.renderTable({
-            locale: {
-              emptyText: '系统中暂无 endpoint，请安装agent或去全部对象页面导入',
-            },
+        <FetchTable
+          ref={(ref) => { this.fetchtable = ref; }}
+          backendPagingEnabled={this.props.backendPagingEnabled}
+          url={this.props.fetchUrl}
+          query={query}
+          processData={this.processData}
+          tableProps={{
             rowSelection: {
               selectedRowKeys: this.state.selectedRowKeys,
               onChange: (selectedRowKeys, selectedRows) => {
@@ -219,8 +231,8 @@ class index extends BaseComponent {
               },
             },
             columns: this.getColumns(),
-          })
-        }
+          }}
+        />
       </div>
     );
   }

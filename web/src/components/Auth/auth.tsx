@@ -1,10 +1,11 @@
 import _ from 'lodash';
-import api from '@path/common/api';
-import request from '@path/common/request';
+import api from '@common/api';
+import request from '@common/request';
+import { UserProfile } from '@interface';
 
 export default (function auth() {
   let isAuthenticated = false;
-  let selftProfile = {};
+  let selftProfile = {} as UserProfile;
   return {
     getIsAuthenticated() {
       return isAuthenticated;
@@ -13,9 +14,7 @@ export default (function auth() {
       return selftProfile;
     },
     checkAuthenticate() {
-      return request({
-        url: api.selftProfile,
-      }).then((res) => {
+      return request(api.selftProfile).then((res: any) => {
         isAuthenticated = true;
         selftProfile = {
           ...res,
@@ -23,26 +22,21 @@ export default (function auth() {
         };
       });
     },
-    authenticate: async (reqBody, cbk) => {
+    authenticate: async (reqBody: any, cbk: () => void) => {
       try {
-        await request({
-          url: api.login,
-          type: 'POST',
-          data: JSON.stringify(reqBody),
+        await request(api.login, {
+          method: 'POST',
+          body: JSON.stringify(reqBody),
         });
         isAuthenticated = true;
-        selftProfile = await request({
-          url: api.selftProfile,
-        });
+        selftProfile = await request(api.selftProfile);
         if (_.isFunction(cbk)) cbk(selftProfile);
       } catch (e) {
         console.log(e);
       }
     },
-    signout(cbk) {
-      request({
-        url: api.logout,
-      }).then((res) => {
+    signout(cbk: () => void) {
+      request(api.logout).then((res) => {
         isAuthenticated = false;
         if (_.isFunction(cbk)) cbk(res);
       });

@@ -5,6 +5,7 @@ import { Layout, Dropdown, Menu, Icon } from 'antd';
 import classNames from 'classnames';
 import PubSub from 'pubsub-js';
 import _ from 'lodash';
+import queryString from 'query-string';
 import BaseComponent from '@path/BaseComponent';
 import { auth } from '@path/Auth';
 import LayoutMenu from './LayoutMenu';
@@ -73,10 +74,7 @@ class NILayout extends BaseComponent {
     const url = treeSearchValue ? this.api.treeSearch : this.api.tree;
     const searchQuery = treeSearchValue ? { query: treeSearchValue } : undefined;
     this.setState({ treeLoading: true });
-    this.request({
-      url,
-      data: searchQuery,
-    }).then((res) => {
+    this.request(`${url}?${queryString.stringify(searchQuery)}`).then((res) => {
       const treeData = normalizeTreeData(_.cloneDeep(res));
       this.setState({ treeData, originTreeData: res });
       if (treeSearchValue) {

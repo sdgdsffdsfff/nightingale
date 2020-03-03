@@ -1,27 +1,29 @@
-import React from 'react';
+import React, { Component, FormEvent } from 'react';
+import { RouteComponentProps } from 'react-router-dom';
 import { Card, Form, Input, Icon, Button, Checkbox } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import queryString from 'query-string';
-import BaseComponent from '@path/BaseComponent';
 import _ from 'lodash';
+import { appname } from '@common/config';
 import auth from './auth';
 import './style.less';
 
 const FormItem = Form.Item;
 
-class Login extends BaseComponent {
-  handleSubmit = (e) => {
+class Login extends Component<RouteComponentProps & FormProps> {
+  handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const { history, location } = this.props;
     const { search } = location;
 
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
         auth.authenticate({
           ...values,
           is_ldap: values.is_ldap ? 1 : 0,
         }, () => {
           const query = queryString.parse(search);
-          const locationState = location.state;
+          const locationState = location.state as { from: string };
           if (query.callback && query.sig) {
             if (query.callback.indexOf('?') > -1) {
               window.location.href = `${query.callback}&sig=${query.sig}`;
@@ -41,9 +43,9 @@ class Login extends BaseComponent {
   }
 
   render() {
-    const prefixCls = `${this.prefixCls}-login`;
+    const prefixCls = `${appname}-login`;
     const { history } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
     const isAuthenticated = auth.getIsAuthenticated();
 
     if (isAuthenticated) {
@@ -73,7 +75,6 @@ class Login extends BaseComponent {
                 )}
               </FormItem>
               <FormItem>
-                {/* <a className={`${prefixCls}-forgot`}>找回密码</a> */}
                 {getFieldDecorator('is_ldap', {
                   valuePropName: 'checked',
                   initialValue: false,

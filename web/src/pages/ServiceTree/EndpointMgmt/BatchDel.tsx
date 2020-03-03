@@ -1,22 +1,23 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component }from 'react';
 import { Modal, Form, Input, message } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import request from '@common/request';
+import api from '@common/api';
+
+interface Props {
+  selectedIdents: string[],
+  title?: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
 const FormItem = Form.Item;
 
-class BatchDel extends BaseComponent {
-  static propTypes = {
-    selectedIdents: PropTypes.array,
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
-
+class BatchDel extends Component<Props & FormProps> {
   static defaultProps = {
     selectedIps: [],
     title: '批量删除',
@@ -28,16 +29,15 @@ class BatchDel extends BaseComponent {
 
   handleOk = () => {
     const { title } = this.props;
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
         const idents = _.split(values.idents, '\n');
         const reqBody = {
           idents,
         };
-        this.request({
-          url: this.api.endpoint,
-          type: 'DELETE',
-          data: JSON.stringify(reqBody),
+        request(api.endpoint, {
+          method: 'DELETE',
+          body: JSON.stringify(reqBody),
         }).then(() => {
           message.success(`${title}成功`);
           this.props.onOk();
@@ -53,7 +53,7 @@ class BatchDel extends BaseComponent {
 
   render() {
     const { title, visible, selectedIdents } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
 
     return (
       <Modal

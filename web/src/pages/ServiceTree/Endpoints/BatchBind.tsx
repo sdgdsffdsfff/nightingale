@@ -1,22 +1,24 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, Form, Input, Checkbox, message } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import { TreeNode } from '@interface';
+import request from '@common/request';
+import api from '@common/api';
+
+interface Props {
+  selectedNode: TreeNode,
+  title?: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
 const FormItem = Form.Item;
 
-class BatchBind extends BaseComponent {
-  static propTypes = {
-    selectedNode: PropTypes.object.isRequired,
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
-
+class BatchBind extends Component<Props & FormProps> {
   static defaultProps = {
     title: '挂载 endpoints',
     visible: true,
@@ -27,16 +29,15 @@ class BatchBind extends BaseComponent {
 
   handleOk = () => {
     const { selectedNode } = this.props;
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
         const reqBody = {
           idents: _.split(values.idents, '\n'),
           del_old: values.del_old ? 1 : 0,
         };
-        this.request({
-          url: `${this.api.node}/${selectedNode.id}/endpoint-bind`,
-          type: 'POST',
-          data: JSON.stringify(reqBody),
+        request( `${api.node}/${selectedNode.id}/endpoint-bind`, {
+          method: 'POST',
+          body: JSON.stringify(reqBody),
         }).then(() => {
           message.success('挂载成功！');
           this.props.onOk();
@@ -52,7 +53,7 @@ class BatchBind extends BaseComponent {
 
   render() {
     const { title, visible, selectedNode } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
 
     return (
       <Modal

@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Menu } from 'antd';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import CreateIncludeNsTree from '@path/Layout/CreateIncludeNsTree';
-import exportXlsx from '@path/common/exportXlsx';
-import EndpointList from '@path/components/EndpointList';
-import EditEndpoint from '@path/components/EndpointList/Edit';
+import CreateIncludeNsTree from '@cpts/Layout/CreateIncludeNsTree';
+import exportXlsx from '@common/exportXlsx';
+import api from '@common/api';
+import { Endpoint } from '@interface';
+import EndpointList from '@cpts/EndpointList';
+import EditEndpoint from '@cpts/EndpointList/Edit';
 import BatchBind from './BatchBind';
 import BatchUnbind from './BatchUnbind';
 
-class index extends BaseComponent {
+class index extends Component {
+  endpointList: any;
+  selectedNodeId: number | undefined = undefined;
   static contextTypes = {
     getSelectedNode: PropTypes.func,
   };
@@ -27,7 +30,6 @@ class index extends BaseComponent {
     if (this.selectedNodeId !== selectedNodeId) {
       this.selectedNodeId = selectedNodeId;
       if (this.endpointList) {
-        this.endpointList.reload();
         this.endpointList.setState({
           selectedRowKeys: [],
           selectedIps: [],
@@ -37,8 +39,7 @@ class index extends BaseComponent {
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  async exportEndpoints(endpoints) {
+  async exportEndpoints(endpoints: Endpoint[]) {
     const data = _.map(endpoints, (item) => {
       return {
         ...item,
@@ -59,7 +60,7 @@ class index extends BaseComponent {
     });
   }
 
-  handleHostUnbindBtnClick = (selectedIdents) => {
+  handleHostUnbindBtnClick = (selectedIdents: string[]) => {
     const { getSelectedNode } = this.context;
     const selectedNode = getSelectedNode();
     BatchUnbind({
@@ -71,7 +72,7 @@ class index extends BaseComponent {
     });
   }
 
-  handleModifyAliasBtnClick = (record) => {
+  handleModifyAliasBtnClick = (record: Endpoint) => {
     EditEndpoint({
       title: '修改别名',
       data: record,
@@ -93,14 +94,8 @@ class index extends BaseComponent {
       <div>
         <EndpointList
           ref={(ref) => { this.endpointList = ref; }}
-          otherParamsKey={['field', 'batch']}
+          fetchUrl={`${api.node}/${this.selectedNodeId}/endpoint`}
           columnKeys={['ident', 'alias', 'nodes']}
-          getFetchDataUrl={() => {
-            if (this.selectedNodeId) {
-              return `${this.api.node}/${this.selectedNodeId}/endpoint`;
-            }
-            return undefined;
-          }}
           exportEndpoints={this.exportEndpoints}
           renderOper={(record) => {
             return (

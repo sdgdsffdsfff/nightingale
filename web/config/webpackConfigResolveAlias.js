@@ -3,6 +3,9 @@ var cwd = process.cwd();
 
 module.exports = {
   'react-dom': '@hot-loader/react-dom',
+  '@common': path.resolve(cwd, 'src/common'),
+  '@cpts': path.resolve(cwd, 'src/components'),
+  '@interface': path.resolve(cwd, 'src/interface'),
   '@path/common': path.resolve(cwd, 'src/common'),
   '@path/components': path.resolve(cwd, 'src/components'),
   '@path/Auth': path.resolve(cwd, 'src/components/Auth'),

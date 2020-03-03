@@ -1,21 +1,24 @@
-import React from 'react';
+import React, { Component, FormEvent } from 'react';
+import { RouteComponentProps } from 'react-router-dom';
 import { Card, Button, message } from 'antd';
 import queryString from 'query-string';
-import BaseComponent from '@path/BaseComponent';
-import ProfileForm from '@path/components/ProfileForm';
+import ProfileForm from '@cpts/ProfileForm';
+import request from '@common/request';
+import api from '@common/api';
+import { appname } from '@common/config';
 import './style.less';
 
-class Register extends BaseComponent {
-  handleSubmit = (e) => {
+class Register extends Component<RouteComponentProps> {
+  profileForm: any; // TODO useRef
+  handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const { location, history } = this.props;
     const query = queryString.parse(location.search);
-    this.profileForm.validateFields((err, values) => {
+    this.profileForm.validateFields((err: any, values: any) => {
       if (!err) {
-        this.request({
-          url: `${this.api.users}/invite`,
-          type: 'POST',
-          data: JSON.stringify({
+        request(`${api.users}/invite`, {
+          method: 'POST',
+          body: JSON.stringify({
             ...values,
             token: query.token,
           }),
@@ -30,14 +33,14 @@ class Register extends BaseComponent {
   }
 
   render() {
-    const prefixCls = `${this.prefixCls}-register`;
+    const prefixCls = `${appname}-register`;
 
     return (
       <div className={prefixCls}>
         <div className={`${prefixCls}-main`}>
           <Card>
             <div className={`${prefixCls}-title`}>账户注册</div>
-            <ProfileForm type="register" ref={(ref) => { this.profileForm = ref; }} />
+            <ProfileForm type="register" ref={(ref: any) => { this.profileForm = ref; }} />
             <Button
               type="primary"
               className={`${prefixCls}-submitBtn`}

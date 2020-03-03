@@ -1,9 +1,4 @@
-/**
- * 简单的将文本添加到剪贴板
- * @param  {String}  text 待添加的文本
- * @return {Boolean}      是否成功
- */
-export default function clipboard(text) {
+export default function clipboard(text: string): boolean {
   const fakeElem = document.createElement('textarea');
   fakeElem.style.border = '0';
   fakeElem.style.padding = '0';

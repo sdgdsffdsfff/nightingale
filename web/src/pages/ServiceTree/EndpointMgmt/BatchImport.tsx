@@ -1,21 +1,22 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component }from 'react';
 import { Modal, Form, Input, message } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import request from '@common/request';
+import api from '@common/api';
+
+interface Props {
+  title?: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
 const FormItem = Form.Item;
 
-class BatchImport extends BaseComponent {
-  static propTypes = {
-    title: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
-
+class BatchImport extends Component<Props & FormProps> {
   static defaultProps = {
     title: '批量导入',
     visible: true,
@@ -26,12 +27,11 @@ class BatchImport extends BaseComponent {
 
   handleOk = () => {
     const { title } = this.props;
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
-        this.request({
-          url: this.api.endpoint,
-          type: 'POST',
-          data: JSON.stringify({
+        request(api.endpoint, {
+          method: 'POST',
+          body: JSON.stringify({
             endpoints: _.split(values.endpoints, '\n'),
           }),
         }).then(() => {
@@ -49,7 +49,7 @@ class BatchImport extends BaseComponent {
 
   render() {
     const { title, visible } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
 
     return (
       <Modal

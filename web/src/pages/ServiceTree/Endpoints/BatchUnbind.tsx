@@ -1,23 +1,25 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Modal, Form, Input, message } from 'antd';
+import { FormProps } from 'antd/lib/form';
 import _ from 'lodash';
-import BaseComponent from '@path/BaseComponent';
-import ModalControl from '@path/ModalControl';
+import ModalControl from '@cpts/ModalControl';
+import { TreeNode } from '@interface';
+import request from '@common/request';
+import api from '@common/api';
+
+interface Props {
+  selectedNode: TreeNode,
+  selectedIdents: string[],
+  title?: string,
+  visible: boolean,
+  onOk: () => void,
+  onCancel: () => void,
+  destroy: () => void,
+}
 
 const FormItem = Form.Item;
 
-class BatchHostUnbind extends BaseComponent {
-  static propTypes = {
-    selectedNode: PropTypes.object.isRequired,
-    selectedIdents: PropTypes.array.isRequired,
-    titile: PropTypes.string,
-    visible: PropTypes.bool,
-    onOk: PropTypes.func,
-    onCancel: PropTypes.func,
-    destroy: PropTypes.func,
-  };
-
+class BatchHostUnbind extends Component<Props & FormProps> {
   static defaultProps = {
     title: '解挂 endpoints',
     visible: true,
@@ -28,15 +30,14 @@ class BatchHostUnbind extends BaseComponent {
 
   handleOk = () => {
     const { selectedNode } = this.props;
-    this.props.form.validateFields((err, values) => {
+    this.props.form!.validateFields((err, values) => {
       if (!err) {
         const reqBody = {
           idents: _.split(values.idents, '\n'),
         };
-        this.request({
-          url: `${this.api.node}/${selectedNode.id}/endpoint-unbind`,
-          type: 'POST',
-          data: JSON.stringify(reqBody),
+        request(`${api.node}/${selectedNode.id}/endpoint-unbind`, {
+          method: 'POST',
+          body: JSON.stringify(reqBody),
         }).then(() => {
           message.success('解除挂载成功！');
           this.props.onOk();
@@ -52,7 +53,7 @@ class BatchHostUnbind extends BaseComponent {
 
   render() {
     const { title, visible, selectedNode, selectedIdents } = this.props;
-    const { getFieldDecorator } = this.props.form;
+    const { getFieldDecorator } = this.props.form!;
 
     return (
       <Modal
@@ -60,8 +61,6 @@ class BatchHostUnbind extends BaseComponent {
         visible={visible}
         onOk={this.handleOk}
         onCancel={this.handleCancel}
-        // okText="确认"
-        // cancelText="取消"
       >
         <Form layout="vertical">
           <FormItem label="解除挂载的节点">
