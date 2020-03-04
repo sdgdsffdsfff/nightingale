@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { Table } from 'antd';
 import _ from 'lodash';
-import api from '@path/common/api';
-import * as config from '@path/common/config';
-import request, { transferXhrToPromise } from '@path/common/request';
+import queryString from 'query-string';
+import api from '@common/api';
+import * as config from '@common/config';
+import request from '@common/request';
 import './style.less';
 
 export default class BaseComponent extends Component {
@@ -11,23 +12,48 @@ export default class BaseComponent extends Component {
     super(props);
     this.api = api;
     this.config = config;
-    this.prefixCls = config.prefixCls;
+    this.prefixCls = config.appname;
     this.request = request;
-    this.transferXhrToPromise = transferXhrToPromise;
     this.otherParamsKey = [];
     this.state = {
-      loading: false, // eslint-disable-line react/no-unused-state
+      loading: false,
       pagination: {
         current: 1,
         pageSize: 10,
         showSizeChanger: true,
       },
-      data: [], // eslint-disable-line react/no-unused-state
+      data: [],
       searchValue: '',
     };
   }
 
-  // eslint-disable-next-line react/sort-comp
+  handleSearchChange = (value) => {
+    this.setState({ searchValue: value }, () => {
+      this.reload({
+        query: value,
+      }, true);
+    });
+  }
+
+  handleTableChange = (pagination) => {
+    const { pagination: paginationState } = this.state;
+    const pager = {
+      ...paginationState,
+      current: pagination.current,
+      pageSize: pagination.pageSize,
+    };
+    this.setState({ pagination: pager }, () => {
+      this.reload({
+        limit: pagination.pageSize,
+        page: pagination.current,
+      });
+    });
+  }
+
+  reload(params) {
+    this.fetchData(params);
+  }
+
   fetchData(newParams = {}, backFirstPage = false) {
     const url = this.getFetchDataUrl();
 
@@ -42,14 +68,10 @@ export default class BaseComponent extends Component {
       ...newParams,
     };
 
-    this.setState({ loading: true }); // eslint-disable-line react/no-unused-state
+    this.setState({ loading: true });
+    // TODO: Method 'fetchData' expected no return value.
     // eslint-disable-next-line consistent-return
-    return this.request({
-      url,
-      data: {
-        ...params,
-      },
-    }).then((res) => {
+    return this.request(`${url}?${queryString(params)}`).then((res) => {
       const newPagination = {
         ...pagination,
         current: backFirstPage ? 1 : pagination.current,
@@ -67,49 +89,21 @@ export default class BaseComponent extends Component {
       });
       return data;
     }).finally(() => {
-      this.setState({ loading: false }); // eslint-disable-line react/no-unused-state
-    });
-  }
-
-  reload(params) {
-    this.fetchData(params);
-  }
-
-  handleSearchChange = (value) => {
-    this.setState({ searchValue: value }, () => {
-      this.reload({
-        query: value,
-      }, true);
-    });
-  }
-
-  handleTableChange = (pagination) => {
-    const pager = {
-      // eslint-disable-next-line react/no-access-state-in-setstate
-      ...this.state.pagination,
-      current: pagination.current,
-      pageSize: pagination.pageSize,
-    };
-    this.setState({ pagination: pager }, () => {
-      this.reload({
-        limit: pagination.pageSize,
-        page: pagination.current,
-      });
+      this.setState({ loading: false });
     });
   }
 
   renderTable(params) {
+    const { loading, pagination, data } = this.state;
     return (
       <Table
         rowKey="id"
         size="small"
-        loading={this.state.loading}
+        loading={loading}
         pagination={{
-          ...this.state.pagination,
-          showTotal: (total) => {
-            return `共 ${total} 条数据`;
-          },
-          pageSizeOptions: ['10', '30', '50', '100', '300', '500', '1000'],
+          ...pagination,
+          showTotal: total => `共 ${total} 条数据`,
+          pageSizeOptions: config.defaultPageSizeOptions,
           onChange: () => {
             if (this.handlePaginationChange) this.handlePaginationChange();
           },
@@ -120,7 +114,7 @@ export default class BaseComponent extends Component {
           }
           return '';
         }}
-        dataSource={this.state.data}
+        dataSource={data}
         onChange={this.handleTableChange}
         {...params}
       />
