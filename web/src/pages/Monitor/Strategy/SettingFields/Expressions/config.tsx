@@ -43,6 +43,18 @@ export const funcMap: { [index: string]: any } = {
     params: [],
     defaultValue: [],
   },
+  diff: {
+    label: '突增突降值',
+    meaning: '最新值与其之前 n 秒的任意值之差 (区分正负) v',
+    params: [],
+    defaultValue: [],
+  },
+  pdiff: {
+    label: '突增突降率',
+    meaning: '(最新值与其之前 n 秒的任意值之差)除以对应历史值 (区分正负) v ％',
+    params: [],
+    defaultValue: [],
+  },
 };
 
 export const defaultExpressionValue = {

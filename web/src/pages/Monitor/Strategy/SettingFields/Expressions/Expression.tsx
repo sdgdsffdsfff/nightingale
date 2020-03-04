@@ -108,7 +108,7 @@ export default class Expression extends Component<Props> {
     const v = <strong style={{ color: '#FF6F27' }}>{eopt && threshold !== undefined ? eopt + ' ' + threshold : '${v}'}</strong>;
 
     if (['diff', 'pdiff'].indexOf(func) > -1) {
-      n = <strong style={{ color: '#2DB7F5' }}>{alertDuration - 1}</strong>;
+      n = <strong style={{ color: '#2DB7F5' }}>{alertDuration}</strong>;
     }
 
     let previewNode = (
