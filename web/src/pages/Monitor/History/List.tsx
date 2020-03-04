@@ -11,6 +11,7 @@ import { prefixCls, timeOptions, priorityOptions, eventTypeOptions } from '../co
 import { DataItem } from './interface';
 
 interface Props {
+  activeKey: string,
   type: string,
   nodepath: string,
   nid: number,
@@ -61,7 +62,13 @@ export default class index extends Component<Props, State> {
   }
 
   componentWillReceiveProps = (nextProps: Props) => {
-    if (nextProps.nodepath && nextProps.nodepath !== this.props.nodepath) {
+    if (
+      nextProps.nodepath &&
+      (
+        nextProps.nodepath !== this.props.nodepath ||
+        nextProps.activeKey === nextProps.type
+      )
+    ) {
       this.updateTime(() => {
         this.setState({
           nodepath: nextProps.nodepath,

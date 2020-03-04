@@ -37,10 +37,10 @@ class index extends Component {
         }}
       >
         <TabPane tab="未恢复报警" key="alert">
-          <List nodepath={this.state.nodepath} nid={this.state.nid} type="alert" />
+          <List nodepath={this.state.nodepath} nid={this.state.nid} type="alert" activeKey={this.state.activeKey} />
         </TabPane>
         <TabPane tab="所有历史报警" key="all">
-          <List nodepath={this.state.nodepath} nid={this.state.nid} type="all" />
+          <List nodepath={this.state.nodepath} nid={this.state.nid} type="all" activeKey={this.state.activeKey} />
         </TabPane>
       </Tabs>
     );
