@@ -15,6 +15,7 @@ class index extends Component {
   state = {
     nodepath: undefined,
     nid: undefined,
+    activeKey: 'alert',
   };
 
   componentWillReceiveProps = () => {
@@ -29,7 +30,12 @@ class index extends Component {
 
   render() {
     return (
-      <Tabs defaultActiveKey="alert">
+      <Tabs
+        activeKey={this.state.activeKey}
+        onChange={(activeKey) => {
+          this.setState({ activeKey });
+        }}
+      >
         <TabPane tab="未恢复报警" key="alert">
           <List nodepath={this.state.nodepath} nid={this.state.nid} type="alert" />
         </TabPane>
