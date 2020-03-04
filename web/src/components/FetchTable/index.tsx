@@ -14,7 +14,7 @@ interface FetchQuery {
 
 interface Props {
   backendPagingEnabled?: boolean,
-  url: string,
+  url?: string,
   query?: FetchQuery,
   tableProps: TableProps<any>,
   processData?: (data: any[]) => Promise<any>,

@@ -46,7 +46,9 @@
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@types/classnames": "^2.2.9",
+    "@types/color": "^3.0.1",
     "@types/lodash": "^4.14.149",
+    "@types/numeral": "0.0.26",
     "@types/pubsub-js": "^1.5.18",
     "@types/query-string": "^5.1.0",
     "@types/react-dom": "^16.9.5",
