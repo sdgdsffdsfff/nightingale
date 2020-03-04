@@ -74,13 +74,7 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 	if exp.Func == "nodata" {
 		info += fmt.Sprintf(" %s (%s,%ds)", exp.Metric, exp.Func, stra.AlertDur)
 	} else {
-		info += fmt.Sprintf(" %s (%s,%ds)%s%v", exp.Metric, exp.Func, stra.AlertDur, exp.Eopt, exp.Threshold)
-	}
-
-	if value == "" {
-		value = fmt.Sprintf("%s:%v", exp.Metric, leftValue)
-	} else {
-		value += fmt.Sprintf(";%s:%v", exp.Metric, leftValue)
+		info += fmt.Sprintf(" %s(%s,%ds) %s %v", exp.Metric, exp.Func, stra.AlertDur, exp.Eopt, exp.Threshold)
 	}
 
 	h := dataobj.History{
@@ -116,6 +110,12 @@ func Judge(stra *model.Stra, exps []model.Exp, historyData []*dataobj.RRDData, f
 	leftValue, isTriggered = judgeItemWithStrategy(stra, historyData, exps[0], firstItem, now)
 	if !isTriggered {
 		return
+	}
+
+	if value == "" {
+		value = fmt.Sprintf("%s: %v", exp.Metric, leftValue)
+	} else {
+		value += fmt.Sprintf("; %s: %v", exp.Metric, leftValue)
 	}
 
 	//与条件情况下执行
