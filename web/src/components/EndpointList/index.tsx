@@ -62,7 +62,7 @@ class index extends Component<Props, State> {
           field,
           batch,
         }, () => {
-          this.fetchtable.reload();
+          this.fetchtable.reload(true);
         });
       },
     });
@@ -73,7 +73,7 @@ class index extends Component<Props, State> {
   }
 
   processData = async (endpoints: Endpoint[]) => {
-    if (this.state.displayBindNode) {
+    if (this.state.displayBindNode && endpoints) {
       const idents = _.map(endpoints, item => item.ident);
       const endpointNodes = await request(`${api.endpoint}s/bindings?idents=${_.join(idents, ',')}`);
       const newEndpoints = _.map(endpoints, (item) => {

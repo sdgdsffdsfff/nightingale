@@ -142,6 +142,8 @@ class Collect extends Component {
 
   render() {
     const data = this.filterData();
+    const { selectedRows } = this.state;
+    const canBatchOper = !_.isEmpty(selectedRows);
     return (
       <div>
         <Row>
@@ -192,10 +194,10 @@ class Collect extends Component {
               overlay={
                 <Menu>
                   <Menu.Item>
-                    <a onClick={this.handleBatchDelete}>删除配置</a>
+                    <Button type="link" disabled={!canBatchOper} onClick={this.handleBatchDelete}>删除配置</Button>
                   </Menu.Item>
                   <Menu.Item>
-                    <a onClick={this.handleBatchCloneToOtherNid}>克隆到其他节点</a>
+                    <Button type="link" disabled={!canBatchOper} onClick={this.handleBatchCloneToOtherNid}>克隆到其他节点</Button>
                   </Menu.Item>
                 </Menu>
               }

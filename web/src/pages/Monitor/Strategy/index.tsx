@@ -57,12 +57,14 @@ class index extends Component {
   }
 
   async fetchData() {
-    this.setState({ loading: true });
-    request(`${api.stra}?nid=${this.selectedNodeId}`).then((strategyData) => {
-      this.setState({ strategyData });
-    }).finally(() => {
-      this.setState({ loading: false });
-    });
+    if (this.selectedNodeId) {
+      this.setState({ loading: true });
+      request(`${api.stra}?nid=${this.selectedNodeId}`).then((strategyData) => {
+        this.setState({ strategyData });
+      }).finally(() => {
+        this.setState({ loading: false });
+      });
+    }
   }
 
   async fetchOtherData() {
@@ -233,7 +235,9 @@ class index extends Component {
   }
 
   render() {
+    const { selectedRows } = this.state;
     const { currentStrategyData } = this.filterData();
+    const canBatchOper = !_.isEmpty(selectedRows);
     return (
       <div className={`${prefixCls} ${prefixCls}-list`}>
         <Row className="mb10">
@@ -272,22 +276,22 @@ class index extends Component {
               overlay={
                 <Menu>
                   <Menu.Item>
-                    <a onClick={() => { this.handleBatchModExclNidBtnClick(); }}>修改排除节点</a>
+                    <Button type="link" disabled={!canBatchOper} onClick={() => { this.handleBatchModExclNidBtnClick(); }}>修改排除节点</Button>
                   </Menu.Item>
                   <Menu.Item>
-                    <a onClick={() => { this.handleBatchModNotifyBtnClick(); }}>修改报警接收组</a>
+                    <Button type="link" disabled={!canBatchOper} onClick={() => { this.handleBatchModNotifyBtnClick(); }}>修改报警接收组</Button>
                   </Menu.Item>
                   <Menu.Item>
-                    <a onClick={() => { this.handleBatchCloneToOtherNidBtnClick(); }}>克隆到其他节点</a>
+                    <Button type="link" disabled={!canBatchOper} onClick={() => { this.handleBatchCloneToOtherNidBtnClick(); }}>克隆到其他节点</Button>
                   </Menu.Item>
                   <Menu.Item>
-                    <a onClick={() => { this.handleBatchDelBtnClick(); }}>删除策略</a>
+                    <Button type="link" disabled={!canBatchOper} onClick={() => { this.handleBatchDelBtnClick(); }}>删除策略</Button>
                   </Menu.Item>
                   <Menu.Item>
-                    <a onClick={() => { this.handleBatchImportBtnClick(); }}>导入策略</a>
+                    <Button type="link" onClick={() => { this.handleBatchImportBtnClick(); }}>导入策略</Button>
                   </Menu.Item>
                   <Menu.Item>
-                    <a onClick={() => { this.handleBatchExportBtnClick(); }}>导出策略</a>
+                    <Button type="link" disabled={!canBatchOper} onClick={() => { this.handleBatchExportBtnClick(); }}>导出策略</Button>
                   </Menu.Item>
                 </Menu>
               }

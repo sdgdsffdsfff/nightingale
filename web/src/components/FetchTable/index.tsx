@@ -51,7 +51,12 @@ export default class FetchTable extends Component<Props, State> {
       || !_.isEqual(this.props.query, nextProps.query)
       || this.props.processData !== nextProps.processData
     ) {
-      this.fetchAndSetState(nextProps);
+      this.setState({ pagination: {
+        ...this.state.pagination,
+        current: 1,
+      }}, () => {
+        this.fetchAndSetState(nextProps);
+      });
     }
   }
 
@@ -125,7 +130,15 @@ export default class FetchTable extends Component<Props, State> {
 
   public request = async (coverQuery?: FetchQuery) => await this.fetchData(this.props, coverQuery)
 
-  public reload = async () => await this.fetchAndSetState()
+  public reload = async (resetPage?: boolean) => {
+    if (resetPage) {
+      this.setState({ pagination: {
+        ...this.state.pagination,
+        current: 1,
+      }});
+    }
+    return await this.fetchAndSetState(this.props)
+  }
 
   private handleTableChange = (pagination: PaginationProps) => {
     const { handleTableChange } = this.props;
