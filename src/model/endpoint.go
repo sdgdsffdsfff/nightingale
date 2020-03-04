@@ -140,7 +140,7 @@ func buildEndpointUnderNodeWhere(leafids []int64, query, batch, field string) *x
 
 	if batch == "" && query != "" {
 		q := "%" + query + "%"
-		session = session.Where("ident like ? or alias like", q, q)
+		session = session.Where("ident like ? or alias like ?", q, q)
 	}
 
 	if batch != "" {
