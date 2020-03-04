@@ -243,7 +243,7 @@ export default class index extends Component<Props, State> {
   }
 
   render() {
-    const { searchValue, data, customTime, stime, etime, priorities, type } = this.state;
+    const { customTime, stime, etime, priorities, type } = this.state;
     const duration = customTime ? 'custom' : (etime - stime) / (60 * 60);
 
     return (
