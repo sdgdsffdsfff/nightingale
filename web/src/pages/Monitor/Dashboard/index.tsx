@@ -89,10 +89,8 @@ class MonitorDashboard extends Component<Props, State> {
           hosts,
           metrics,
         }, () => {
-          if (this.metricSelect && !this.onceLoad) {
-            _.each(_.reverse(baseMetrics), async (metric) => {
-              this.metricSelect.handleMetricClick(metric);
-            });
+          if (!this.onceLoad) {
+            this.processBaseMetrics();
             this.onceLoad = true;
           }
         });
@@ -142,6 +140,40 @@ class MonitorDashboard extends Component<Props, State> {
       this.setState({ metricsLoading: false });
     }
     return metrics;
+  }
+
+  async processBaseMetrics() {
+    const { getSelectedNode } = this.context;
+    const { selectedHosts, hosts } = this.state;
+    const selectedTreeNode = getSelectedNode();
+    const nid = _.get(selectedTreeNode, 'id');
+    const now = moment();
+    const newGraphs = [];
+
+    for (let i = 0; i < baseMetrics.length; i++) {
+      const tagkv = await services.fetchTagkv(selectedHosts, baseMetrics[i], hosts);
+      const selectedTagkv = _.cloneDeep(tagkv);
+      const endpointTagkv = _.find(selectedTagkv, { tagk: 'endpoint' });
+      endpointTagkv.tagv = selectedHosts;
+
+      newGraphs.push({
+        now: now.clone().format('x'),
+        start: now.clone().subtract(3600000, 'ms').format('x'),
+        end: now.clone().format('x'),
+        metrics: [{
+          selectedNid: nid,
+          selectedEndpoint: selectedHosts,
+          endpoints: hosts,
+          selectedMetric: baseMetrics[i],
+          selectedTagkv,
+          tagkv,
+          aggrFunc: undefined,
+          counterList: [],
+        }],
+      });
+
+      this.setState({ graphs: newGraphs });
+    }
   }
 
   handleGraphConfigSubmit = (type: UpdateType, data: GraphData, id: GraphId) => {
