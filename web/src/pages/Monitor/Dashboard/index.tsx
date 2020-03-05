@@ -157,6 +157,7 @@ class MonitorDashboard extends Component<Props, State> {
       endpointTagkv.tagv = selectedHosts;
 
       newGraphs.push({
+        id: Number(_.uniqueId()),
         now: now.clone().format('x'),
         start: now.clone().subtract(3600000, 'ms').format('x'),
         end: now.clone().format('x'),
