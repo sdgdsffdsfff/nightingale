@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Row, Col, Input, Button, Dropdown, Menu, Checkbox } from 'antd';
+import { Link } from 'react-router-dom';
+import { Row, Col, Input, Button, Dropdown, Menu, Checkbox, Icon } from 'antd';
 import { ColumnProps } from 'antd/lib/table';
 import _ from 'lodash';
 import FetchTable from '@cpts/FetchTable';
@@ -128,6 +129,22 @@ class index extends Component<Props, State> {
         ),
         dataIndex: 'ident',
         width: 200,
+        render: (text, record: any) => {
+          return (
+            <span>
+              {text}
+              <Link
+                to={{
+                  pathname: '/monitor/dashboard',
+                  search: `mode=allHosts&selectedHosts=${record.ident}`,
+                }}
+                target="_blank"
+              >
+                <Icon type="dashboard" style={{ paddingLeft: 8 }} />
+              </Link>
+            </span>
+          );
+        },
       }, {
         title: '别名',
         dataIndex: 'alias',

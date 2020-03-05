@@ -342,12 +342,5 @@ export const baseMetrics = [
   'cpu.util',
   'cpu.loadavg.1',
   'mem.bytes.used.percent',
-  'mem.swap.bytes.used.percent',
   'disk.bytes.used.percent',
-  'disk.inodes.used.percent',
-  'disk.io.util',
-  'net.in.bits',
-  'net.out.bits',
-  'net.sockets.used',
-  'sys.ps.process.total',
 ];
