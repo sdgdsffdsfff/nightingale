@@ -19,6 +19,7 @@ function GraphsContainer(props: any) {
             subclassData={props.subclassData}
             originTreeData={props.originTreeData}
             onDelChart={props.onDelChart}
+            onCloneGraph={props.onCloneGraph}
           />
         ))
       }

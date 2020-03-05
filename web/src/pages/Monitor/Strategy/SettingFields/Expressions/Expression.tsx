@@ -274,7 +274,7 @@ export default class Expression extends Component<Props> {
           <div>
             <div className={metricError && 'has-error'} style={{ display: 'inline-block', verticalAlign: 'top' }}>
               <Select
-                // mode="combobox"
+                mode="combobox"
                 notFoundContent=""
                 size="default"
                 style={{ width: 250 }}

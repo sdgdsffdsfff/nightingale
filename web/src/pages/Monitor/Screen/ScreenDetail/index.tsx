@@ -6,7 +6,8 @@ import PubSub from 'pubsub-js';
 import _ from 'lodash';
 import update from 'immutability-helper';
 import CreateIncludeNsTree from '@cpts/Layout/CreateIncludeNsTree';
-import { GraphConfig } from '@cpts/Graph';
+import DateInput from '@cpts/DateInput';
+import { GraphConfig, config as graphcConfig, util as graphUtil } from '@cpts/Graph';
 import request from '@common/request';
 import api from '@common/api';
 import AddModal from './AddModal';
@@ -335,6 +336,53 @@ class ScreenDetail extends Component<FormProps> {
     }
   }
 
+  handleTimeOptionChange = (val) => {
+    const nowMoment = moment();
+    const { chartData } = this.state;
+    const chartDataClone = _.cloneDeep(chartData);
+    let start;
+    let end;
+    const now = nowMoment.format('x');
+
+    if (val !== 'custom') {
+      start = nowMoment.clone().subtract(Number(val), 'ms').format('x');
+      end = nowMoment.format('x');
+    } else {
+      start = nowMoment.clone().subtract(2, 'hour').format('x');
+      end = moment().format('x');
+    }
+
+    _.each(chartDataClone, (graphs) => {
+      _.each(graphs, (item) => {
+        item.configs = {
+          ...item.configs,
+          now,
+          end,
+          start,
+        };
+      });
+    });
+
+    this.setState({ chartData: chartDataClone, now, start, end });
+  }
+
+  handleDateChange = (key, d) => {
+    const { chartData } = this.state;
+    const chartDataClone = _.cloneDeep(chartData);
+    const val = _.isDate(d) ? _.toString(d.getTime()) : null;
+
+    _.each(chartDataClone, (graphs) => {
+      _.each(graphs, (item) => {
+        item.configs = {
+          ...item.configs,
+          [key]: val,
+        };
+      });
+    });
+
+    this.setState({ chartData: chartDataClone, [key]: val });
+  }
+
   renderSubclass = (subclassObj: any, idx: number) => {
     const { chartData, subclassData } = this.state;
     const subclassChartData = chartData[subclassObj.id];
@@ -431,21 +479,77 @@ class ScreenDetail extends Component<FormProps> {
               message.success('图表排序成功！');
             });
           }}
+          onCloneGraph={(configs: any) => {
+            this.currentSubclassId = subclassObj.id;
+            this.graphConfigForm.showModal('push', '克隆图表', {
+              ...configs,
+            });
+          }}
         />
       </Card>
     );
   }
 
   render() {
-    const { subclassData } = this.state;
+    const { subclassData, now, start, end } = this.state;
+    let timeVal;
+    if (start && end) {
+      timeVal = now === end ? graphUtil.getTimeLabelVal(start, end, 'value') : 'custom';
+    }
+    const datePickerStartVal = moment(Number(start)).format(graphcConfig.timeFormatMap.moment);
+    const datePickerEndVal = moment(Number(end)).format(graphcConfig.timeFormatMap.moment);
     return (
       <div>
         <Row className="mb10">
-          <Col span={12}>
+          <Col span={6}>
             <Button onClick={this.handleAddSubclass} style={{ marginRight: 8 }}>新增分类</Button>
             <Button onClick={this.handleBatchMoveSubclass}>批量移动分类</Button>
           </Col>
-          <Col span={12} className="textAlignRight">
+          <Col span={18} className="textAlignRight">
+          <span style={{ paddingRight: 10 }}>
+            时间：
+            <Select size="default" style={
+              timeVal === 'custom' ?
+                {
+                  width: 80,
+                  marginRight: 10,
+                } : {
+                  width: 80,
+                }
+            }
+              placeholder="无"
+              value={timeVal}
+              onChange={this.handleTimeOptionChange}
+            >
+              {
+                _.map(graphcConfig.time, o => <Option key={o.value} value={o.value}>{o.label}</Option>)
+              }
+            </Select>
+            {
+              timeVal === 'custom' ?
+                [
+                  <DateInput key="datePickerStart"
+                    format={graphcConfig.timeFormatMap.antd}
+                    style={{
+                      position: 'relative',
+                      width: 120,
+                    }}
+                    value={datePickerStartVal}
+                    onChange={d => this.handleDateChange('start', d)}
+                  />,
+                  <span key="datePickerDivider" style={{ paddingLeft: 10, paddingRight: 10 }}>-</span>,
+                  <DateInput key="datePickerEnd"
+                    format={graphcConfig.timeFormatMap.antd}
+                    style={{
+                      position: 'relative',
+                      width: 120,
+                    }}
+                    value={datePickerEndVal}
+                    onChange={d => this.handleDateChange('end', d)}
+                  />,
+                ] : false
+              }
+            </span>
             <Checkbox
               style={{ marginRight: 8 }}
               checked={this.state.autoRefresh}

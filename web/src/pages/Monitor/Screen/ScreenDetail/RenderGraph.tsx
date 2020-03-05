@@ -28,6 +28,10 @@ class RenderGraph extends Component<any> {
     });
   }
 
+  handleCloneGraph = (configs: any) => {
+    this.props.onCloneGraph(configs);
+  }
+
   render() {
     const { data, originTreeData, subclassData, colNum } = this.props;
 
@@ -55,6 +59,9 @@ class RenderGraph extends Component<any> {
             <Menu.Item key="share">
               <a onClick={() => { this.handleShareGraph(data.configs); }}>分享图表</a>
             </Menu.Item>,
+            <Menu.Item key="clone">
+            <a onClick={() => { this.handleCloneGraph(data.configs); }}>克隆图表</a>
+          </Menu.Item>,
             <Menu.Item key="del">
               <Popconfirm title="确定要删除这个图表吗？" onConfirm={() => { this.props.onDelChart(data.id); }}>
                 <a>删除图表</a>

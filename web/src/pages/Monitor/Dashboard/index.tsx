@@ -119,7 +119,7 @@ class MonitorDashboard extends Component<Props, State> {
       this.setState({ hostsLoading: true });
       if (nid === undefined) {
         const res = await request(`${api.endpoint}?limit=1000`);
-        hosts = res.list;
+        hosts = _.map(res.list, 'ident');
       } else {
         hosts = await services.fetchEndPoints(nid, this.context.habitsId);
       }
